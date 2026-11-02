@@ -98,6 +98,12 @@ export class DesktopFleet {
           "-N",
           "-o",
           "ExitOnForwardFailure=yes",
+          // A tunnel is its own connection: a multiplexed client would hand
+          // the forwards to a shared master and exit.
+          "-o",
+          "ControlMaster=no",
+          "-o",
+          "ControlPath=none",
           ...args,
           host.destination,
         ],
