@@ -183,6 +183,7 @@ const fleetRunDescription = (vision: boolean) =>
   (vision
     ? "fields: named rectangles whose content varies; YOU provide their values per surface in `values` (from a fleet_crops contact sheet, crops_id), one item per surface per run; there is no text channel. "
     : "fields: named rectangles whose text varies (values only, not labels: text nodes whose centre lies inside are concatenated); the host reads their exact text via the platform text channel, so you never transcribe values. ") +
+  "inputs: columns of the host task table shown in the task; steps type or choose them like fields, per surface, so you never transcribe them. items: how many items this policy performs per surface in this run (use one policy per item when items differ). " +
   "ignore: other pixels inside the template that legitimately change (counters, headings, selection highlight, input contents, receipts not declared as fields). Every click target is also checked locally against the exemplar (keep value fields off click targets); a surface whose target looks different gets no input. steps (ordered): click{x,y}; type_field{field}; choose{field,cases[{equals,x,y,label}],otherwise?{x,y,label}} clicks the case whose equals exactly matches the field value; otherwise covers any other non-empty value; no match => surface untouched and reported; " +
   (vision
     ? ""
