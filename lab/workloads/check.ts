@@ -6,7 +6,7 @@
  *
  * hosts.json: the workload's `hosts` array ("local" or {destination, options}).
  */
-import { readFile, mkdir, writeFile } from "node:fs/promises";
+import { readFile, mkdir, writeFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { ProgressLedger } from "../../packages/virtual-screen/src/workset.js";
 import { StackScreen } from "../../packages/virtual-screen/src/stack.js";
@@ -20,6 +20,9 @@ const hosts = JSON.parse(await readFile(hostsPath!, "utf8")).map((h: any) =>
   h === "local" ? { kind: "local" } : { kind: "ssh", ...h },
 );
 const count = Number(countArg ?? 4);
+// A durable ledger resumes: an old run directory would skip the new desktops.
+if (await stat(join(out, "ledger")).catch(() => null))
+  throw Error(`run directory already used: ${out}`);
 await mkdir(out, { recursive: true });
 const [workload, oracle] =
   app === "kicad"
@@ -59,6 +62,12 @@ for (const { name, ...policy } of oracle) {
   for (const v of r.views ?? [])
     await writeFile(join(out, `${name}-${v.surface_id}.png`), v.png);
 }
+await mkdir(join(out, "final"), { recursive: true });
+for (const id of lab.surfaces)
+  await writeFile(
+    join(out, "final", `${id}.png`),
+    (await lab.port.capture(id)).png,
+  );
 const scores = await lab.grade();
 await lab.collect?.(join(out, "artifacts"));
 await ledger.close();
