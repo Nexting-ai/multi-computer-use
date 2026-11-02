@@ -52,6 +52,7 @@ import { rng, type Usage } from "../benchmark/metrics.js";
 import { runClaude } from "../agents/claude.js";
 import { sequence, miniwob } from "../workloads/web.js";
 import { blender } from "../workloads/blender.js";
+import { kicad } from "../workloads/kicad.js";
 import type { Workload } from "../workloads/types.js";
 
 const ARMS = ["P-V", "P-T", "B-V", "B-T", "S"] as const;
@@ -71,7 +72,7 @@ const schema = z.strictObject({
     }),
     z.strictObject({ kind: z.literal("miniwob"), task: z.string() }),
     z.strictObject({
-      kind: z.literal("blender"),
+      kind: z.enum(["blender", "kicad"]),
       image: z.string(),
       port: z.number().int().optional(),
       /** Docker hosts; "local" or an SSH destination with its options. */
@@ -106,7 +107,7 @@ const schema = z.strictObject({
 });
 const o = schema.parse(JSON.parse(await readFile(process.argv[2]!, "utf8")));
 o.output = resolve(o.output);
-if (o.count > 12 && o.workload.kind !== "blender")
+if (o.count > 12 && ["sequence", "miniwob"].includes(o.workload.kind))
   throw Error("more_than_12_local_browser_surfaces");
 await mkdir(o.output, { recursive: false });
 
@@ -116,7 +117,7 @@ const workload: Workload =
     ? sequence(W.variant)
     : W.kind === "miniwob"
       ? miniwob(W.task)
-      : blender({
+      : (W.kind === "blender" ? blender : kicad)({
           image: W.image,
           ...(W.port ? { port: W.port } : {}),
           hosts: W.hosts.map((h) =>

@@ -1,9 +1,6 @@
-import {
-  DesktopFleet,
-  type DockerHost,
-} from "../../packages/desktop/src/fleet.js";
 import { rng } from "../benchmark/metrics.js";
-import type { Score, Workload } from "./types.js";
+import { desktopWorkload, type DesktopOptions } from "./desktop.js";
+import type { Score } from "./types.js";
 
 /** One row of the building schedule (all values exactly as they are typed). */
 export type Building = {
@@ -55,77 +52,32 @@ export function schedule(seed: number, count: number): Map<string, Building> {
   );
 }
 
-const SUMMARY =
-  "Each surface runs Blender with one object, Building (a 1 m cube, selected, with the sidebar's Item tab open). Make each surface's Building match its row of the building schedule: (1) Dimensions X = width, Y = depth, Z = height in metres; (2) Location X = x and Y = y in metres (leave Z); (3) the Facade material's Base Color = the colour hex; (4) save the file in place (Ctrl+S). These are four items per surface, in this order. Use only the Blender user interface: no Python console, scripts, add-ons, file dialogs or other applications. Unknown or delivered inputs must not be repeated.";
-
 /** Blender: build one row of a city's building schedule per desktop. */
-export function blender(o: {
-  hosts: DockerHost[];
-  image: string;
-  port?: number;
-}): Workload {
-  return {
-    items: 4,
-    declared: true,
-    // Blender refreshes the title bar's unsaved mark lazily (up to ~20 s).
-    settle_ms: 30_000,
-    summary: SUMMARY,
-    async open(_directory, count, seed) {
-      const rows = schedule(seed, count);
-      const fleet = await DesktopFleet.launch({
-        hosts: o.hosts,
-        image: o.image,
-        count,
-        name: `mcu-blender-${seed}`,
-        port: o.port ?? 17000,
-        cpus: 2,
-        memory: "4g",
-      });
-      const table = [...rows]
-        .map(
-          ([id, b]) =>
-            `${id}: width ${b.width}, depth ${b.depth}, height ${b.height}, x ${b.x}, y ${b.y}, colour ${b.color}`,
-        )
-        .join("\n");
-      return {
-        surfaces: fleet.surfaces,
-        port: fleet.port,
-        task: `${SUMMARY}\nBuilding schedule (also available to fleet policies as inputs width, depth, height, x, y, color):\n${table}`,
-        inputs: Object.fromEntries(rows),
-        grade: () =>
-          Promise.all(
-            fleet.surfaces.map(async (id) =>
-              gradeBuilding(
-                id,
-                rows.get(id)!,
-                await fleet.exec(id, [
-                  "blender",
-                  "-b",
-                  "/work/scene.blend",
-                  "--python",
-                  "/opt/app/grade.py",
-                ]),
-              ),
-            ),
-          ),
-        collect: async (dir) => {
-          for (const id of fleet.surfaces)
-            await fleet.collect(id, `${dir}/${id}`);
-        },
-        close: () => fleet.close(),
-      };
+export const blender = (o: DesktopOptions) =>
+  desktopWorkload<Building>(
+    {
+      app: "blender",
+      items: 4,
+      // Blender refreshes the title bar's unsaved mark lazily (up to ~20 s).
+      settle_ms: 30_000,
+      summary:
+        "Each surface runs Blender with one object, Building (a 1 m cube, selected, with the sidebar's Item tab and the material properties open). Make each surface's Building match its row of the task table: (1) Dimensions X = width, Y = depth, Z = height in metres; (2) Location X = x and Y = y in metres (leave Z); (3) the Facade material's Base Color = the colour hex (color); (4) save the file in place (Ctrl+S). These are four items per surface, in this order. Use only the Blender user interface: no Python console, scripts, add-ons, file dialogs or other applications. Unknown or delivered inputs must not be repeated.",
+      rows: schedule,
+      grader: [
+        "blender",
+        "-b",
+        "/work/scene.blend",
+        "--python",
+        "/opt/app/grade.py",
+      ],
+      grade: gradeBuilding,
     },
-  };
-}
+    o,
+  );
 
 /** Grades the saved scene file against the schedule row. */
-export function gradeBuilding(
-  id: string,
-  row: Building,
-  output: string,
-): Score {
-  const line = output.split("\n").find((l) => l.startsWith("GRADE "));
-  const g = line ? JSON.parse(line.slice(6)) : { found: false };
+export function gradeBuilding(id: string, row: Building, g: any): Score {
+  g ??= { found: false };
   const near = (a: number, b: string) => Math.abs(a - Number(b)) < 0.01;
   const items = g.found
     ? {
