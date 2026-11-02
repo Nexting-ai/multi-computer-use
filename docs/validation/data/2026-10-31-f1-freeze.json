@@ -1,0 +1,20 @@
+{
+ "at": "2026-10-30T16:14:15Z",
+ "commit": "079d2cdcbd7c961f65edfb964136be41e04865a7",
+ "source_archive_sha256": "d90a1e5ce013742c81cbfd3c0f955d4c241b303ae65079da31ee75b185f9cff6",
+ "images": {
+  "6": "sha256:325e452ed0025a9c9024817ace9f6607305b3a22e9b2725571c8a3ddc3c24a0c",
+  "7": "sha256:0d67b9bf8ea0c3c2c7c55fc93ede7e02b92082585083e676b1ee8e6cd857d04b"
+ },
+ "region": "sfo3",
+ "configs": {
+  "f1-click-dialog.json": "70ce3e2805c956ce24e12146e4d4d730dd9db69db761ee06252c3f1d94b0e34f",
+  "f1-click-test-2.json": "7446ff27b1a04ff3aa6fcca055d11b24e7c975663f5e130672c6bbd8a042f962",
+  "f1-d-mixed.json": "4106f206f02eda2ba2e57482ea86287b2086400ba9eb8eb00b40505fade3551d",
+  "f1-d-uniform.json": "c4c93960276148faa6674358589a995a6e4787df346709524c958dca14ad96b2",
+  "f1-enter-text-2.json": "526bb24bf49fb02be81e4cf2ec9521844a839a39b7a96a64f9484ac418220d5c",
+  "f1-focus-text.json": "c88262f2e479d6b3b0f0bdbe16ca922f5dd8aeac66bbc6710a74d3596f5ee0e1",
+  "f1-multi-orderings.json": "12290413778d0142c14173512e65d1dbdbf8bda7707b323ed8a6c4e39858bfee",
+  "f1-read-table-2.json": "12bc74f53a90367251ede875be3bce824bfa1ef139d7af21cecc029f45216093"
+ }
+}

@@ -1,0 +1,187 @@
+[
+  {
+    "scenario": "wrong-click-canary-on",
+    "surfaces_with_input": 1,
+    "input_operations": 1,
+    "saves": 0,
+    "wrong_saves": 0,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 0,
+    "ledger_verified": 0,
+    "ledger_attention": 0
+  },
+  {
+    "scenario": "wrong-click-canary-off",
+    "surfaces_with_input": 12,
+    "input_operations": 12,
+    "saves": 0,
+    "wrong_saves": 0,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 0,
+    "ledger_verified": 0,
+    "ledger_attention": 0
+  },
+  {
+    "scenario": "wrong-value-canary-on",
+    "surfaces_with_input": 1,
+    "input_operations": 1,
+    "saves": 1,
+    "wrong_saves": 1,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 0,
+    "ledger_verified": 0,
+    "ledger_attention": 0
+  },
+  {
+    "scenario": "wrong-value-canary-off",
+    "surfaces_with_input": 12,
+    "input_operations": 12,
+    "saves": 12,
+    "wrong_saves": 12,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 0,
+    "ledger_verified": 0,
+    "ledger_attention": 0
+  },
+  {
+    "scenario": "lost-replies-resolve-on",
+    "surfaces_with_input": 12,
+    "input_operations": 36,
+    "saves": 36,
+    "wrong_saves": 0,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 12,
+    "ledger_verified": 12,
+    "ledger_attention": 0
+  },
+  {
+    "scenario": "lost-replies-resolve-off",
+    "surfaces_with_input": 12,
+    "input_operations": 25,
+    "saves": 25,
+    "wrong_saves": 0,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 5,
+    "ledger_verified": 4,
+    "ledger_attention": 8
+  },
+  {
+    "scenario": "frame-changes-before-input",
+    "surfaces_with_input": 12,
+    "input_operations": 36,
+    "saves": 36,
+    "wrong_saves": 0,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 12,
+    "ledger_verified": 12,
+    "ledger_attention": 0
+  },
+  {
+    "scenario": "unmatched-values",
+    "surfaces_with_input": 9,
+    "input_operations": 27,
+    "saves": 27,
+    "wrong_saves": 0,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 9,
+    "ledger_verified": 9,
+    "ledger_attention": 0
+  },
+  {
+    "scenario": "overlapping-concurrent-policies",
+    "surfaces_with_input": 12,
+    "input_operations": 36,
+    "saves": 36,
+    "wrong_saves": 0,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 12,
+    "ledger_verified": 12,
+    "ledger_attention": 0
+  },
+  {
+    "scenario": "mixed-layouts-a-policy",
+    "surfaces_with_input": 7,
+    "input_operations": 21,
+    "saves": 21,
+    "wrong_saves": 0,
+    "misrouted": 0,
+    "duplicates": 0,
+    "surfaces_correct": 7,
+    "ledger_verified": 7,
+    "ledger_attention": 0
+  },
+  {
+    "scenario": "sparse-moved-controls-check-on",
+    "submissions": 1,
+    "correct_submissions": 1,
+    "wrong_submissions": 0,
+    "surfaces_untouched": 11,
+    "runtime_counts": {
+      "verified": 1,
+      "exception:template_mismatch": 11
+    }
+  },
+  {
+    "scenario": "sparse-moved-controls-check-off",
+    "submissions": 8,
+    "correct_submissions": 7,
+    "wrong_submissions": 1,
+    "surfaces_untouched": 4,
+    "runtime_counts": {
+      "verified": 8,
+      "exception:template_mismatch": 4
+    }
+  },
+  {
+    "scenario": "reordered-labels-strict",
+    "surfaces_same_order": 2,
+    "submissions": 2,
+    "misapplied_submissions": 0,
+    "runtime_counts": {
+      "verified": 2,
+      "exception:template_mismatch": 10
+    }
+  },
+  {
+    "scenario": "reordered-labels-lenient",
+    "surfaces_same_order": 2,
+    "submissions": 8,
+    "misapplied_submissions": 6,
+    "runtime_counts": {
+      "verified": 8,
+      "exception:template_mismatch": 4
+    }
+  },
+  {
+    "scenario": "occluded-target-on",
+    "surfaces_eligible": 24,
+    "submissions": 20,
+    "correct_submissions": 20,
+    "wrong_submissions": 0,
+    "runtime_counts": {
+      "exception:click_text_occluded": 3,
+      "verified": 20,
+      "exception:template_mismatch": 1
+    }
+  },
+  {
+    "scenario": "occluded-target-off",
+    "surfaces_eligible": 24,
+    "submissions": 23,
+    "correct_submissions": 18,
+    "wrong_submissions": 5,
+    "runtime_counts": {
+      "verified": 23,
+      "exception:template_mismatch": 1
+    }
+  }
+]

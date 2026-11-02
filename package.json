@@ -1,0 +1,23 @@
+{
+  "name": "z-broadcast",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm typecheck && pnpm test",
+    "fault-suite": "node --import tsx lab/virtual-screen/fault-suite.ts .local/fault-suite"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "prettier": "^3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}

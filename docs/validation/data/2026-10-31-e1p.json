@@ -1,0 +1,1613 @@
+{
+ "experiment": "E1-P",
+ "preregistration": "docs/validation/2026-10-31-preregistration-e1p.md",
+ "freeze": {
+  "at": "2026-10-31T11:55:00Z",
+  "commit": "b55aab3",
+  "source_archive_sha256": "7c2f4fc30c385f216252fce708e94c0cadcfe8c6371ccb136cdfa1ae666e36f8",
+  "image": "sha256:8a4b674339a525d6cf957974b290dde24edfa7848eb08b54300d4c4a72772ac1",
+  "region": "sfo3"
+ },
+ "rows": [
+  {
+   "block": 0,
+   "arm": "P-V",
+   "elapsed_s": 108.034,
+   "tokens": 5347959,
+   "items": 297,
+   "total_items": 300,
+   "sessions": [
+    {
+     "path": "sessions/12",
+     "status": {
+      "id": "01a191d2-d66d-77c1-80fb-e761bc7f78b8",
+      "rootTurnId": "01a191d2-d66d-77c1-80fb-e761bc7f78b8",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0df7bdf2f7aa4986016ae5d7fbc288819191837f2a5d61defe",
+        "text": "Completed and verified all 12 items on W97\u2013W100. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447931893,
+        "completedAtMs": 1793447932420
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447876,
+      "completedAt": 1793447932,
+      "durationMs": 56271
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 125228,
+      "inputTokens": 123037,
+      "cachedInputTokens": 103168,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 2191,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 60499
+    },
+    {
+     "path": "sessions/7",
+     "status": {
+      "id": "01a191d2-d3a4-73a3-936d-b0e59991aa7e",
+      "rootTurnId": "01a191d2-d3a4-73a3-936d-b0e59991aa7e",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0cccfa5f672e4caa016ae5d80e8044819196ba3de350886b66",
+        "text": "Completed and verified all 24 items across W57\u2013W64. No remaining failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447950636,
+        "completedAtMs": 1793447951056
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447875,
+      "completedAt": 1793447951,
+      "durationMs": 75666
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 313102,
+      "inputTokens": 310137,
+      "cachedInputTokens": 271872,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 2965,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 78806
+    },
+    {
+     "path": "sessions/8",
+     "status": {
+      "id": "01a191d2-d301-70c3-a0cc-51d01bfb3d22",
+      "rootTurnId": "01a191d2-d301-70c3-a0cc-51d01bfb3d22",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0e3bd8a09165f4ed016ae5d81448088191ba79b0530188d590",
+        "text": "Completed and verified all 24 items on W65\u2013W72. No remaining failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447956404,
+        "completedAtMs": 1793447956938
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447875,
+      "completedAt": 1793447956,
+      "durationMs": 81666
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 452843,
+      "inputTokens": 449355,
+      "cachedInputTokens": 367616,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3488,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 84630
+    },
+    {
+     "path": "sessions/3",
+     "status": {
+      "id": "01a191d2-d1ea-71f1-a215-2a0806ff6084",
+      "rootTurnId": "01a191d2-d1ea-71f1-a215-2a0806ff6084",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0123ecf0d02df5aa016ae5d8181f1c8191b7c58676cb550f93",
+        "text": "Completed and verified all 24 items on W25\u2013W32. No remaining failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447960245,
+        "completedAtMs": 1793447960633
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447875,
+      "completedAt": 1793447960,
+      "durationMs": 85600
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 444361,
+      "inputTokens": 440916,
+      "cachedInputTokens": 400512,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3445,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 88335
+    },
+    {
+     "path": "sessions/1",
+     "status": {
+      "id": "01a191d2-d185-7060-9c88-24c6afb19439",
+      "rootTurnId": "01a191d2-d185-7060-9c88-24c6afb19439",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0e8e6c2756b7ccf7016ae5d81b570481919d65bedaae7cc1fa",
+        "text": "Completed and verified all 24 items on W09\u2013W16. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447963467,
+        "completedAtMs": 1793447963829
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447874,
+      "completedAt": 1793447964,
+      "durationMs": 89077
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 446982,
+      "inputTokens": 443572,
+      "cachedInputTokens": 403200,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3410,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 91727
+    },
+    {
+     "path": "sessions/9",
+     "status": {
+      "id": "01a191d2-d181-74a1-8021-68d401a7a858",
+      "rootTurnId": "01a191d2-d181-74a1-8021-68d401a7a858",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_04dbf28632b88f88016ae5d81c56ec8191819a70eac5edac95",
+        "text": "Completed and verified all 24 items on W73\u2013W80. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447964466,
+        "completedAtMs": 1793447965008
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447874,
+      "completedAt": 1793447965,
+      "durationMs": 90149
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 414848,
+      "inputTokens": 411625,
+      "cachedInputTokens": 373120,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3223,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 92720
+    },
+    {
+     "path": "sessions/6",
+     "status": {
+      "id": "01a191d2-d344-73a0-a414-ab4fd0a6586e",
+      "rootTurnId": "01a191d2-d344-73a0-a414-ab4fd0a6586e",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0fdeeaa65757ab43016ae5d81c7d0c819181a9b9817fcfa33d",
+        "text": "Completed and verified all 24 items across W49\u2013W56. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447964621,
+        "completedAtMs": 1793447965168
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447875,
+      "completedAt": 1793447965,
+      "durationMs": 89943
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 449812,
+      "inputTokens": 446418,
+      "cachedInputTokens": 406144,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3394,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 92997
+    },
+    {
+     "path": "sessions/4",
+     "status": {
+      "id": "01a191d2-d1a0-7d73-b170-f420cb29eaa3",
+      "rootTurnId": "01a191d2-d1a0-7d73-b170-f420cb29eaa3",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_05193b922a8c186b016ae5d81d9dc081919898e5d48907887d",
+        "text": "Completed and verified all 24 items across W33\u2013W40. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447965746,
+        "completedAtMs": 1793447967118
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447874,
+      "completedAt": 1793447967,
+      "durationMs": 92165
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 428460,
+      "inputTokens": 424872,
+      "cachedInputTokens": 385152,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3588,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 94815
+    },
+    {
+     "path": "sessions/11",
+     "status": {
+      "id": "01a191d2-d1cb-7f62-a11c-40a9395a54bf",
+      "rootTurnId": "01a191d2-d1cb-7f62-a11c-40a9395a54bf",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_06357990fe5033ed016ae5d81f903881919ea203e30e6e0495",
+        "text": "Completed and verified all 24 items on W89\u2013W96. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447967691,
+        "completedAtMs": 1793447968086
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447875,
+      "completedAt": 1793447968,
+      "durationMs": 93131
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 439366,
+      "inputTokens": 435970,
+      "cachedInputTokens": 396416,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3396,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 95762
+    },
+    {
+     "path": "sessions/5",
+     "status": {
+      "id": "01a191d2-d329-7ab3-83b2-dd18356b43d9",
+      "rootTurnId": "01a191d2-d329-7ab3-83b2-dd18356b43d9",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0f5cc317e41b8987016ae5d82393d48191b22fcbba879dc50b",
+        "text": "Completed and verified all 24 items on W41\u2013W48. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447971699,
+        "completedAtMs": 1793447972213
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447875,
+      "completedAt": 1793447972,
+      "durationMs": 97002
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 453306,
+      "inputTokens": 449761,
+      "cachedInputTokens": 409344,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3545,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 100035
+    },
+    {
+     "path": "sessions/2",
+     "status": {
+      "id": "01a191d2-d305-7f63-b583-5774114834ca",
+      "rootTurnId": "01a191d2-d305-7f63-b583-5774114834ca",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0a3f748261f67300016ae5d826a63881919426e7368af79cbb",
+        "text": "Completed and verified all 24 items on W17\u2013W24. No remaining failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447974776,
+        "completedAtMs": 1793447975162
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447875,
+      "completedAt": 1793447975,
+      "durationMs": 99941
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 466351,
+      "inputTokens": 462532,
+      "cachedInputTokens": 421760,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3819,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 102967
+    },
+    {
+     "path": "sessions/0",
+     "status": {
+      "id": "01a191d2-d13d-7240-8502-0337952d907e",
+      "rootTurnId": "01a191d2-d13d-7240-8502-0337952d907e",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0dfb2e667af8a23e016ae5d82a7ebc81919f932926231911e7",
+        "text": "Completed and verified all 24 items across W01\u2013W08. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447978628,
+        "completedAtMs": 1793447979025
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447874,
+      "completedAt": 1793447979,
+      "durationMs": 104205
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 445627,
+      "inputTokens": 442237,
+      "cachedInputTokens": 374912,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3390,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 106789
+    },
+    {
+     "path": "sessions/10",
+     "status": {
+      "id": "01a191d2-d174-7870-a8c4-eec15fbae258",
+      "rootTurnId": "01a191d2-d174-7870-a8c4-eec15fbae258",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0aa5f196c7d2f13a016ae5d82b039c81919e2d673443d88ac2",
+        "text": "Completed and verified all 24 items on W81\u2013W88. No remaining failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793447979150,
+        "completedAtMs": 1793447979524
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793447874,
+      "completedAt": 1793447979,
+      "durationMs": 104646
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 467673,
+      "inputTokens": 463822,
+      "cachedInputTokens": 423680,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3851,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 107196
+    }
+   ],
+   "tool_calls": 169,
+   "last_delivery_s": 79.4
+  },
+  {
+   "block": 0,
+   "arm": "B-T",
+   "elapsed_s": 89.357,
+   "tokens": 56397,
+   "items": 300,
+   "total_items": 300,
+   "sessions": [
+    {
+     "path": "sessions/fleet",
+     "status": {
+      "id": "01a191dc-6f26-7fb0-9ffa-1c72e3e6d336",
+      "rootTurnId": "01a191dc-6f26-7fb0-9ffa-1c72e3e6d336",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_07688547b18146f3016ae5da8c989881919c75d6cc43d3164c",
+        "text": "Completed all 300 items across 100 surfaces. All verified; no exceptions.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793448588739,
+        "completedAtMs": 1793448589243
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793448505,
+      "completedAt": 1793448589,
+      "durationMs": 84165
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 56397,
+      "inputTokens": 56024,
+      "cachedInputTokens": 41344,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 373,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 89352
+    }
+   ],
+   "tool_calls": 2,
+   "last_delivery_s": 86.9
+  },
+  {
+   "block": 1,
+   "arm": "P-V",
+   "elapsed_s": 105.55,
+   "tokens": 5284055,
+   "items": 300,
+   "total_items": 300,
+   "sessions": [
+    {
+     "path": "sessions/12",
+     "status": {
+      "id": "01a191e6-36da-77c0-94c5-3b271b9ff04d",
+      "rootTurnId": "01a191e6-36da-77c0-94c5-3b271b9ff04d",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0e0cc2114607b0e2016ae5dcfd33a48191b501009f4dcf0e7e",
+        "text": "Completed and verified all 12 items on W97\u2013W100. No remaining failures.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449213329,
+        "completedAtMs": 1793449213532
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449214,
+      "durationMs": 68102
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 234238,
+      "inputTokens": 231789,
+      "cachedInputTokens": 209920,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 2449,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 70185
+    },
+    {
+     "path": "sessions/7",
+     "status": {
+      "id": "01a191e6-3971-7510-8b2c-59c878553f16",
+      "rootTurnId": "01a191e6-3971-7510-8b2c-59c878553f16",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0206c26f8dd08f39016ae5dd042ea481918f622a3b25d7710b",
+        "text": "Completed and verified all 24 items across W57\u2013W64. No remaining failures.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449220291,
+        "completedAtMs": 1793449220543
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449220,
+      "durationMs": 73856
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 338702,
+      "inputTokens": 335548,
+      "cachedInputTokens": 296704,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3154,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 76198
+    },
+    {
+     "path": "sessions/0",
+     "status": {
+      "id": "01a191e6-3837-72b0-8dd2-a6aad67a27ab",
+      "rootTurnId": "01a191e6-3837-72b0-8dd2-a6aad67a27ab",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0dd85b9ca558a596016ae5dd04e6588191b392601ab661bb43",
+        "text": "Completed and verified all 24 items on W01\u2013W08. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449221005,
+        "completedAtMs": 1793449221349
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449221,
+      "durationMs": 74983
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 442116,
+      "inputTokens": 438667,
+      "cachedInputTokens": 398336,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3449,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 77080
+    },
+    {
+     "path": "sessions/4",
+     "status": {
+      "id": "01a191e6-3928-73b0-b121-c2a1d5704b6b",
+      "rootTurnId": "01a191e6-3928-73b0-b121-c2a1d5704b6b",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0ac5943a9f75a213016ae5dd0be0c481918dfa55b1044f3b0f",
+        "text": "Completed and verified all 24 items on W33\u2013W40. No remaining failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449227986,
+        "completedAtMs": 1793449228504
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449228,
+      "durationMs": 81958
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 335928,
+      "inputTokens": 332802,
+      "cachedInputTokens": 294656,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3126,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 84263
+    },
+    {
+     "path": "sessions/11",
+     "status": {
+      "id": "01a191e6-3975-7883-8303-266fe50b75c8",
+      "rootTurnId": "01a191e6-3975-7883-8303-266fe50b75c8",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_06d34ea741901d4d016ae5dd0fd32c8191aab13a0a4fb8f481",
+        "text": "Completed and verified all 24 items on W89\u2013W96. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449232005,
+        "completedAtMs": 1793449232304
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449232,
+      "durationMs": 85627
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 443431,
+      "inputTokens": 439989,
+      "cachedInputTokens": 399744,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3442,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 87925
+    },
+    {
+     "path": "sessions/1",
+     "status": {
+      "id": "01a191e6-3850-7141-970e-7cb80d3df4bf",
+      "rootTurnId": "01a191e6-3850-7141-970e-7cb80d3df4bf",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_029cb9340f47dd6e016ae5dd10cb6881919760950b4b2ce253",
+        "text": "Completed and verified all 24 items on W09\u2013W16. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449232905,
+        "completedAtMs": 1793449233350
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449233,
+      "durationMs": 86959
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 445838,
+      "inputTokens": 442374,
+      "cachedInputTokens": 401920,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3464,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 89069
+    },
+    {
+     "path": "sessions/8",
+     "status": {
+      "id": "01a191e6-38f4-7bc1-a1fa-dc58df9a0211",
+      "rootTurnId": "01a191e6-38f4-7bc1-a1fa-dc58df9a0211",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0458f6f9a092af4d016ae5dd124fec8191a2e9a37b5f4b8027",
+        "text": "Completed and verified all 24 items across W65\u2013W72. No remaining failures.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449234424,
+        "completedAtMs": 1793449234648
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449234,
+      "durationMs": 88100
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 482691,
+      "inputTokens": 479233,
+      "cachedInputTokens": 399872,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3458,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 90327
+    },
+    {
+     "path": "sessions/6",
+     "status": {
+      "id": "01a191e6-388f-7400-b5e3-0437f749b6c8",
+      "rootTurnId": "01a191e6-388f-7400-b5e3-0437f749b6c8",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_05504280bf2df11f016ae5dd12d0e08191947edee1023384ef",
+        "text": "Completed and verified all 24 items on W49\u2013W56. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449234920,
+        "completedAtMs": 1793449235357
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449235,
+      "durationMs": 88891
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 442387,
+      "inputTokens": 438939,
+      "cachedInputTokens": 403840,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3448,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 91021
+    },
+    {
+     "path": "sessions/5",
+     "status": {
+      "id": "01a191e6-39c7-7820-88a1-aa6a0931815c",
+      "rootTurnId": "01a191e6-39c7-7820-88a1-aa6a0931815c",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0e42801781a39141016ae5dd1416208191a754dea4e899611f",
+        "text": "Completed and verified all 24 items on W41\u2013W48. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449236197,
+        "completedAtMs": 1793449236602
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449236,
+      "durationMs": 89806
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 445389,
+      "inputTokens": 442059,
+      "cachedInputTokens": 378624,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3330,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 92253
+    },
+    {
+     "path": "sessions/10",
+     "status": {
+      "id": "01a191e6-388f-7e80-b09d-aae7a679450a",
+      "rootTurnId": "01a191e6-388f-7e80-b09d-aae7a679450a",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_03de6a276bdf9115016ae5dd1508c08191be639dce3afec652",
+        "text": "Completed and verified all 24 items across W81\u2013W88. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449237138,
+        "completedAtMs": 1793449237698
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449237,
+      "durationMs": 91262
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 325013,
+      "inputTokens": 320707,
+      "cachedInputTokens": 281984,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 4306,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 93341
+    },
+    {
+     "path": "sessions/2",
+     "status": {
+      "id": "01a191e6-3833-7360-866e-7e70fb6207e6",
+      "rootTurnId": "01a191e6-3833-7360-866e-7e70fb6207e6",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_037596fd79107b6a016ae5dd17a7948191b4ce511bff9f48c3",
+        "text": "Completed and verified all 24 items on W17\u2013W24. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449239775,
+        "completedAtMs": 1793449240392
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449240,
+      "durationMs": 93973
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 445427,
+      "inputTokens": 441989,
+      "cachedInputTokens": 407168,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3438,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 96045
+    },
+    {
+     "path": "sessions/3",
+     "status": {
+      "id": "01a191e6-379b-7eb2-9603-705dd190ac62",
+      "rootTurnId": "01a191e6-379b-7eb2-9603-705dd190ac62",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_046de116d3fe7738016ae5dd17fca88191a6c19bcea3d2b179",
+        "text": "Completed and verified all 24 items on W25\u2013W32. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449240098,
+        "completedAtMs": 1793449240480
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449240,
+      "durationMs": 94264
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 439817,
+      "inputTokens": 436378,
+      "cachedInputTokens": 390528,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3439,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 96174
+    },
+    {
+     "path": "sessions/9",
+     "status": {
+      "id": "01a191e6-38ea-7bc3-9f36-db47be6a57b3",
+      "rootTurnId": "01a191e6-38ea-7bc3-9f36-db47be6a57b3",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_00c1a0d45d963745016ae5dd2062e88191af510bb2e2c2d759",
+        "text": "Completed and verified all 24 items on W73\u2013W80. No failures or pending targets.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449248492,
+        "completedAtMs": 1793449249085
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449146,
+      "completedAt": 1793449249,
+      "durationMs": 102482
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 463078,
+      "inputTokens": 458488,
+      "cachedInputTokens": 418048,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 4590,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 104667
+    }
+   ],
+   "tool_calls": 169,
+   "last_delivery_s": 77.2
+  },
+  {
+   "block": 1,
+   "arm": "B-T",
+   "elapsed_s": 74.785,
+   "tokens": 56544,
+   "items": 300,
+   "total_items": 300,
+   "sessions": [
+    {
+     "path": "sessions/fleet",
+     "status": {
+      "id": "01a191f0-02c2-7a23-b904-2611db697094",
+      "rootTurnId": "01a191f0-02c2-7a23-b904-2611db697094",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0e2e981388d8f80a016ae5df83f2248191b311ecd2525b1e22",
+        "text": "Completed all 300 items across 100 surfaces. All saves verified; no exceptions remain.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793449860128,
+        "completedAtMs": 1793449860629
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793449788,
+      "completedAt": 1793449860,
+      "durationMs": 72531
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 56544,
+      "inputTokens": 56166,
+      "cachedInputTokens": 41600,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 378,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 74782
+    }
+   ],
+   "tool_calls": 2,
+   "last_delivery_s": 70.8
+  },
+  {
+   "block": 2,
+   "arm": "P-V",
+   "elapsed_s": 98.737,
+   "tokens": 4541574,
+   "items": 299,
+   "total_items": 300,
+   "sessions": [
+    {
+     "path": "sessions/12",
+     "status": {
+      "id": "01a19205-24bc-7171-8653-4bcab89f0c30",
+      "rootTurnId": "01a19205-24bc-7171-8653-4bcab89f0c30",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0a85a93c74512adb016ae5e4e16dd88191b460e497fd12b34b",
+        "text": "Completed and verified all 12 items on W97\u2013W100. No remaining failures.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451233549,
+        "completedAtMs": 1793451234006
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451173,
+      "completedAt": 1793451234,
+      "durationMs": 61085
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 166482,
+      "inputTokens": 164206,
+      "cachedInputTokens": 143744,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 2276,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 63764
+    },
+    {
+     "path": "sessions/9",
+     "status": {
+      "id": "01a19205-23f0-7973-9a9f-a35b1c94abac",
+      "rootTurnId": "01a19205-23f0-7973-9a9f-a35b1c94abac",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_05769840c811c56b016ae5e4eaf0b48191a4fa77bf38b23c36",
+        "text": "Completed and verified all 24 items on W73\u2013W80. No remaining failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451243065,
+        "completedAtMs": 1793451243515
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451172,
+      "completedAt": 1793451243,
+      "durationMs": 70688
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 313314,
+      "inputTokens": 310340,
+      "cachedInputTokens": 277376,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 2974,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 72838
+    },
+    {
+     "path": "sessions/6",
+     "status": {
+      "id": "01a19205-2482-7a60-a7bb-be09ff35c3db",
+      "rootTurnId": "01a19205-2482-7a60-a7bb-be09ff35c3db",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0b5c765a5e503e3d016ae5e4eda7a08191a2c93e310227ccb8",
+        "text": "Completed and verified all 24 items on W49\u2013W56. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451245807,
+        "completedAtMs": 1793451246131
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451172,
+      "completedAt": 1793451246,
+      "durationMs": 73156
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 308442,
+      "inputTokens": 305580,
+      "cachedInputTokens": 267904,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 2862,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 75476
+    },
+    {
+     "path": "sessions/7",
+     "status": {
+      "id": "01a19205-24ba-7fd1-9ce1-826afa3a09ad",
+      "rootTurnId": "01a19205-24ba-7fd1-9ce1-826afa3a09ad",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0f1ea5133216e581016ae5e4eec7ac8191b47e5f957b0789c3",
+        "text": "Completed and verified all 24 items on W57\u2013W64. No remaining failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451246904,
+        "completedAtMs": 1793451247271
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451173,
+      "completedAt": 1793451247,
+      "durationMs": 74331
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 381384,
+      "inputTokens": 378380,
+      "cachedInputTokens": 341120,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3004,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 76698
+    },
+    {
+     "path": "sessions/0",
+     "status": {
+      "id": "01a19205-289a-77e1-b38b-fac21c19c0e4",
+      "rootTurnId": "01a19205-289a-77e1-b38b-fac21c19c0e4",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0e70b539e59c407d016ae5e4f8089481919390341cd0aafcf5",
+        "text": "Completed and verified all 24 items across W01\u2013W08. No failures.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451256190,
+        "completedAtMs": 1793451256395
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451174,
+      "completedAt": 1793451256,
+      "durationMs": 82409
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 403770,
+      "inputTokens": 399354,
+      "cachedInputTokens": 359296,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 4416,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 85826
+    },
+    {
+     "path": "sessions/11",
+     "status": {
+      "id": "01a19205-246a-7c03-bb54-44c4dfb453cf",
+      "rootTurnId": "01a19205-246a-7c03-bb54-44c4dfb453cf",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_02462e7f5ff25548016ae5e4f8318481918c1ca4da352dece1",
+        "text": "Completed and verified all 24 items on W89\u2013W96. No failures; workset can end.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451256326,
+        "completedAtMs": 1793451256703
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451172,
+      "completedAt": 1793451256,
+      "durationMs": 83847
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 387514,
+      "inputTokens": 384447,
+      "cachedInputTokens": 350336,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3067,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 86102
+    },
+    {
+     "path": "sessions/3",
+     "status": {
+      "id": "01a19205-25a7-7713-a98c-7e66f665980a",
+      "rootTurnId": "01a19205-25a7-7713-a98c-7e66f665980a",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_04b0db6bfdc9a5e0016ae5e4f9b1ec8191900537af614196fd",
+        "text": "Completed and verified all 24 items on W25\u2013W32. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451257866,
+        "completedAtMs": 1793451258285
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451173,
+      "completedAt": 1793451258,
+      "durationMs": 85102
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 423676,
+      "inputTokens": 420377,
+      "cachedInputTokens": 382080,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3299,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 87741
+    },
+    {
+     "path": "sessions/4",
+     "status": {
+      "id": "01a19205-2612-71f1-8155-5891c6853e12",
+      "rootTurnId": "01a19205-2612-71f1-8155-5891c6853e12",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0045fe1336355e21016ae5e4fa6fe88191b96be21cd835ae9f",
+        "text": "Completed and verified all 24 items on W33\u2013W40. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451258557,
+        "completedAtMs": 1793451259112
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451173,
+      "completedAt": 1793451259,
+      "durationMs": 85815
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 321146,
+      "inputTokens": 316835,
+      "cachedInputTokens": 278656,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 4311,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 88552
+    },
+    {
+     "path": "sessions/8",
+     "status": {
+      "id": "01a19205-2400-7fd0-9ba6-67408743df20",
+      "rootTurnId": "01a19205-2400-7fd0-9ba6-67408743df20",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0a2d1af60d865894016ae5e4fc9904819192794c66c39abedc",
+        "text": "Completed and verified all 24 items on W65\u2013W72. No remaining failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451260747,
+        "completedAtMs": 1793451261110
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451172,
+      "completedAt": 1793451261,
+      "durationMs": 88283
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 321611,
+      "inputTokens": 317308,
+      "cachedInputTokens": 278912,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 4303,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 90457
+    },
+    {
+     "path": "sessions/5",
+     "status": {
+      "id": "01a19205-268f-7be1-99fa-0a1d1a8d7615",
+      "rootTurnId": "01a19205-268f-7be1-99fa-0a1d1a8d7615",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0df5526cd2b33c3b016ae5e4ff1dd88191a9526cefa4de4fed",
+        "text": "Completed and verified all 24 items on W41\u2013W48. No remaining failures.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451263274,
+        "completedAtMs": 1793451263891
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451173,
+      "completedAt": 1793451263,
+      "durationMs": 90372
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 318253,
+      "inputTokens": 313953,
+      "cachedInputTokens": 281856,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 4300,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 93224
+    },
+    {
+     "path": "sessions/2",
+     "status": {
+      "id": "01a19205-248a-7e42-bfd0-884e32952adf",
+      "rootTurnId": "01a19205-248a-7e42-bfd0-884e32952adf",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0362c6325d75ce11016ae5e4ffc7788191a4fdf1b0675671ae",
+        "text": "Completed and verified all 24 items on W17\u2013W24. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451263923,
+        "completedAtMs": 1793451264314
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451173,
+      "completedAt": 1793451264,
+      "durationMs": 91370
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 416720,
+      "inputTokens": 413387,
+      "cachedInputTokens": 379008,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3333,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 93731
+    },
+    {
+     "path": "sessions/10",
+     "status": {
+      "id": "01a19205-24d0-7321-b014-1f93346d0ba2",
+      "rootTurnId": "01a19205-24d0-7321-b014-1f93346d0ba2",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_07a6e02313188676016ae5e4ffd33c8191a37f959952f92cd7",
+        "text": "Completed and verified all 24 items on W81\u2013W88. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451263984,
+        "completedAtMs": 1793451264358
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451173,
+      "completedAt": 1793451264,
+      "durationMs": 91332
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 317471,
+      "inputTokens": 313144,
+      "cachedInputTokens": 261888,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 4327,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 93695
+    },
+    {
+     "path": "sessions/1",
+     "status": {
+      "id": "01a19205-246d-7aa3-ab99-0b18ce2f9571",
+      "rootTurnId": "01a19205-246d-7aa3-ab99-0b18ce2f9571",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_0ecefce97f4152c3016ae5e504385c81918b189b5893560dd5",
+        "text": "Completed and verified all 24 items on W09\u2013W16. No failures; workset.can_end is true.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793451268351,
+        "completedAtMs": 1793451268730
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793451172,
+      "completedAt": 1793451268,
+      "durationMs": 95816
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 461791,
+      "inputTokens": 457236,
+      "cachedInputTokens": 417664,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 4555,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 98156
+    }
+   ],
+   "tool_calls": 143,
+   "last_delivery_s": 74.6
+  },
+  {
+   "block": 2,
+   "arm": "B-T",
+   "elapsed_s": 147.969,
+   "tokens": 56589,
+   "items": 300,
+   "total_items": 300,
+   "sessions": [
+    {
+     "path": "sessions/fleet",
+     "status": {
+      "id": "01a191f9-f8bd-7ed2-88ae-c6eee18e3a8c",
+      "rootTurnId": "01a191f9-f8bd-7ed2-88ae-c6eee18e3a8c",
+      "items": [
+       {
+        "type": "agentMessage",
+        "id": "msg_06cd905ecb74ec06016ae5e258f9948191bc3f1f45e4db20e1",
+        "text": "Completed all 300 items across all 100 surfaces. All saves verified; no exceptions remain.",
+        "phase": "final_answer",
+        "memoryCitation": null,
+        "delivery": null,
+        "questions": null,
+        "startedAtMs": 1793450585199,
+        "completedAtMs": 1793450585839
+       }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1793450440,
+      "completedAt": 1793450586,
+      "durationMs": 145355
+     },
+     "stop": null,
+     "usage": {
+      "totalTokens": 56589,
+      "inputTokens": 56194,
+      "cachedInputTokens": 41472,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 395,
+      "reasoningOutputTokens": 0
+     },
+     "elapsed_ms": 147965
+    }
+   ],
+   "tool_calls": 2,
+   "last_delivery_s": 59.7
+  }
+ ],
+ "summary": {
+  "P-V_parallel13": {
+   "elapsed_s": 312.321,
+   "tokens": 15173588,
+   "items": 896
+  },
+  "B-T": {
+   "elapsed_s": 312.111,
+   "tokens": 169530,
+   "items": 900
+  },
+  "time_ratio_geomean_bt_over_pv": 0.9576461454891239,
+  "token_ratio_geomean_bt_over_pv": 0.01120308382435526,
+  "exploratory_last_delivery_ratio_geomean": 0.9295731657881892,
+  "H1P_holds": false
+ }
+}

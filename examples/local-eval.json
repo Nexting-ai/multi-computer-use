@@ -1,0 +1,16 @@
+{
+  "binary": "/path/to/codex",
+  "auth_path": "/path/to/.codex/auth.json",
+  "output": ".local/eval-local",
+  "count": 12,
+  "blocks": 1,
+  "seed": 3010,
+  "arms": ["P-T", "B-T"],
+  "workload": { "kind": "sequence", "variant": "uniform" },
+  "agent": "astra",
+  "deadline_ms": 3600000,
+  "session_deadline_ms": 1200000,
+  "max_tokens": 4000000,
+  "max_calls": 600,
+  "workset_parallel": 2
+}

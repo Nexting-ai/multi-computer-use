@@ -1,0 +1,320 @@
+{
+ "note": "Broadcast-only replications on the same seeds and server type as the paired campaigns; compared with those campaigns' per-surface baselines, not newly paired.",
+ "uniform": {
+  "seed": 91102931,
+  "baseline": "zs-formal-1",
+  "versions": {
+   "v1": "zs-formal-1(+c2)",
+   "v5": "zu5-1",
+   "v7": "zu7-1"
+  }
+ },
+ "mixed": {
+  "seed": 91102971,
+  "baseline": "zf-formal-1 (per-surface with dismiss)",
+  "versions": {
+   "v1": "zm-formal-3",
+   "v2": "zf-formal-1",
+   "v3": "zv3-1",
+   "v6": "zv6-2"
+  }
+ },
+ "rows": {
+  "uniform-v1": [
+   {
+    "pair": 0,
+    "elapsed_ms": 78077,
+    "tokens": 175340,
+    "inferences": 5,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 1,
+    "elapsed_ms": 89111,
+    "tokens": 216043,
+    "inferences": 6,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 2,
+    "elapsed_ms": 86004,
+    "tokens": 216217,
+    "inferences": 6,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   }
+  ],
+  "uniform-v1-c2": [
+   {
+    "pair": 3,
+    "elapsed_ms": 70083,
+    "tokens": 174687,
+    "inferences": 5,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   }
+  ],
+  "uniform-v5": [
+   {
+    "pair": 0,
+    "elapsed_ms": 54674,
+    "tokens": 56728,
+    "inferences": 4,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 1,
+    "elapsed_ms": 48003,
+    "tokens": 42138,
+    "inferences": 3,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 2,
+    "elapsed_ms": 55536,
+    "tokens": 56712,
+    "inferences": 4,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 3,
+    "elapsed_ms": 90212,
+    "tokens": 42034,
+    "inferences": 3,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   }
+  ],
+  "uniform-v7": [
+   {
+    "pair": 0,
+    "elapsed_ms": 58141,
+    "tokens": 56869,
+    "inferences": 4,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 1,
+    "elapsed_ms": 54344,
+    "tokens": 42260,
+    "inferences": 3,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 2,
+    "elapsed_ms": 51647,
+    "tokens": 42258,
+    "inferences": 3,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 3,
+    "elapsed_ms": 55840,
+    "tokens": 56878,
+    "inferences": 4,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   }
+  ],
+  "mixed-v1": [
+   {
+    "pair": 0,
+    "elapsed_ms": 201118,
+    "tokens": 177042,
+    "inferences": 10,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 1,
+    "elapsed_ms": 285624,
+    "tokens": 132608,
+    "inferences": 8,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 2,
+    "elapsed_ms": 156538,
+    "tokens": 131866,
+    "inferences": 8,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 3,
+    "elapsed_ms": 158813,
+    "tokens": 137369,
+    "inferences": 8,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   }
+  ],
+  "mixed-v2": [
+   {
+    "pair": 0,
+    "elapsed_ms": 124833,
+    "tokens": 117703,
+    "inferences": 7,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 1,
+    "elapsed_ms": 132804,
+    "tokens": 132351,
+    "inferences": 8,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 2,
+    "elapsed_ms": 146459,
+    "tokens": 138172,
+    "inferences": 8,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 3,
+    "elapsed_ms": 138711,
+    "tokens": 116756,
+    "inferences": 7,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   }
+  ],
+  "mixed-v3": [
+   {
+    "pair": 0,
+    "elapsed_ms": 126490,
+    "tokens": 132611,
+    "inferences": 8,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 1,
+    "elapsed_ms": 113771,
+    "tokens": 117530,
+    "inferences": 7,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 2,
+    "elapsed_ms": 272471,
+    "tokens": 211260,
+    "inferences": 11,
+    "surfaces_correct": 98,
+    "items_correct": 298,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 3,
+    "elapsed_ms": 151853,
+    "tokens": 116688,
+    "inferences": 7,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   }
+  ],
+  "mixed-v6": [
+   {
+    "pair": 0,
+    "elapsed_ms": 91148,
+    "tokens": 65406,
+    "inferences": 4,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 1,
+    "elapsed_ms": 82196,
+    "tokens": 65279,
+    "inferences": 4,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 2,
+    "elapsed_ms": 93731,
+    "tokens": 88704,
+    "inferences": 5,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   },
+   {
+    "pair": 3,
+    "elapsed_ms": 90759,
+    "tokens": 67939,
+    "inferences": 4,
+    "surfaces_correct": 100,
+    "items_correct": 300,
+    "duplicates": 0,
+    "misrouted": 0
+   }
+  ]
+ }
+}

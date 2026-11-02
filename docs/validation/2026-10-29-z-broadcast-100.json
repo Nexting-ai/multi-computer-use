@@ -1,0 +1,269 @@
+{
+ "campaign": "z-broadcast uniform, 100 server desktops x 4 pairs",
+ "model": "gpt-6-astra medium",
+ "seed": 91102931,
+ "order": [
+  {
+   "pair": 0,
+   "seed": 183314266,
+   "order": [
+    "infra",
+    "baseline"
+   ],
+   "sessions": [
+    "755a70bce67d1d2b0d5f153e",
+    "76323b0d85ee31105c671990"
+   ]
+  },
+  {
+   "pair": 1,
+   "seed": 907250110,
+   "order": [
+    "baseline",
+    "infra"
+   ],
+   "sessions": [
+    "9db5bbcaeaf80e89d23c3177",
+    "1235872bae002743f6c42a08"
+   ]
+  },
+  {
+   "pair": 2,
+   "seed": 180406603,
+   "order": [
+    "infra",
+    "baseline"
+   ],
+   "sessions": [
+    "c4b702ff9df0061a1774f145",
+    "a1f9b2e5de2b9da63f292f24"
+   ]
+  },
+  {
+   "pair": 3,
+   "seed": 1271594510,
+   "order": [
+    "baseline",
+    "infra"
+   ],
+   "sessions": [
+    "1b18210d05c610826cd25cdb",
+    "ddda210a6795cae25d9bba0d"
+   ]
+  }
+ ],
+ "source_sha256": "1fb46db792f647a766459fee949d843e7dfb89dc14ae2dc67a4468926ed75f2d",
+ "frozen_commit": "9a2e821",
+ "image": "sha256:321266e583650869d7e18a8a44e6e57121980c209255860a2646ed33c9d0b580",
+ "continuation": {
+  "slot": {
+   "pair": 3,
+   "arm": "infra"
+  },
+  "cause": "transient doctl EOF before provisioning (zero input)",
+  "patch": "slots filter + read-only identity-check retry on frozen 9a2e821",
+  "invalid_attempt_excluded": "controller with post-campaign edge code vs frozen server worker; operator_method_unknown; stopped"
+ },
+ "rows": [
+  {
+   "arm": "baseline",
+   "pair": 0,
+   "elapsed_ms": 1672888,
+   "tokens": 5447216,
+   "uncached_input": 504800,
+   "inferences": 188,
+   "avg_input": 28746,
+   "sessions": 13,
+   "tool_calls": 178,
+   "surfaces_correct": 99,
+   "items_correct": 299,
+   "items_total": 300,
+   "commits": 300,
+   "duplicates": 0,
+   "wrong_surfaces": 1,
+   "misrouted": 0,
+   "broadcast": {
+    "delivered": 0,
+    "value_errors": 0,
+    "completed_by_broadcast": 0
+   },
+   "regrade_matches_runner": true,
+   "stop_reason": null
+  },
+  {
+   "arm": "infra",
+   "pair": 0,
+   "elapsed_ms": 78077,
+   "tokens": 175340,
+   "uncached_input": 54434,
+   "inferences": 5,
+   "avg_input": 34976,
+   "sessions": 1,
+   "tool_calls": 3,
+   "surfaces_correct": 100,
+   "items_correct": 300,
+   "items_total": 300,
+   "commits": 300,
+   "duplicates": 0,
+   "wrong_surfaces": 0,
+   "misrouted": 0,
+   "broadcast": {
+    "delivered": 300,
+    "value_errors": 0,
+    "completed_by_broadcast": 300
+   },
+   "regrade_matches_runner": true,
+   "stop_reason": null
+  },
+  {
+   "arm": "baseline",
+   "pair": 1,
+   "elapsed_ms": 1585659,
+   "tokens": 5540181,
+   "uncached_input": 486896,
+   "inferences": 187,
+   "avg_input": 29397,
+   "sessions": 13,
+   "tool_calls": 174,
+   "surfaces_correct": 99,
+   "items_correct": 299,
+   "items_total": 300,
+   "commits": 300,
+   "duplicates": 0,
+   "wrong_surfaces": 1,
+   "misrouted": 0,
+   "broadcast": {
+    "delivered": 0,
+    "value_errors": 0,
+    "completed_by_broadcast": 0
+   },
+   "regrade_matches_runner": true,
+   "stop_reason": null
+  },
+  {
+   "arm": "infra",
+   "pair": 1,
+   "elapsed_ms": 89111,
+   "tokens": 216043,
+   "uncached_input": 41858,
+   "inferences": 6,
+   "avg_input": 35926,
+   "sessions": 1,
+   "tool_calls": 3,
+   "surfaces_correct": 100,
+   "items_correct": 300,
+   "items_total": 300,
+   "commits": 300,
+   "duplicates": 0,
+   "wrong_surfaces": 0,
+   "misrouted": 0,
+   "broadcast": {
+    "delivered": 300,
+    "value_errors": 0,
+    "completed_by_broadcast": 300
+   },
+   "regrade_matches_runner": true,
+   "stop_reason": null
+  },
+  {
+   "arm": "baseline",
+   "pair": 2,
+   "elapsed_ms": 1375696,
+   "tokens": 5421170,
+   "uncached_input": 544156,
+   "inferences": 184,
+   "avg_input": 29232,
+   "sessions": 13,
+   "tool_calls": 171,
+   "surfaces_correct": 99,
+   "items_correct": 299,
+   "items_total": 300,
+   "commits": 300,
+   "duplicates": 0,
+   "wrong_surfaces": 1,
+   "misrouted": 0,
+   "broadcast": {
+    "delivered": 0,
+    "value_errors": 0,
+    "completed_by_broadcast": 0
+   },
+   "regrade_matches_runner": true,
+   "stop_reason": null
+  },
+  {
+   "arm": "infra",
+   "pair": 2,
+   "elapsed_ms": 86004,
+   "tokens": 216217,
+   "uncached_input": 41263,
+   "inferences": 6,
+   "avg_input": 35955,
+   "sessions": 1,
+   "tool_calls": 3,
+   "surfaces_correct": 100,
+   "items_correct": 300,
+   "items_total": 300,
+   "commits": 300,
+   "duplicates": 0,
+   "wrong_surfaces": 0,
+   "misrouted": 0,
+   "broadcast": {
+    "delivered": 300,
+    "value_errors": 0,
+    "completed_by_broadcast": 300
+   },
+   "regrade_matches_runner": true,
+   "stop_reason": null
+  },
+  {
+   "arm": "baseline",
+   "pair": 3,
+   "elapsed_ms": 1647500,
+   "tokens": 5477721,
+   "uncached_input": 527925,
+   "inferences": 187,
+   "avg_input": 29064,
+   "sessions": 13,
+   "tool_calls": 175,
+   "surfaces_correct": 99,
+   "items_correct": 299,
+   "items_total": 300,
+   "commits": 300,
+   "duplicates": 0,
+   "wrong_surfaces": 1,
+   "misrouted": 0,
+   "broadcast": {
+    "delivered": 0,
+    "value_errors": 0,
+    "completed_by_broadcast": 0
+   },
+   "regrade_matches_runner": true,
+   "stop_reason": null
+  },
+  {
+   "arm": "infra",
+   "pair": 3,
+   "elapsed_ms": 70083,
+   "tokens": 174687,
+   "uncached_input": 40978,
+   "inferences": 5,
+   "avg_input": 34845,
+   "sessions": 1,
+   "tool_calls": 3,
+   "surfaces_correct": 100,
+   "items_correct": 300,
+   "items_total": 300,
+   "commits": 300,
+   "duplicates": 0,
+   "wrong_surfaces": 0,
+   "misrouted": 0,
+   "broadcast": {
+    "delivered": 300,
+    "value_errors": 0,
+    "completed_by_broadcast": 300
+   },
+   "regrade_matches_runner": true,
+   "stop_reason": null
+  }
+ ]
+}

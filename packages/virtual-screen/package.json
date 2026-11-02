@@ -1,0 +1,20 @@
+{
+  "name": "@cu/virtual-screen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./task": "./src/task.ts",
+    "./step": "./src/step.ts",
+    "./managed": "./src/managed.ts",
+    "./workset": "./src/workset.ts",
+    "./stack": "./src/stack.ts",
+    "./align": "./src/align.ts",
+    "./script": "./src/script.ts"
+  },
+  "dependencies": {
+    "sharp": "0.35.5",
+    "zod": "4.6.7"
+  }
+}
