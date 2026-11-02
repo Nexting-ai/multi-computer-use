@@ -2,7 +2,8 @@
  * Preregistered evaluation runner (docs/validation/2026-10-30-preregistration.md).
  * Arms: P-V, P-T (per-surface, vision/text values), B-V, B-T (broadcast,
  * vision/text values), S (model-written script over text snapshots).
- * Workloads: sequence (uniform | mixed | k<N>) and held-out MiniWoB tasks.
+ * Workloads (lab/workloads): the synthetic business form (uniform | mixed |
+ * k<N>), held-out MiniWoB tasks, and desktop applications (Blender, KiCad).
  * Agents: Astra (Codex app-server) or Claude (claude -p over MCP).
  * Every block draws a fresh scene seed and a random arm order; every arm gets a
  * fresh fleet and fresh model sessions. Grading is independent of the runtime.
@@ -49,7 +50,9 @@ import {
 import { runAstra, type ToolResult, type Tool } from "../benchmark/astra.js";
 import { rng, type Usage } from "../benchmark/metrics.js";
 import { runClaude } from "../agents/claude.js";
-import { openBrowserLab } from "./browser.js";
+import { sequence, miniwob } from "../workloads/web.js";
+import { blender } from "../workloads/blender.js";
+import type { Workload } from "../workloads/types.js";
 
 const ARMS = ["P-V", "P-T", "B-V", "B-T", "S"] as const;
 type Arm = (typeof ARMS)[number];
@@ -67,6 +70,23 @@ const schema = z.strictObject({
       variant: z.string().default("uniform"),
     }),
     z.strictObject({ kind: z.literal("miniwob"), task: z.string() }),
+    z.strictObject({
+      kind: z.literal("blender"),
+      image: z.string(),
+      port: z.number().int().optional(),
+      /** Docker hosts; "local" or an SSH destination with its options. */
+      hosts: z
+        .array(
+          z.union([
+            z.literal("local"),
+            z.strictObject({
+              destination: z.string(),
+              options: z.array(z.string()),
+            }),
+          ]),
+        )
+        .min(1),
+    }),
   ]),
   agent: z.enum(["astra", "claude"]).default("astra"),
   claude_model: z.string().default("sonnet"),
@@ -83,34 +103,30 @@ const schema = z.strictObject({
   slots: z
     .array(z.strictObject({ block: z.number().int(), arm: z.enum(ARMS) }))
     .optional(),
-  remote: z
-    .object({
-      cloud_manifest: z.string(),
-      known_hosts: z.string(),
-      image: z.string(),
-      transport: z.literal("stream"),
-    })
-    .optional(),
 });
 const o = schema.parse(JSON.parse(await readFile(process.argv[2]!, "utf8")));
 o.output = resolve(o.output);
-if (o.count > 12 && !o.remote)
-  throw Error("hundred_requires_independent_server_desktops");
+if (o.count > 12 && o.workload.kind !== "blender")
+  throw Error("more_than_12_local_browser_surfaces");
 await mkdir(o.output, { recursive: false });
 
 const W = o.workload;
-const free = W.kind === "miniwob";
-const steps = W.kind === "sequence" ? 3 : 1;
-const mixed = W.kind === "sequence" && W.variant === "mixed";
-
-// ---------- task text (identical across arms) ----------
-const taskText =
+const workload: Workload =
   W.kind === "sequence"
-    ? "Each surface has THREE consecutive items. Read its CURRENT Copy code and Priority. Enter the exact code, choose Urgent for HIGH otherwise Standard, then Save item exactly once. Save advances to the next item and clears controls. Never infer unseen values. No DOM, shell, external network, task data files or grader access. Unknown or delivered inputs must not be repeated." +
-      (mixed
-        ? " A surface may show a blocking notice; dismiss it first. Dismissing is not an item (per-surface tools: a desktop_act target with dismiss:true and no expectation; fleet tools: a prepare policy)."
-        : "")
-    : "Each surface shows one small web task (a MiniWoB++ episode) with its instruction at the top. Complete each surface's instruction exactly as written. When an episode ends a START cover appears: never click START. Declare a surface done only after you have completed its instruction. No DOM, shell, external network, task data files or grader access. Unknown or delivered inputs must not be repeated.";
+    ? sequence(W.variant)
+    : W.kind === "miniwob"
+      ? miniwob(W.task)
+      : blender({
+          image: W.image,
+          ...(W.port ? { port: W.port } : {}),
+          hosts: W.hosts.map((h) =>
+            h === "local"
+              ? { kind: "local" as const }
+              : { kind: "ssh" as const, ...h },
+          ),
+        });
+const free = workload.declared;
+const steps = workload.items;
 
 // ---------- tool schemas ----------
 const observeSchema = z.strictObject({
@@ -232,14 +248,14 @@ const scriptTools: Tool[] = [
 ];
 const forward =
   'In code mode, forward every result line: for (const line of r.split("\\n")) { if (line.startsWith("data:image/")) image(line); else text(line); }.';
-const fleetPrompt = (n: number, ids: string[], vision: boolean) =>
-  `${taskText}\nYou operate a fleet of ${n} surfaces (${ids[0]}…${ids.at(-1)}, Z=1..${n}). Do not operate surfaces one by one. Observe one exemplar with fleet_observe, then express the procedure once as a fleet_run policy using that exemplar's pixels; the host canaries it on one surface before broadcasting. ` +
+const fleetPrompt = (task: string, n: number, ids: string[], vision: boolean) =>
+  `${task}\nYou operate a fleet of ${n} surfaces (${ids[0]}…${ids.at(-1)}, Z=1..${n}). Do not operate surfaces one by one. Observe one exemplar with fleet_observe, then express the procedure once as a fleet_run policy using that exemplar's pixels; the host canaries it on one surface before broadcasting. ` +
   (vision
     ? "There is no text channel: use fleet_crops to read each round's values from contact sheets, pass them as fleet_run values with crops_id, then after the round read receipts with fleet_crops and confirm them with fleet_confirm. "
     : "If exceptions are returned, inspect each exception group's screenshot: a different layout gets its own policy restricted to that group's surfaces; an interruption gets a prepare policy, after which the original policy is run again on those surfaces. Handle all groups in ONE code cell: independent policies for different groups run concurrently (Promise.all), and for an interruption group chain the prepare policy then the item policy with await. ") +
   `Surfaces you leave unfinished are handed to per-surface operators afterwards (more expensive). ${forward} End when the fleet is complete or nothing more can be done by policy. Starting progress: `;
-const scriptPrompt = (n: number, ids: string[]) =>
-  `${taskText}\nYou operate a fleet of ${n} surfaces (${ids[0]}…${ids.at(-1)}). You have accessibility snapshots (text and control positions), not screenshots. Write code in a single code cell where possible that loops over all surfaces: read snapshots, decide each surface's actions from its own snapshot, act, re-read, ` +
+const scriptPrompt = (task: string, n: number, ids: string[]) =>
+  `${task}\nYou operate a fleet of ${n} surfaces (${ids[0]}…${ids.at(-1)}). You have accessibility snapshots (text and control positions), not screenshots. Write code in a single code cell where possible that loops over all surfaces: read snapshots, decide each surface's actions from its own snapshot, act, re-read, ` +
   (free
     ? "and declare done surfaces. "
     : "and confirm each item from a fresh snapshot. ") +
@@ -304,7 +320,7 @@ await writeFile(
         .digest("hex"),
       source,
       blocks,
-      task: taskText,
+      task: workload.summary,
       tools: {
         "P-V": perSurfaceTools(false),
         "P-T": perSurfaceTools(true),
@@ -340,16 +356,8 @@ for (const blk of blocks)
       }),
     );
     const env = join(directory, "environment");
-    // The 100-desktop server fleet tooling is not part of this repository;
-    // local runs drive up to 12 Chrome surfaces on this machine.
-    if (o.remote) throw Error("server_fleet_not_included");
-    const lab = await openBrowserLab(env, o.count, blk.seed, {
-      sequence: W.kind === "sequence",
-      ...(W.kind === "sequence" && W.variant !== "uniform"
-        ? { mix: W.variant }
-        : {}),
-      ...(W.kind === "miniwob" ? { miniwob: W.task } : {}),
-    });
+    const lab = await workload.open(env, o.count, blk.seed);
+    await writeFile(join(directory, "task.txt"), lab.task);
     const ledger = await ProgressLedger.open(
       join(directory, "ledger"),
       lab.surfaces,
@@ -575,9 +583,11 @@ for (const blk of blocks)
           const agent = await session(
             `sessions/${index}`,
             perSurfaceTools(text),
-            taskText +
+            lab.task +
               (free
-                ? " Declare each finished surface with desktop_done."
+                ? steps > 1
+                  ? ` Declare each finished item with desktop_done, once per item (${steps} items per surface).`
+                  : " Declare each finished surface with desktop_done."
                 : " For intermediate items include checks in the next desktop_act; for the third item call desktop_verify. Use the literal observed receipt text/choice.") +
               " Coordinates are LOCAL to each selected Z panel. Use post-action images directly; only re-observe missing/pending targets.\nThis session owns ONLY " +
               ids.join(", ") +
@@ -626,6 +636,8 @@ for (const blk of blocks)
         const vision = arm === "B-V";
         const stack = new StackScreen(lab.port, ledger, lab.surfaces, {
           concurrency: o.stack_concurrency,
+          ...(lab.inputs ? { inputs: lab.inputs } : {}),
+          ...(workload.settle_ms ? { settle_ms: workload.settle_ms } : {}),
           values: vision ? "vision" : "text",
           evidence: {
             source: saveSource,
@@ -635,7 +647,7 @@ for (const blk of blocks)
         await session(
           "sessions/fleet",
           fleetTools(vision),
-          fleetPrompt(lab.surfaces.length, lab.surfaces, vision) +
+          fleetPrompt(lab.task, lab.surfaces.length, lab.surfaces, vision) +
             JSON.stringify(ledger.summary()),
           async (name, args) => {
             if (name === "fleet_observe") {
@@ -670,7 +682,7 @@ for (const blk of blocks)
         await session(
           "sessions/script",
           scriptTools,
-          scriptPrompt(lab.surfaces.length, lab.surfaces) +
+          scriptPrompt(lab.task, lab.surfaces.length, lab.surfaces) +
             JSON.stringify(ledger.summary()),
           async (name, args) => {
             if (name === "surface_read")
@@ -717,6 +729,7 @@ for (const blk of blocks)
           }),
         );
         const scores = await lab.grade();
+        await lab.collect?.(join(directory, "artifacts"));
         const row = {
           block: blk.block,
           arm,

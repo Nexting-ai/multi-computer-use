@@ -294,6 +294,52 @@ test("one decision completes every matching surface with machine-read values", a
   }
 });
 
+test("task-table inputs: each surface types its own row; the screen is not read for them", async () => {
+  const apps = { A1: app(1), A2: app(2), A3: app(3) };
+  const s = await setup(apps, 1);
+  // The host's spec sheet: the code to enter on each surface (A3 has no row).
+  const inputs = {
+    A1: { given: apps.A1.cases[0]!.code },
+    A2: { given: apps.A2.cases[0]!.code },
+  };
+  const stack = new StackScreen(s.port, s.ledger, Object.keys(apps), {
+    settle_ms: 300,
+    inputs,
+  });
+  try {
+    const view = (await stack.observe(["A1"])).views[0]!.view_id;
+    const p = policy(apps.A1, view, { inputs: ["given"] });
+    p.steps[1] = { kind: "type_field", field: "given" } as never;
+    p.verify = { field: "receipt", contains: ["{given}", "{choice}"] };
+    const r = await stack.run(p);
+    expect(r.counts).toEqual({ verified: 2, "exception:no_input_value": 1 });
+    expect(apps.A1.saved[0]!.text).toBe(apps.A1.cases[0]!.code);
+    expect(apps.A2.saved[0]!.text).toBe(apps.A2.cases[0]!.code);
+    expect(apps.A3.saved).toEqual([]);
+    await expect(
+      stack.run(policy(apps.A1, view, { inputs: ["nope"] })),
+    ).rejects.toThrow("unknown_input");
+    await expect(
+      stack.run(policy(apps.A1, view, { inputs: ["code"] })),
+    ).rejects.toThrow("input_shadows_field");
+  } finally {
+    await s.clean();
+  }
+});
+
+test("items caps a policy at that many items per surface, canary included", async () => {
+  const apps = { A1: app(1), A2: app(2), A3: app(3) };
+  const s = await setup(apps); // two items per surface
+  try {
+    const r = await s.stack.run(policy(apps.A1, s.view.view_id, { items: 1 }));
+    expect(r.counts).toEqual({ verified: 3 });
+    expect(Object.values(apps).map((a) => a.saved.length)).toEqual([1, 1, 1]);
+    expect(s.ledger.summary().completed_steps).toBe(3);
+  } finally {
+    await s.clean();
+  }
+});
+
 test("a failed canary leaves every other surface untouched", async () => {
   const apps = { A1: app(1), A2: app(2), A3: app(3) };
   const s = await setup(apps);
