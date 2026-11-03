@@ -13,6 +13,7 @@ import {
   type Delivery,
 } from "./index.js";
 import sharp from "sharp";
+import { tileSheet } from "./sheet.js";
 import {
   acceptable,
   register,
@@ -38,6 +39,12 @@ const field = z.string().regex(/^[a-z][a-z0-9_]{0,31}$/);
 const step = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("click"), x: coordinate, y: coordinate }),
   z.strictObject({ kind: z.literal("type_field"), field }),
+  /** Literal text with {placeholders} filled per surface from fields and
+   * inputs (e.g. one parametric script, each surface with its own row). */
+  z.strictObject({
+    kind: z.literal("type"),
+    text: z.string().min(1).max(20000),
+  }),
   z.strictObject({
     kind: z.literal("choose"),
     field,
@@ -185,6 +192,9 @@ const inside = (r: Rect, outer: Rect) =>
   r.y + r.height <= outer.y + outer.height;
 const point = (x: number, y: number, outer: Rect) =>
   inside({ x, y, width: 1, height: 1 }, outer);
+/** Placeholder names in a literal text step. */
+const placeholders = (t: string) =>
+  [...t.matchAll(/\{([a-z][a-z0-9_]{0,31})\}/g)].map((m) => m[1]!);
 /** Fields whose reading becomes input or a choice. */
 const valueFields = (p: Policy) =>
   new Set(
@@ -193,7 +203,9 @@ const valueFields = (p: Policy) =>
         ? [s.field]
         : s.kind === "click_text" && s.field
           ? [s.field]
-          : [],
+          : s.kind === "type"
+            ? placeholders(s.text)
+            : [],
     ),
   );
 /** The smallest element containing a point. */
@@ -394,6 +406,55 @@ export class StackScreen {
       png: frame.png,
     };
   }
+  /**
+   * Review a fleet in one image: every listed surface (default all), cropped
+   * to `region` when given, tiled with its id. Read-only; not an exemplar
+   * (planning uses observe).
+   */
+  async overview(
+    ids: string[] = this.surfaces,
+    region?: Rect,
+    tile = { width: 480, height: 300 },
+  ) {
+    if (!ids.length || ids.length > 100)
+      throw Error("invalid_overview_targets");
+    for (const id of ids) this.z(id);
+    const shots = await Promise.all(
+      ids.map(async (id) => {
+        try {
+          const f = await bounded(
+            this.port.capture(id),
+            30000,
+            "capture_timeout",
+          );
+          const png = region
+            ? await sharp(f.png)
+                .extract({
+                  left: region.x,
+                  top: region.y,
+                  width: Math.min(region.width, f.width - region.x),
+                  height: Math.min(region.height, f.height - region.y),
+                })
+                .png()
+                .toBuffer()
+            : f.png;
+          return { label: `${id} (Z${this.z(id)})`, png };
+        } catch (e) {
+          const png = await sharp({
+            create: { width: 16, height: 10, channels: 3, background: "#400" },
+          })
+            .png()
+            .toBuffer();
+          return { label: `${id}: ${String(e).slice(0, 40)}`, png };
+        }
+      }),
+    );
+    return {
+      png: await tileSheet(shots, tile),
+      surfaces: ids,
+      fleet: this.ledger.summary(),
+    };
+  }
   async observe(ids: string[]) {
     if (!ids.length || ids.length > 4 || new Set(ids).size !== ids.length)
       throw Error("invalid_observation_targets");
@@ -456,6 +517,9 @@ export class StackScreen {
         throw Error("unknown_field:" + s.field);
       if (s.kind === "click_text" && s.field && !usable.has(s.field))
         throw Error("unknown_field:" + s.field);
+      if (s.kind === "type")
+        for (const name of placeholders(s.text))
+          if (!usable.has(name)) throw Error("unknown_placeholder:" + name);
       if (s.kind === "choose") {
         choose++;
         if (new Set(s.cases.map((c) => c.equals)).size !== s.cases.length)
@@ -490,7 +554,12 @@ export class StackScreen {
     } = p;
     if (
       p.mode === "prepare" &&
-      (p.inputs?.length || p.steps.some((s) => s.kind === "type_field"))
+      (p.inputs?.length ||
+        p.steps.some(
+          (s) =>
+            s.kind === "type_field" ||
+            (s.kind === "type" && placeholders(s.text).length),
+        ))
     )
       throw Error("prepare_cannot_type_task_values");
     const id = createHash("sha256")
@@ -730,6 +799,12 @@ export class StackScreen {
         if (!v) throw new Exception("field_empty", s.field, frame);
         actions.push({ kind: "type_text", text: v });
         typed.push(v);
+      } else if (s.kind === "type") {
+        for (const name of placeholders(s.text))
+          if (!values[name]) throw new Exception("field_empty", name, frame);
+        const text = fill(s.text, values);
+        actions.push({ kind: "type_text", text });
+        typed.push(text);
       } else if (s.kind === "choose") {
         const v = values[s.field]!,
           k =

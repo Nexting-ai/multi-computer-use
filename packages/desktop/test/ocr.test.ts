@@ -27,6 +27,9 @@ test("key chords map to xdotool keysyms", () => {
   expect(xdotool({ kind: "key_chord", keys: ["Ctrl", "s"] })).toEqual([
     ["key", "--clearmodifiers", "ctrl+s"],
   ]);
+  expect(xdotool({ kind: "key_chord", keys: ["F12"] })).toEqual([
+    ["key", "--clearmodifiers", "F12"],
+  ]);
   expect(xdotool({ kind: "click", x: 3, y: 4 })).toEqual([
     ["mousemove", "--sync", "3", "4"],
     ["click", "1"],

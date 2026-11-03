@@ -9,6 +9,11 @@ const KEYSYM: Record<string, string> = {
   Escape: "Escape",
   Tab: "Tab",
   Backspace: "BackSpace",
+  Delete: "Delete",
+  Home: "Home",
+  End: "End",
+  PageUp: "Prior",
+  PageDown: "Next",
   Space: "space",
   ArrowUp: "Up",
   ArrowDown: "Down",
@@ -28,6 +33,9 @@ export function xdotool(a: Action): string[][] {
       ["click", "1"],
     ];
   if (a.kind === "type_text") return [["type", "--delay", "15", "--", a.text]];
-  const combo = a.keys.map((k) => KEYSYM[k] ?? k.toLowerCase()).join("+");
+  // Function keys keep their case (F12); letters are lower-case keysyms.
+  const combo = a.keys
+    .map((k) => KEYSYM[k] ?? (/^F\d+$/.test(k) ? k : k.toLowerCase()))
+    .join("+");
   return [["key", "--clearmodifiers", combo]];
 }

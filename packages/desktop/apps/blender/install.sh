@@ -1,2 +1,2 @@
 set -e
-apt-get update && apt-get install -y --no-install-recommends blender && rm -rf /var/lib/apt/lists/*
+apt-get update && apt-get install -y --no-install-recommends blender ffmpeg && rm -rf /var/lib/apt/lists/*

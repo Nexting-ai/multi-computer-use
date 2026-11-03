@@ -12,6 +12,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { join } from "node:path";
 import sharp from "sharp";
+import { host } from "./host.js";
 
 const run = promisify(execFile);
 const [app, dir, hostsPath] = process.argv.slice(2) as [string, string, string];
@@ -59,39 +60,16 @@ await grid(
 );
 
 // Render on the first host: upload the saved work, run the app headless.
-const host = JSON.parse(await readFile(hostsPath!, "utf8"))[0];
-/** SSH through a flaky proxy: retry only when the connection never opened. */
-async function retry<T>(f: () => Promise<T>): Promise<T> {
-  for (let attempt = 1; ; attempt++)
-    try {
-      return await f();
-    } catch (e: any) {
-      if (
-        attempt >= 5 ||
-        !/Connection (closed|reset)|kex_exchange/.test(String(e.stderr))
-      )
-        throw e;
-      await new Promise((r) => setTimeout(r, 2000 * attempt));
-    }
-}
-const ssh = (cmd: string) =>
-  retry(() =>
-    run("ssh", [...host.options, host.destination, cmd], {
-      maxBuffer: 1 << 28,
-    }),
-  );
-const scp = (from: string, to: string) =>
-  retry(() =>
-    run("scp", ["-q", ...host.options, from, to], { maxBuffer: 1 << 28 }),
-  );
+const h = host(JSON.parse(await readFile(hostsPath!, "utf8"))[0]);
+const ssh = h.sh;
 const remote = `/root/present-${app}`;
 await ssh(`rm -rf ${remote} && mkdir -p ${remote}/in ${remote}/out`);
 for (const f of ids) {
   const id = f.replace(".png", "");
   await ssh(`mkdir -p ${remote}/in/${id}`);
-  await scp(
+  await h.put(
     join(dir, "artifacts", id, "work.tar"),
-    `${host.destination}:${remote}/in/${id}/work.tar`,
+    `${remote}/in/${id}/work.tar`,
   );
   await ssh(`tar -xf ${remote}/in/${id}/work.tar -C ${remote}/in/${id}`);
 }
@@ -100,16 +78,13 @@ if (app === "blender") {
   await ssh(
     `docker run --rm -v ${remote}:/p --entrypoint blender mcu-blender -b --factory-startup --python /opt/app/city.py -- /p/in /p/out/city.png >/dev/null 2>&1; ls ${remote}/out`,
   );
-  await scp(
-    `${host.destination}:${remote}/out/city.png`,
-    join(dir, "city.png"),
-  );
+  await h.get(`${remote}/out/city.png`, join(dir, "city.png"));
 } else {
   await ssh(
     `docker run --rm -v ${remote}:/p --entrypoint bash mcu-kicad -c 'Xvfb :9 >/dev/null 2>&1 & sleep 1; for d in /p/in/*/; do id=$(basename $d); DISPLAY=:9 kicad-cli pcb render --side top --quality high --background opaque -w 900 -h 500 -o /p/out/$id.png $d/badge.kicad_pcb >/dev/null 2>&1; done'`,
   );
   for (const f of ids)
-    await scp(`${host.destination}:${remote}/out/${f}`, join(dir, "render", f));
+    await h.get(`${remote}/out/${f}`, join(dir, "render", f));
   await grid(
     ids.map((f) => join(dir, "render", f)),
     450,

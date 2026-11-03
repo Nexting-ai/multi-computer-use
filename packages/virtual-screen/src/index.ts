@@ -154,7 +154,7 @@ const rect = z.strictObject({
 });
 export const actionSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("click"), x: coordinate, y: coordinate }),
-  z.strictObject({ kind: z.literal("type_text"), text: z.string().max(4096) }),
+  z.strictObject({ kind: z.literal("type_text"), text: z.string().max(20000) }),
   z.strictObject({
     kind: z.literal("key_chord"),
     keys: z
@@ -162,7 +162,7 @@ export const actionSchema = z.discriminatedUnion("kind", [
         z
           .string()
           .regex(
-            /^(Ctrl|Alt|Shift|Meta|Enter|Escape|Tab|Backspace|Space|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|[a-zA-Z0-9])$/,
+            /^(Ctrl|Alt|Shift|Meta|Enter|Escape|Tab|Backspace|Delete|Space|Home|End|PageUp|PageDown|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|F[1-9]|F1[0-2]|[a-zA-Z0-9])$/,
           ),
       )
       .min(1)

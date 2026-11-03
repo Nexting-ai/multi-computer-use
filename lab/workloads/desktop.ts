@@ -24,6 +24,8 @@ export type DesktopOptions = {
   hosts: DockerHost[];
   image: string;
   port?: number;
+  /** Environment for every desktop (e.g. SCENE for the starting file). */
+  env?: Record<string, string>;
   /** Resources of one desktop. */
   cpus?: number;
   memory?: string;
@@ -53,6 +55,7 @@ export function desktopWorkload<Row extends Record<string, string>>(
         port: o.port ?? 17000,
         cpus: o.cpus ?? 2,
         memory: o.memory ?? "4g",
+        ...(o.env ? { env: o.env } : {}),
       });
       const columns = Object.keys(rows.values().next().value ?? {});
       const table = [...rows]

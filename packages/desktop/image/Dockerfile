@@ -3,7 +3,7 @@
 FROM node:24-bookworm-slim
 ARG APP
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      xvfb x11-utils xdotool imagemagick openbox python3-venv libglib2.0-0 libgl1 \
+      xvfb x11-utils xdotool xclip imagemagick openbox python3-venv libglib2.0-0 libgl1 \
       libgl1-mesa-dri fonts-dejavu-core ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 # OCR: PP-OCR models on ONNX Runtime (CPU).

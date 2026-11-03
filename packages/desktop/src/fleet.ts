@@ -19,6 +19,8 @@ export type FleetOptions = {
   name: string;
   /** First host port; desktop i listens on 127.0.0.1:(port + i). */
   port?: number;
+  /** Environment for every desktop (e.g. which starting scene to open). */
+  env?: Record<string, string>;
   /** Per-desktop resource limits. */
   cpus?: number;
   memory?: string;
@@ -77,6 +79,10 @@ export class DesktopFleet {
               ]
             : []),
           ...(o.memory ? ["--memory", o.memory] : []),
+          ...Object.entries(o.env ?? {}).flatMap(([k, v]) => [
+            "-e",
+            `${k}=${v}`,
+          ]),
           o.image,
         ]);
         placement.set(id, { host, container });

@@ -160,8 +160,35 @@ async function quiet() {
     last = now;
   }
 }
+/** Long or multi-line text is pasted, as a person would paste a script:
+ * typing it key by key is slow and editors re-indent typed newlines. */
+const PASTE_FROM = 120;
+async function paste(text: string) {
+  await new Promise<void>((resolve, reject) => {
+    // xclip keeps a child serving the selection: wait for the parent's exit,
+    // not for its output streams.
+    const p = spawn("xclip", ["-selection", "clipboard"], {
+      env,
+      stdio: ["pipe", "ignore", "ignore"],
+    });
+    p.on("error", reject);
+    p.on("exit", (code) =>
+      code === 0 ? resolve() : reject(Error("clipboard_failed")),
+    );
+    p.stdin.end(text);
+  });
+  await run("xdotool", ["key", "--clearmodifiers", "ctrl+v"], { env });
+}
 async function inject(actions: Action[]) {
   for (const a of actions) {
+    if (
+      a.kind === "type_text" &&
+      (a.text.includes("\n") || a.text.length >= PASTE_FROM)
+    ) {
+      await paste(a.text);
+      await quiet();
+      continue;
+    }
     // A click hovers first and waits for the hover to be drawn.
     for (const [i, args] of xdotool(a).entries()) {
       if (i) await quiet();

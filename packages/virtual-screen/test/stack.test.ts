@@ -340,6 +340,38 @@ test("items caps a policy at that many items per surface, canary included", asyn
   }
 });
 
+test("type fills placeholders per surface; overview tiles the fleet in one image", async () => {
+  const apps = { A1: app(1), A2: app(2) };
+  const s = await setup(apps, 1);
+  const stack = new StackScreen(s.port, s.ledger, Object.keys(apps), {
+    settle_ms: 300,
+    inputs: {
+      A1: { given: apps.A1.cases[0]!.code },
+      A2: { given: apps.A2.cases[0]!.code },
+    },
+  });
+  try {
+    const view = (await stack.observe(["A1"])).views[0]!.view_id;
+    const p = policy(apps.A1, view, { inputs: ["given"] });
+    p.steps[1] = { kind: "type", text: "{given}" } as never;
+    p.verify = { field: "receipt", contains: ["{given}", "{choice}"] };
+    expect((await stack.run(p)).counts).toEqual({ verified: 2 });
+    expect(apps.A2.saved[0]!.text).toBe(apps.A2.cases[0]!.code);
+    await expect(
+      stack.run({
+        ...policy(apps.A1, view),
+        steps: [{ kind: "type", text: "{nope}" }],
+      } as never),
+    ).rejects.toThrow("unknown_placeholder");
+    const o = await stack.overview();
+    const meta = await sharp(o.png).metadata();
+    expect(o.surfaces).toEqual(["A1", "A2"]);
+    expect(meta.width).toBeGreaterThan(900);
+  } finally {
+    await s.clean();
+  }
+});
+
 test("a failed canary leaves every other surface untouched", async () => {
   const apps = { A1: app(1), A2: app(2), A3: app(3) };
   const s = await setup(apps);

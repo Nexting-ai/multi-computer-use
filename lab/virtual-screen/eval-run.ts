@@ -20,6 +20,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { z } from "zod";
+import sharp from "sharp";
 import {
   ManagedScreen,
   managedActionSchema,
@@ -53,9 +54,10 @@ import { runClaude } from "../agents/claude.js";
 import { sequence, miniwob } from "../workloads/web.js";
 import { blender } from "../workloads/blender.js";
 import { kicad } from "../workloads/kicad.js";
+import { studio } from "../workloads/studio.js";
 import type { Workload } from "../workloads/types.js";
 
-const ARMS = ["P-V", "P-T", "B-V", "B-T", "S"] as const;
+const ARMS = ["P-V", "P-T", "B-V", "B-T", "S", "F"] as const;
 type Arm = (typeof ARMS)[number];
 const schema = z.strictObject({
   binary: z.string(),
@@ -72,7 +74,7 @@ const schema = z.strictObject({
     }),
     z.strictObject({ kind: z.literal("miniwob"), task: z.string() }),
     z.strictObject({
-      kind: z.enum(["blender", "kicad"]),
+      kind: z.enum(["blender", "kicad", "studio", "city"]),
       image: z.string(),
       port: z.number().int().optional(),
       /** Docker hosts; "local" or an SSH destination with its options. */
@@ -112,20 +114,27 @@ if (o.count > 12 && ["sequence", "miniwob"].includes(o.workload.kind))
 await mkdir(o.output, { recursive: false });
 
 const W = o.workload;
+const desktopOptions = (w: {
+  image: string;
+  port?: number | undefined;
+  hosts: unknown[];
+}) => ({
+  image: w.image,
+  ...(w.port ? { port: w.port } : {}),
+  hosts: (w.hosts as any[]).map((h) =>
+    h === "local" ? { kind: "local" as const } : { kind: "ssh" as const, ...h },
+  ),
+});
 const workload: Workload =
   W.kind === "sequence"
     ? sequence(W.variant)
     : W.kind === "miniwob"
       ? miniwob(W.task)
-      : (W.kind === "blender" ? blender : kicad)({
-          image: W.image,
-          ...(W.port ? { port: W.port } : {}),
-          hosts: W.hosts.map((h) =>
-            h === "local"
-              ? { kind: "local" as const }
-              : { kind: "ssh" as const, ...h },
-          ),
-        });
+      : W.kind === "blender"
+        ? blender(desktopOptions(W))
+        : W.kind === "kicad"
+          ? kicad(desktopOptions(W))
+          : studio(W.kind, desktopOptions(W));
 const free = workload.declared;
 const steps = workload.items;
 
@@ -222,6 +231,28 @@ const fleetTools = (vision: boolean): Tool[] => [
       ]
     : []),
 ];
+const overviewSchema = z.strictObject({
+  surfaces: z.array(z.string()).min(1).max(100).optional(),
+  region: z
+    .strictObject({
+      x: z.number().int().min(0),
+      y: z.number().int().min(0),
+      width: z.number().int().min(8),
+      height: z.number().int().min(8),
+    })
+    .optional(),
+});
+const directorTools: Tool[] = [
+  ...fleetTools(false),
+  t(
+    "fleet_overview",
+    "One image of many surfaces at once: each surface's current screen (or the same `region` of every screen, in screen pixels) as a labelled tile. Use it to review the whole fleet in one look, e.g. after rendering previews everywhere. Read-only; for exemplars and planning use fleet_observe.",
+    overviewSchema,
+  ),
+  ...perSurfaceTools(false),
+];
+const directorPrompt = (task: string, ids: string[]) =>
+  `${task}\nYou direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}) and decide how work is split. Work that is the same everywhere (shared helper code, materials, settings, rendering a preview, saving) is one fleet_run policy for all desktops: a \`type\` step pastes literal text with {placeholders} filled from each desktop's task-table inputs, so one script serves every desktop. Work that differs per desktop uses desktop_observe/desktop_act on that desktop alone. Review progress across the fleet with fleet_overview instead of observing desktops one by one. Declare each desktop's item with desktop_done when its result is finished and saved. ${forward} Starting progress: `;
 const scriptTools: Tool[] = [
   t(
     "surface_read",
@@ -329,6 +360,7 @@ await writeFile(
         "B-V": fleetTools(true),
         "B-T": fleetTools(false),
         S: scriptTools,
+        F: directorTools,
       },
     },
     null,
@@ -560,6 +592,46 @@ for (const blk of blocks)
         }
       return views;
     };
+    /** Per-surface tools over `ids` (null when the tool is not one of them). */
+    const desk = (
+      runtime: ManagedScreen,
+      ids: string[],
+      text: boolean,
+      name: string,
+      args: unknown,
+    ): Promise<{ views: any[]; rest: unknown }> | null => {
+      if (
+        ![
+          "desktop_observe",
+          "desktop_act",
+          "desktop_verify",
+          "desktop_done",
+        ].includes(name)
+      )
+        return null;
+      return (async () => {
+        let value: any;
+        if (name === "desktop_observe") {
+          const q = observeSchema.parse(args);
+          value = await runtime.observe(
+            q.surfaces.map((x) => x.surface_id),
+            q.full,
+          );
+        } else if (name === "desktop_act") value = await runtime.act(args);
+        else if (!free && name === "desktop_verify")
+          value = { progress: await runtime.confirm(args), views: [] };
+        else if (free && name === "desktop_done") {
+          for (const id of doneSchema.parse(args).surfaces) {
+            if (!ids.includes(id)) throw Error("target_outside_workset");
+            if (ledger.get(id).state === "ready") await ledger.declare(id);
+          }
+          value = { progress: runtime.status(), views: [] };
+        } else throw Error("unknown_tool");
+        const views = await withText(value, text);
+        const { views: _v, ...rest } = value;
+        return { views, rest };
+      })();
+    };
     const perSurface = async (text: boolean) =>
       runWorksets(
         ledger,
@@ -595,29 +667,10 @@ for (const blk of blocks)
               ids.join(", ") +
               `. Complete actionable items in this workset. Skip deferred, blocked or unknown targets. End when workset.can_end is true. ${forward} Starting durable progress: ` +
               JSON.stringify(runtime.status()),
-            async (name, args) => {
-              let value: any;
-              if (name === "desktop_observe") {
-                const q = observeSchema.parse(args);
-                value = await runtime.observe(
-                  q.surfaces.map((x) => x.surface_id),
-                  q.full,
-                );
-              } else if (name === "desktop_act")
-                value = await runtime.act(args);
-              else if (!free && name === "desktop_verify")
-                value = { progress: await runtime.confirm(args), views: [] };
-              else if (free && name === "desktop_done") {
-                for (const id of doneSchema.parse(args).surfaces) {
-                  if (!ids.includes(id)) throw Error("target_outside_workset");
-                  if (ledger.get(id).state === "ready")
-                    await ledger.declare(id);
-                }
-                value = { progress: runtime.status(), views: [] };
-              } else throw Error("unknown_tool");
-              const views = await withText(value, text);
-              const { views: _v, ...rest } = value;
-              return { views, rest };
+            (name, args) => {
+              const handled = desk(runtime, ids, text, name, args);
+              if (!handled) throw Error("unknown_tool");
+              return handled;
             },
           );
           await context.run(-index - 1, () => runtime.drain());
@@ -675,6 +728,75 @@ for (const blk of blocks)
             throw Error("unknown_tool");
           },
         );
+      } else if (arm === "F") {
+        // The director: fleet policies for shared work, per-surface tools for
+        // what differs, and one-image reviews of the whole fleet.
+        const stack = new StackScreen(lab.port, ledger, lab.surfaces, {
+          concurrency: o.stack_concurrency,
+          ...(lab.inputs ? { inputs: lab.inputs } : {}),
+          ...(workload.settle_ms ? { settle_ms: workload.settle_ms } : {}),
+          evidence: {
+            source: saveSource,
+            delivery: delivery("stack-deliveries.jsonl"),
+          },
+        });
+        const runtime = new ManagedScreen(
+          lab.port,
+          ledger,
+          lab.surfaces,
+          lab.surfaces,
+          false,
+          {
+            source: (f) => saveSource(f, "director"),
+            delivery: (request, receipt) =>
+              delivery("deliveries.jsonl")({
+                director: true,
+                request,
+                receipt,
+                at: new Date().toISOString(),
+              }),
+            contract: free ? "free" : "item",
+          },
+        );
+        await session(
+          "sessions/director",
+          directorTools,
+          directorPrompt(lab.task, lab.surfaces) +
+            JSON.stringify(ledger.summary()),
+          async (name, args) => {
+            if (name === "fleet_observe") {
+              const q = await stack.observe(fleetObserve.parse(args).surfaces);
+              return {
+                views: q.views,
+                rest: { errors: q.errors, fleet: q.fleet },
+              };
+            }
+            if (name === "fleet_run") {
+              const { views, ...rest } = await stack.run(args);
+              return { views, rest };
+            }
+            if (name === "fleet_overview") {
+              const q = overviewSchema.parse(args);
+              const ov = await stack.overview(q.surfaces, q.region);
+              const meta = await sharp(ov.png).metadata();
+              return {
+                views: [
+                  {
+                    png: ov.png,
+                    width: meta.width,
+                    height: meta.height,
+                    overview: ov.surfaces,
+                  },
+                ],
+                rest: { fleet: ov.fleet },
+              };
+            }
+            const handled = desk(runtime, lab.surfaces, false, name, args);
+            if (!handled) throw Error("unknown_tool");
+            return handled;
+          },
+        );
+        await context.run(-1, () => runtime.drain());
       } else if (arm === "S") {
         const script = new ScriptScreen(lab.port, ledger, lab.surfaces, {
           contract: free ? "free" : "item",
