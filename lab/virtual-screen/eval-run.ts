@@ -94,7 +94,7 @@ const schema = z.strictObject({
   agent: z.enum(["astra", "claude"]).default("astra"),
   claude_model: z.string().default("sonnet"),
   deadline_ms: z.number().int().min(10000).max(14400000),
-  session_deadline_ms: z.number().int().min(10000).max(1800000),
+  session_deadline_ms: z.number().int().min(10000).max(10800000),
   max_tokens: z.number().int().positive(),
   max_calls: z.number().int().positive(),
   session_max_tokens: z.number().int().positive().default(1000000),
