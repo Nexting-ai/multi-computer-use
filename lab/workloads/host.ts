@@ -7,8 +7,9 @@ const run = promisify(execFile);
 /** An SSH host from a workload's `hosts` entry ({destination, options}). */
 export type SshHost = { destination: string; options: string[] };
 
-/** Retry only when SSH never opened a session (nothing ran twice). */
-async function retry<T>(f: () => Promise<T>): Promise<T> {
+/** Retry when SSH never opened a session (nothing ran twice), or, for
+ * idempotent transfers, whenever the connection dropped. */
+async function retry<T>(f: () => Promise<T>, idempotent = false): Promise<T> {
   for (let attempt = 1; ; attempt++)
     try {
       return await f();
@@ -17,7 +18,8 @@ async function retry<T>(f: () => Promise<T>): Promise<T> {
         /Connection (closed|reset|refused|timed out)|kex_exchange|banner exchange/i.test(
           String(e?.stderr ?? e),
         );
-      if (!unreached || attempt >= 6) throw e;
+      const dropped = idempotent && /ssh 255/.test(String(e?.message));
+      if (!(unreached || dropped) || attempt >= 6) throw e;
       await new Promise((r) => setTimeout(r, 2000 * attempt));
     }
 }
@@ -42,6 +44,7 @@ export function host(h: SshHost) {
               : reject(Object.assign(Error(`ssh ${code}`), { stderr })),
           );
         }),
+      true,
     );
   return {
     sh: (cmd: string) =>

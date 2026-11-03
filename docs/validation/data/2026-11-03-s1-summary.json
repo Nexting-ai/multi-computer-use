@@ -1,0 +1,47 @@
+{
+  "A": {
+    "wall_s": 338,
+    "to_last_declared_s": 330,
+    "tokens": 292286,
+    "tool_calls": 26,
+    "images": 7,
+    "sessions": 1,
+    "declared": 16,
+    "objective": {
+      "buildings_fully_correct": 15,
+      "checks_passed": 47,
+      "checks_total": 48
+    },
+    "stop_reason": null
+  },
+  "B": {
+    "wall_s": 3267,
+    "to_last_declared_s": 3264,
+    "tokens": 4321066,
+    "tool_calls": 163,
+    "images": 94,
+    "sessions": 16,
+    "declared": 16,
+    "objective": {
+      "buildings_fully_correct": 16,
+      "checks_passed": 48,
+      "checks_total": 48
+    },
+    "stop_reason": null
+  },
+  "C": {
+    "wall_s": 408,
+    "to_last_declared_s": null,
+    "tokens": 401770,
+    "tool_calls": 8,
+    "images": 4,
+    "sessions": 1,
+    "declared": 0,
+    "objective": {
+      "buildings_fully_correct": 16,
+      "checks_passed": 48,
+      "checks_total": 48
+    },
+    "stop_reason": null
+  }
+}

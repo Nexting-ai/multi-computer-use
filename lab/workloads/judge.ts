@@ -16,6 +16,7 @@ import {
   writeFile,
   copyFile,
   readdir,
+  stat,
 } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { join, resolve } from "node:path";
@@ -48,18 +49,30 @@ const centre = (n: number) => [
   (1.5 - Math.floor((n - 1) / 4)) * 30,
 ];
 
-// 1. Standard photos.
+// JUDGE_ONLY=W01,W07 re-judges those plots and keeps every other result.
+const only = process.env.JUDGE_ONLY?.split(",");
+
+// 1. Standard photos (only those missing, so a rerun fills gaps).
 for (const a of arms) {
   const shots = join(out, "shots", a.arm);
   await mkdir(shots, { recursive: true });
+  const missing = [];
+  for (const id of briefs.keys())
+    if (
+      (!only || only.includes(id)) &&
+      !((await stat(join(shots, `${id}.png`)).catch(() => null))?.size ?? 0)
+    )
+      missing.push(id);
+  if (!missing.length) continue;
   const work = `/root/judge-${a.arm}`;
   await h.sh(`rm -rf ${work} && mkdir -p ${work}/out`);
-  for (const id of (await readdir(a.dir)).filter((d) => /^W\d+$/.test(d))) {
+  const sources = a.mode === "city" ? ["W01"] : missing;
+  for (const id of sources) {
     await h.sh(`mkdir -p ${work}/${id}`);
     await h.put(join(a.dir, id, "work.tar"), `${work}/${id}/work.tar`);
     await h.sh(`tar -xf ${work}/${id}/work.tar -C ${work}/${id}`);
   }
-  const jobs = [...briefs.keys()].map((id) => {
+  const jobs = missing.map((id) => {
     const n = Number(id.slice(1));
     const [x, y] = a.mode === "city" ? centre(n) : [0, 0];
     const [file, col] =
@@ -69,9 +82,9 @@ for (const a of arms) {
     return `[ -f ${file} ] && blender -b ${file} --python /opt/app/module_shot.py -- ${col} ${x} ${y} /p/out/${id}.png >/dev/null 2>&1`;
   });
   await h.sh(
-    `docker run --rm -e DISPLAY=:9 -v ${work}:/p --entrypoint bash mcu-blender -c 'Xvfb :9 -screen 0 960x720x24 +extension GLX >/dev/null 2>&1 & sleep 1; ${jobs.join("; ")}; true'`,
+    `docker run --rm -e DISPLAY=:9 -v ${work}:/p --entrypoint bash mcu-blender -c 'Xvfb :9 -screen 0 960x720x24 +extension GLX >/dev/null 2>&1 & for i in $(seq 50); do xdpyinfo -display :9 >/dev/null 2>&1 && break; sleep 0.2; done; ${jobs.join("; ")}; true'`,
   );
-  for (const id of briefs.keys())
+  for (const id of missing)
     await h
       .get(`${work}/out/${id}.png`, join(shots, `${id}.png`))
       .catch(() => {});
@@ -121,8 +134,12 @@ function claude(cwd: string, prompt: string): Promise<string> {
   });
 }
 
-const results: any[] = [];
+const previous: any[] = only
+  ? JSON.parse(await readFile(join(out, "judge-raw.json"), "utf8"))
+  : [];
+const results: any[] = previous.filter((r) => !only?.includes(r.id));
 for (const [id, b] of briefs) {
+  if (only && !only.includes(id)) continue;
   const dir = join(out, "blind", id);
   await mkdir(dir, { recursive: true });
   const order = arms.map((a) => a.arm);
