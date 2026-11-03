@@ -748,6 +748,7 @@ for (const blk of blocks)
           lab.surfaces,
           false,
           {
+            max_scope: lab.surfaces.length,
             source: (f) => saveSource(f, "director"),
             delivery: (request, receipt) =>
               delivery("deliveries.jsonl")({
