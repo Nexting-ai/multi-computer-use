@@ -41,7 +41,7 @@ export class DesktopFleet {
       string,
       { host: DockerHost; container: string }
     >,
-    private readonly tunnels: ChildProcess[],
+    private readonly tunnels: Tunnel[],
   ) {}
 
   static async launch(o: FleetOptions): Promise<DesktopFleet> {
@@ -97,24 +97,23 @@ export class DesktopFleet {
     );
     const tunnels = [...forwards].map(([host, args]) => {
       if (host.kind !== "ssh") throw Error("unreachable");
-      return spawn(
-        "ssh",
-        [
-          ...host.options,
-          "-N",
-          "-o",
-          "ExitOnForwardFailure=yes",
-          // A tunnel is its own connection: a multiplexed client would hand
-          // the forwards to a shared master and exit.
-          "-o",
-          "ControlMaster=no",
-          "-o",
-          "ControlPath=none",
-          ...args,
-          host.destination,
-        ],
-        { stdio: "ignore" },
-      );
+      return new Tunnel([
+        ...host.options,
+        "-N",
+        "-o",
+        "ExitOnForwardFailure=yes",
+        // Detect a dead path in under a minute.
+        "-o",
+        "ServerAliveCountMax=3",
+        // A tunnel is its own connection: a multiplexed client would hand
+        // the forwards to a shared master and exit.
+        "-o",
+        "ControlMaster=no",
+        "-o",
+        "ControlPath=none",
+        ...args,
+        host.destination,
+      ]);
     });
     const fleet = new DesktopFleet(
       surfaces,
@@ -170,7 +169,7 @@ export class DesktopFleet {
   }
 
   async close() {
-    for (const t of this.tunnels) t.kill();
+    for (const t of this.tunnels) t.close();
     await Promise.all(
       [...this.placement.values()].map(({ host, container }) =>
         docker(host, ["rm", "-f", container]).catch(() => {}),
@@ -230,3 +229,24 @@ async function docker(
 
 const quote = (s: string) =>
   /^[\w@%+=:,./-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`;
+
+/** An SSH port forward that re-establishes itself until closed. */
+class Tunnel {
+  private proc: ChildProcess | null = null;
+  private closed = false;
+  constructor(private readonly args: string[]) {
+    this.start();
+  }
+  private start() {
+    if (this.closed) return;
+    const p = spawn("ssh", this.args, { stdio: "ignore" });
+    this.proc = p;
+    p.on("exit", () => {
+      if (!this.closed) setTimeout(() => this.start(), 2000);
+    });
+  }
+  close() {
+    this.closed = true;
+    this.proc?.kill();
+  }
+}

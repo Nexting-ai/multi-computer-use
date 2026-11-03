@@ -24,7 +24,25 @@ export class DesktopPort implements SurfacePort {
     if (!base) throw Error("unknown_surface");
     return base + path;
   }
+  /** Reads (/frame, /text, /probe) retry while the path is down (a tunnel
+   * reconnecting); /execute is never retried here. */
   private async call<T>(
+    surface: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
+    for (let attempt = 1; ; attempt++)
+      try {
+        return await this.once<T>(surface, path, body);
+      } catch (e) {
+        const unreachable = /fetch failed|ECONNREFUSED|ECONNRESET/.test(
+          String((e as any)?.cause ?? e),
+        );
+        if (path === "/execute" || !unreachable || attempt >= 6) throw e;
+        await new Promise((r) => setTimeout(r, 2500 * attempt));
+      }
+  }
+  private async once<T>(
     surface: string,
     path: string,
     body?: unknown,

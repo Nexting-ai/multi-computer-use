@@ -45,3 +45,12 @@ Common settings:
 - **H4:** C's objective grade ≥ the other arms' objective grades.
 
 Every result is reported as observed. A run interrupted by infrastructure before any input is rerun with the same seed and recorded.
+
+## Deviations (recorded before the reruns)
+
+1. First attempts of A and C (2026-11-03 08:44 / 08:49 UTC, commits c80fcb5 / 723b7bd) were lost to infrastructure: the SSH tunnels to the desktops dropped mid-run, captures failed, and the agents stopped. A had in fact built all sixteen plots, but could not observe or save them. C's director lost all sixteen desktops; the hand-off then started 48 per-surface sessions that could not reach the desktops either. Fixes:
+   - tunnels re-establish themselves (tested by killing them mid-run: 4/4 completed);
+   - reads retry while a tunnel reconnects (input is never retried);
+   - arm C has no hand-off to per-surface agents, as specified above (the director owns its fleet).
+   Both arms are rerun with the same seed; the failed attempts are kept in `.local/s1/*-fail1`.
+2. Arm A's single desktop gets a whole server (8 vCPU, 16 GB) instead of 2 vCPU. One agent works on one computer, and building sixteen buildings in one scene with software rendering was too slow on 2 vCPU. B and C keep 2 vCPU per desktop.

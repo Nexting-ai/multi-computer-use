@@ -77,6 +77,9 @@ const schema = z.strictObject({
       kind: z.enum(["blender", "kicad", "studio", "city"]),
       image: z.string(),
       port: z.number().int().optional(),
+      /** Resources of one desktop (default 2 vCPU, 4 GB). */
+      cpus: z.number().positive().optional(),
+      memory: z.string().optional(),
       /** Docker hosts; "local" or an SSH destination with its options. */
       hosts: z
         .array(
@@ -117,10 +120,14 @@ const W = o.workload;
 const desktopOptions = (w: {
   image: string;
   port?: number | undefined;
+  cpus?: number | undefined;
+  memory?: string | undefined;
   hosts: unknown[];
 }) => ({
   image: w.image,
   ...(w.port ? { port: w.port } : {}),
+  ...(w.cpus ? { cpus: w.cpus } : {}),
+  ...(w.memory ? { memory: w.memory } : {}),
   hosts: (w.hosts as any[]).map((h) =>
     h === "local" ? { kind: "local" as const } : { kind: "ssh" as const, ...h },
   ),
@@ -830,7 +837,9 @@ for (const blk of blocks)
       };
       // Leftovers (and the per-surface arms themselves) use per-surface worksets.
       const t1 = performance.now();
-      await perSurface(arm === "P-T" || arm === "B-T" || arm === "S");
+      // The director (F) owns its fleet: no hand-off to per-surface agents.
+      if (arm !== "F")
+        await perSurface(arm === "P-T" || arm === "B-T" || arm === "S");
       phases.worksets = {
         elapsed_ms: Math.round(performance.now() - t1),
         progress: ledger.summary(),
