@@ -111,7 +111,7 @@ export function block(seed: number, count: number): Map<string, Brief> {
 }
 
 const QUALITY =
-  "Aim for a convincing, detailed building, not a placeholder: real proportions, distinct parts (base, body, top), windows or openings, materials with fitting colours. Check your work with preview renders (F12) and fix what looks wrong (floating or intersecting parts, wrong scale, flat colours). Stay inside the plot and near the target height. Save (Ctrl+S) when the building is finished. Use the Blender interface and its Python (text editor + Alt+P, or the Python console); no other applications, add-ons or downloads. Unknown or delivered inputs must not be repeated.";
+  "Aim for a convincing, detailed building, not a placeholder: real proportions, distinct parts (base, body, top), windows or openings, materials with fitting colours. A long script can keep Blender busy for minutes with a frozen screen: wait (desktop_wait) and observe again before concluding it is unresponsive. Check your work with preview renders (F12) and fix what looks wrong (floating or intersecting parts, wrong scale, flat colours). Stay inside the plot and near the target height. Save (Ctrl+S) when the building is finished. Use the Blender interface and its Python (text editor + Alt+P, or the Python console); no other applications, add-ons or downloads. Unknown or delivered inputs must not be repeated.";
 
 /**
  * The studio task: a city block of sixteen different buildings. `studio`

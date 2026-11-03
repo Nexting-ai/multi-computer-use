@@ -193,6 +193,11 @@ const perSurfaceTools = (text: boolean): Tool[] => [
         "Verify the final saved item of each assigned surface using a fresh view and the actual text and priority you see. Delivery is not completion. A mismatch blocks this target; report it honestly. Use checks inline in the next action for intermediate items.",
         verificationSchema,
       ),
+  t(
+    "desktop_wait",
+    "Wait up to 600 seconds without observing (e.g. while an application is busy). Costs no screenshot.",
+    waitSchema,
+  ),
 ];
 const fleetRunDescription = (vision: boolean) =>
   "Broadcast ONE decision over many surfaces (Z). All rectangles/points are pixels of the exemplar view_id. template: the stable task area enclosing everything referenced; the host finds it on every surface by pixel registration (translation tolerated) and never touches a surface where it does not match. " +
@@ -238,6 +243,9 @@ const fleetTools = (vision: boolean): Tool[] => [
       ]
     : []),
 ];
+const waitSchema = z.strictObject({
+  seconds: z.number().int().min(1).max(600),
+});
 const overviewSchema = z.strictObject({
   surfaces: z.array(z.string()).min(1).max(100).optional(),
   region: z
@@ -613,6 +621,7 @@ for (const blk of blocks)
           "desktop_act",
           "desktop_verify",
           "desktop_done",
+          "desktop_wait",
         ].includes(name)
       )
         return null;
@@ -633,6 +642,10 @@ for (const blk of blocks)
             if (ledger.get(id).state === "ready") await ledger.declare(id);
           }
           value = { progress: runtime.status(), views: [] };
+        } else if (name === "desktop_wait") {
+          const { seconds } = waitSchema.parse(args);
+          await new Promise((res) => setTimeout(res, seconds * 1000));
+          value = { waited: seconds, progress: runtime.status(), views: [] };
         } else throw Error("unknown_tool");
         const views = await withText(value, text);
         const { views: _v, ...rest } = value;
