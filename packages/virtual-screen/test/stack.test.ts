@@ -372,6 +372,32 @@ test("type fills placeholders per surface; overview tiles the fleet in one image
   }
 });
 
+test("free contract: policies are verified steps, never items; declared surfaces are skipped", async () => {
+  const apps = { A1: app(1), A2: app(2), A3: app(3) };
+  const s = await setup(apps, 1);
+  const stack = new StackScreen(s.port, s.ledger, Object.keys(apps), {
+    settle_ms: 300,
+    contract: "free",
+    inputs: Object.fromEntries(
+      Object.entries(apps).map(([id, a]) => [id, { given: a.cases[0]!.code }]),
+    ),
+  });
+  try {
+    await s.ledger.declare("A3"); // finished earlier by the model
+    const view = (await stack.observe(["A1"])).views[0]!.view_id;
+    const p = policy(apps.A1, view, { inputs: ["given"] });
+    p.steps[1] = { kind: "type", text: "{given}" } as never;
+    p.verify = { field: "receipt", contains: ["{given}"] };
+    const r = await stack.run(p);
+    expect(r.counts).toEqual({ prepared: 2, verified: 1 });
+    expect(apps.A1.saved[0]!.text).toBe(apps.A1.cases[0]!.code);
+    expect(apps.A3.saved).toEqual([]);
+    expect(s.ledger.summary().completed_steps).toBe(1); // only the declaration
+  } finally {
+    await s.clean();
+  }
+});
+
 test("a failed canary leaves every other surface untouched", async () => {
   const apps = { A1: app(1), A2: app(2), A3: app(3) };
   const s = await setup(apps);

@@ -354,6 +354,12 @@ export class StackScreen {
        * channel anywhere; values and receipts are transcribed by the model
        * from fleet_crops contact sheets (ablation B-V). */
       values?: "text" | "vision";
+      /** item (default): a policy run delivers and verifies task items.
+       * free: the model declares items done itself (open-ended work such as
+       * building a model); every policy is a step that applies once per
+       * surface per run, verified, never counted as an item, and finished
+       * (declared) surfaces are left alone. */
+      contract?: "item" | "free";
       /** Task table supplied by the host: surface id -> column -> value. */
       inputs?: Record<string, Record<string, string>>;
       /** Ablation only: false clicks text centres without avoiding occlusion. */
@@ -554,6 +560,7 @@ export class StackScreen {
     } = p;
     if (
       p.mode === "prepare" &&
+      this.options.contract !== "free" &&
       (p.inputs?.length ||
         p.steps.some(
           (s) =>
@@ -1126,7 +1133,10 @@ export class StackScreen {
         }
         if (row.state !== "ready")
           return result({ reason: row.state, detail: row.reason });
-        if ((c.policy.mode ?? "item") === "prepare")
+        if (
+          (c.policy.mode ?? "item") === "prepare" ||
+          this.options.contract === "free"
+        )
           return await this.prepare(c, id, deadline, dry, result);
         if (items >= limit) return result({ status: "canary" });
         if (!c.baseline.has(id)) c.baseline.set(id, row.completed);
@@ -1272,7 +1282,9 @@ export class StackScreen {
       const o = await this.observeAt(c, id);
       const frame = o.frame;
       const m = this.registered(o);
-      const { values, dx, dy } = this.values(c, o.nodes, m);
+      const read = this.values(c, o.nodes, m);
+      const { dx, dy } = read;
+      const values = { ...read.values, ...this.given(c, id, frame) };
       const p = this.plan(c, values, dx, dy, frame, o.nodes);
       if (dry)
         return result({
@@ -1304,7 +1316,10 @@ export class StackScreen {
         continue;
       }
       if (d.status === "unknown") {
-        await this.ledger.block(id, "prepare_unknown_effect");
+        // An item task cannot continue on an uncertain state; in a free task
+        // the model inspects the surface and decides (nothing is replayed).
+        if (this.options.contract !== "free")
+          await this.ledger.block(id, "prepare_unknown_effect");
         return result({ reason: "unknown_effect", detail: d.reason });
       }
       if (r.observation) {

@@ -252,7 +252,7 @@ const directorTools: Tool[] = [
   ...perSurfaceTools(false),
 ];
 const directorPrompt = (task: string, ids: string[]) =>
-  `${task}\nYou direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}) and decide how work is split. Work that is the same everywhere (shared helper code, materials, settings, rendering a preview, saving) is one fleet_run policy for all desktops: a \`type\` step pastes literal text with {placeholders} filled from each desktop's task-table inputs, so one script serves every desktop. Work that differs per desktop uses desktop_observe/desktop_act on that desktop alone. Review progress across the fleet with fleet_overview instead of observing desktops one by one. Declare each desktop's item with desktop_done when its result is finished and saved. ${forward} Starting progress: `;
+  `${task}\nYou direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}) and decide how work is split. Work that is the same everywhere (shared helper code, materials, settings, rendering a preview, saving) is one fleet_run policy for all desktops: a \`type\` step pastes literal text with {placeholders} filled from each desktop's task-table inputs, so one script serves every desktop. Work that differs per desktop uses desktop_observe/desktop_act on that desktop alone. Review progress across the fleet with fleet_overview instead of observing desktops one by one. In this task fleet_run policies are steps: each applies once per desktop per run (canary first, then the rest), is verified by its post-condition, and never completes an item; desktops you have declared done are skipped. Declare each desktop's item with desktop_done when its result is finished and saved. ${forward} Starting progress: `;
 const scriptTools: Tool[] = [
   t(
     "surface_read",
@@ -733,6 +733,7 @@ for (const blk of blocks)
         // what differs, and one-image reviews of the whole fleet.
         const stack = new StackScreen(lab.port, ledger, lab.surfaces, {
           concurrency: o.stack_concurrency,
+          contract: free ? "free" : "item",
           ...(lab.inputs ? { inputs: lab.inputs } : {}),
           ...(workload.settle_ms ? { settle_ms: workload.settle_ms } : {}),
           evidence: {
