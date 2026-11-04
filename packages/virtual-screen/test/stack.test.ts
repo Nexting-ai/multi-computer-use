@@ -373,6 +373,40 @@ test("assign: the model's own per-surface values in one decision, only on assign
   }
 });
 
+test("free task: a policy without a post-condition delivers and is checked by looking; an item task requires one", async () => {
+  const apps = { A1: app(1), A2: app(2) };
+  const s = await setup(apps, 1);
+  const free = new StackScreen(s.port, s.ledger, Object.keys(apps), {
+    settle_ms: 300,
+    contract: "free",
+  });
+  const item = new StackScreen(s.port, s.ledger, Object.keys(apps), {
+    settle_ms: 300,
+  });
+  try {
+    const view = (await free.observe(["A1"])).views[0]!.view_id;
+    const p = policy(apps.A1, view, {
+      inputs: ["edit"],
+      assign: {
+        A1: { edit: apps.A1.cases[0]!.code },
+        A2: { edit: apps.A2.cases[0]!.code },
+      },
+    });
+    p.steps[1] = { kind: "type", text: "{edit}" } as never;
+    delete (p as any).verify;
+    const r = await free.run(p);
+    expect(r.counts).toEqual({ delivered: 2 });
+    expect(apps.A1.saved[0]!.text).toBe(apps.A1.cases[0]!.code);
+    expect(apps.A2.saved[0]!.text).toBe(apps.A2.cases[0]!.code);
+    const view2 = (await item.observe(["A1"])).views[0]!.view_id;
+    const q = policy(apps.A1, view2);
+    delete (q as any).verify;
+    await expect(item.run(q)).rejects.toThrow("verify_required");
+  } finally {
+    await s.clean();
+  }
+});
+
 test("items caps a policy at that many items per surface, canary included", async () => {
   const apps = { A1: app(1), A2: app(2), A3: app(3) };
   const s = await setup(apps); // two items per surface

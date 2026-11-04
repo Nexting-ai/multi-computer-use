@@ -245,7 +245,7 @@ const fleetRunDescription = (vision: boolean) =>
   (vision
     ? ""
     : "click_text{field|text} clicks the unique text/control inside the template whose text equals the field value or literal; ") +
-  "key_chord. verify: post-condition of a field after the steps, {field,equals} or {field,contains:[...]} with placeholders {fieldname} and {choice} (a post-condition without placeholders only proves the steps ran and is reported as weak)" +
+  "key_chord. verify (optional only in free tasks, where you check the effect by looking): post-condition of a field after the steps, {field,equals} or {field,contains:[...]} with placeholders {fieldname} and {choice} (a post-condition without placeholders only proves the steps ran and is reported as weak)" +
   (vision
     ? " (in vision mode it is not checked by the host; you confirm receipts with fleet_confirm)"
     : "") +
@@ -348,7 +348,7 @@ const roundTools: Tool[] = [
   ),
 ];
 const roundsRule =
-  "In this task fleet_run policies are steps: each applies once per desktop per run (canary first, then the rest), is verified by its post-condition, and never completes an item; declared desktops are skipped. Make a post-condition prove this run's change, e.g. assign each desktop a unique mark too, put it in the script's first line and verify the field showing that line contains {mark}. A rejected policy returns the reason: fix it and run it again.";
+  "In this task fleet_run policies are steps: each applies once per desktop per run (canary first, then the rest), is verified by its post-condition, and never completes an item; declared desktops are skipped. Here verify may be omitted: each desktop then reports delivered (template matched, input sent) and you check the effect by looking, e.g. with fleet_overview. A rejected policy returns the reason: fix it and run it again.";
 const roundPrompt = (
   task: string,
   ids: string[],

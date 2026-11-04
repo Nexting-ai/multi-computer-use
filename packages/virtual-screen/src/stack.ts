@@ -104,14 +104,19 @@ export const policySchema = z.strictObject({
     .record(z.string(), z.record(field, z.string().min(1).max(20000)))
     .optional(),
   steps: z.array(step).min(1).max(12),
-  verify: z.union([
-    z.strictObject({ field, equals: z.string().min(1).max(512) }),
-    z.strictObject({
-      field,
-      contains: z.array(z.string().min(1).max(256)).min(1).max(8),
-    }),
-    z.strictObject({ field, absent: z.literal(true) }),
-  ]),
+  /** Required, except in a free task: without it each surface's result is
+   * "delivered" (template matched, input sent) and the model checks the
+   * effect by looking, e.g. with an overview. */
+  verify: z
+    .union([
+      z.strictObject({ field, equals: z.string().min(1).max(512) }),
+      z.strictObject({
+        field,
+        contains: z.array(z.string().min(1).max(256)).min(1).max(8),
+      }),
+      z.strictObject({ field, absent: z.literal(true) }),
+    ])
+    .optional(),
   /** item: one durable task item per execution (default). prepare: clear an
    * interruption once per surface; never counts as task progress. */
   mode: z.enum(["item", "prepare"]).optional(),
@@ -182,6 +187,11 @@ type Compiled = {
   bindings: Map<string, Binding | null>;
   /** Items each surface had completed when this run first reached it. */
   baseline: Map<string, number>;
+};
+/** The post-condition's field; only free-task steps may run without one. */
+const verifyField = (c: Compiled) => {
+  if (!c.policy.verify) throw Error("verify_required");
+  return c.policy.verify.field;
 };
 type Binding = { role: string; text: string };
 type Observation = {
@@ -270,14 +280,19 @@ export function readField(nodes: TextNode[], r: Rect) {
   );
 }
 /** Expected post-condition of the verify field, from values read before input. */
-export function expect(p: Policy, values: Record<string, string>) {
+export function expect(
+  p: Policy,
+  values: Record<string, string>,
+): Expected | null {
+  if (!p.verify) return null;
   return "equals" in p.verify
     ? { equals: fill(p.verify.equals, values) }
     : "contains" in p.verify
-      ? { contains: p.verify.contains.map((t) => fill(t, values)) }
+      ? { contains: p.verify.contains.map((t: string) => fill(t, values)) }
       : { absent: values[p.verify.field] ?? "" };
 }
-export type Expected = ReturnType<typeof expect>;
+export type Expected =
+  { equals: string } | { contains: string[] } | { absent: string };
 /** Text channels disagree on whitespace (OCR reads "12m" or "12 m"), so
  * post-conditions compare text with all whitespace removed. */
 const squash = (t: string) => t.replace(/\s+/g, "");
@@ -552,8 +567,11 @@ export class StackScreen {
       throw Error(
         "no_effective_step (keys alone have no checked target: add a click on the element that should receive them)",
       );
-    if (!names.has(p.verify.field)) throw Error("unknown_verify_field");
-    if ((p.mode ?? "item") === "item" && "absent" in p.verify)
+    if (!p.verify) {
+      if (this.options.contract !== "free")
+        throw Error("verify_required (only a free task may omit it)");
+    } else if (!names.has(p.verify.field)) throw Error("unknown_verify_field");
+    else if ((p.mode ?? "item") === "item" && "absent" in p.verify)
       throw Error("item_requires_positive_verification");
     const local = (r: Rect) => ({ ...r, x: r.x - t.x, y: r.y - t.y });
     const masked = [...p.fields.map((f) => f.rect), ...(p.ignore ?? [])].map(
@@ -916,14 +934,12 @@ export class StackScreen {
     // A post-condition that already holds before input proves nothing.
     // (Without a reading of the verify field, as in vision mode, it is unknown.)
     if (
-      values[c.policy.verify.field] !== undefined &&
-      satisfied(receipt, values[c.policy.verify.field])
+      receipt &&
+      c.policy.verify &&
+      values[verifyField(c)] !== undefined &&
+      satisfied(receipt, values[verifyField(c)])
     )
-      throw new Exception(
-        "verify_not_discriminative",
-        c.policy.verify.field,
-        frame,
-      );
+      throw new Exception("verify_not_discriminative", verifyField(c), frame);
     return { actions, expected, receipt };
   }
   /** The element under a click point must be the exemplar's element. */
@@ -969,9 +985,7 @@ export class StackScreen {
       try {
         if (this.port.probeText) {
           // Screenshot-free wait; only a satisfied probe earns a bound observation.
-          const f = c.policy.fields.find(
-            (f) => f.name === c.policy.verify.field,
-          )!;
+          const f = c.policy.fields.find((f) => f.name === verifyField(c))!;
           const region = {
             ...f.rect,
             x: f.rect.x + hint.x - c.policy.template.x,
@@ -981,7 +995,7 @@ export class StackScreen {
             c,
             await this.port.probeText(id, region),
             hint,
-          ).values[c.policy.verify.field];
+          ).values[verifyField(c)];
           // Probes read at the last proven offset; every third miss falls
           // through to a full registration in case the layout moved.
           if (!satisfied(receipt, probe) && ++misses % 3 !== 0) {
@@ -999,7 +1013,7 @@ export class StackScreen {
         const registered = this.ok(o.match);
         const m = registered ? o.match! : hint;
         if (registered) hint = m;
-        seen = this.values(c, o.nodes, m).values[c.policy.verify.field];
+        seen = this.values(c, o.nodes, m).values[verifyField(c)];
         if (satisfied(receipt, seen)) {
           await this.evidence(o.frame, "verify");
           const reusable = registered ? o : undefined;
@@ -1110,8 +1124,8 @@ export class StackScreen {
               detail: JSON.stringify({
                 pending_verification: {
                   expected,
-                  seen: values[c.policy.verify.field],
-                  match: satisfied(expected, values[c.policy.verify.field]),
+                  seen: values[verifyField(c)],
+                  match: satisfied(expected, values[verifyField(c)]),
                 },
               }),
             });
@@ -1173,6 +1187,7 @@ export class StackScreen {
         const { dx, dy } = read;
         const values = { ...read.values, ...this.given(c, id, frame) };
         const p = this.plan(c, values, dx, dy, frame, o.nodes);
+        if (!p.receipt) throw Error("verify_required");
         if (dry) {
           await this.evidence(frame, "dry_run");
           return result({
@@ -1240,9 +1255,7 @@ export class StackScreen {
           const ob = r.observation;
           const registered = this.ok(ob.match);
           const at = registered ? ob.match! : m;
-          const seen = this.values(c, ob.nodes, at).values[
-            c.policy.verify.field
-          ];
+          const seen = this.values(c, ob.nodes, at).values[verifyField(c)];
           if (satisfied(p.receipt, seen)) {
             const view = "stack:" + ob.frame.revision.slice(0, 16);
             await this.ledger.observed(id, view);
@@ -1337,10 +1350,13 @@ export class StackScreen {
           await this.ledger.block(id, "prepare_unknown_effect");
         return result({ reason: "unknown_effect", detail: d.reason });
       }
+      // No post-condition (free task): sent, to be checked by looking.
+      if (!c.policy.verify || !p.receipt)
+        return result({ status: "delivered" });
       if (r.observation) {
         const at = this.ok(r.observation.match) ? r.observation.match! : m;
         const seen = this.values(c, r.observation.nodes, at).values[
-          c.policy.verify.field
+          verifyField(c)
         ];
         if (satisfied(p.receipt, seen)) return result({ status: "prepared" });
       }
@@ -1362,18 +1378,23 @@ export class StackScreen {
     actions: Action[],
     op: string,
     m: Match,
-    receipt: Expected,
+    receipt: Expected | null,
   ): Promise<Awaited<ReturnType<NonNullable<SurfacePort["actAndObserve"]>>>> {
     this.inputAttempted.add(frame.surface_id);
     const settleMs = this.options.settle_ms ?? 5000;
-    if (this.port.actAndObserve && this.options.edge !== false)
+    const verify = c.policy.verify;
+    if (
+      receipt &&
+      verify &&
+      this.port.actAndObserve &&
+      this.options.edge !== false
+    )
       return bounded(
         this.port.actAndObserve(frame, actions, op, {
           template: c.spec,
           hint: { x: m.x, y: m.y },
           origin: { x: c.policy.template.x, y: c.policy.template.y },
-          field: c.policy.fields.find((f) => f.name === c.policy.verify.field)!
-            .rect,
+          field: c.policy.fields.find((f) => f.name === verify.field)!.rect,
           expected: receipt,
           timeout_ms: settleMs,
         }),
@@ -1803,7 +1824,9 @@ export class StackScreen {
           settled.get(id)
             ? Promise.resolve(settled.get(id)!)
             : // A prepared canary is finished; an item canary continues its items.
-              canary?.status === "prepared" && id === canary.surface_id
+              (canary?.status === "prepared" ||
+                  canary?.status === "delivered") &&
+                id === canary.surface_id
               ? Promise.resolve(canary)
               : // Await the read-only seed OUTSIDE the gate: no slot waits on another.
                 (seeds.get(id) ?? Promise.resolve(undefined)).then((seed) =>
