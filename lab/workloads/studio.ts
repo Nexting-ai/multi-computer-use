@@ -297,6 +297,8 @@ type Plan = {
   what: string;
   /** What one plot holds (default building). */
   noun?: string;
+  /** A sentence every arm reads about the whole (e.g. one scene). */
+  note?: string;
 };
 export const PLANS: Record<"block" | "street" | "airport", Plan> = {
   block: {
@@ -320,6 +322,7 @@ export const PLANS: Record<"block" | "street" | "airport", Plan> = {
     briefs: airport,
     what: "an airport in a rainforest made of sixteen different pieces (aircraft, buildings, landscape, creatures and machines)",
     noun: "piece",
+    note: "All sixteen pieces are assembled into one scene, so together they should look like one place: a consistent style, palette and level of detail.",
   },
 };
 
@@ -350,8 +353,8 @@ export function studio(
       items: many ? total : 1,
       settle_ms: 60_000,
       summary: many
-        ? `Blender is open on ${plan.what}: ${total} empty 20 x 20 m plots (collections P01..P${total}; their coordinates are in module.py). Build every plot's ${noun} from the task table below (row Wnn is plot Pnn). ${quality(noun)} Each plot is one item: declare it done when its ${noun} is finished and saved.`
-        : `This is ${plan.what}. Each surface runs Blender on one empty 20 x 20 m plot. Build that surface's ${noun} from its row of the task table, inside the collection Module. ${quality(noun)} One item per surface: declare it done when the ${noun} is finished and saved.`,
+        ? `Blender is open on ${plan.what}: ${total} empty 20 x 20 m plots (collections P01..P${total}; their coordinates are in module.py). Build every plot's ${noun} from the task table below (row Wnn is plot Pnn). ${plan.note ? plan.note + " " : ""}${quality(noun)} Each plot is one item: declare it done when its ${noun} is finished and saved.`
+        : `This is ${plan.what}. Each surface runs Blender on one empty 20 x 20 m plot. Build that surface's ${noun} from its row of the task table, inside the collection Module. ${plan.note ? plan.note + " " : ""}${quality(noun)} One item per surface: declare it done when the ${noun} is finished and saved.`,
       rows: (seed, count) => plan.briefs(seed, count),
       grader: [
         "blender",
