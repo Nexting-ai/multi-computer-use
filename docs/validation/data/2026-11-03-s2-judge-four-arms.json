@@ -1,0 +1,578 @@
+{
+  "summary": {
+    "A": {
+      "brief": 4.94,
+      "craft": 3.69,
+      "materials": 3.69,
+      "soundness": 6.44,
+      "overall": 4.69
+    },
+    "B": {
+      "brief": 8.06,
+      "craft": 8,
+      "materials": 7.31,
+      "soundness": 8.5,
+      "overall": 7.97
+    },
+    "C": {
+      "brief": 4.44,
+      "craft": 3.81,
+      "materials": 3.88,
+      "soundness": 6.44,
+      "overall": 4.64
+    },
+    "H": {
+      "brief": 7.69,
+      "craft": 7.25,
+      "materials": 6.44,
+      "soundness": 8.44,
+      "overall": 7.46
+    }
+  },
+  "results": [
+    {
+      "id": "W01",
+      "brief": {
+        "style": "brick townhouse row",
+        "height": "14",
+        "brief": "three attached red-brick houses with gabled roofs, chimneys and white window frames"
+      },
+      "scores": {
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 5,
+          "soundness": 6
+        },
+        "H": {
+          "brief": 9,
+          "craft": 9,
+          "materials": 8,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 9
+        },
+        "C": {
+          "brief": 6,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W02",
+      "brief": {
+        "style": "water tower",
+        "height": "22",
+        "brief": "steel lattice legs carrying a cylindrical tank with a conical roof"
+      },
+      "scores": {
+        "C": {
+          "brief": 6,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 4
+        },
+        "H": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 8,
+          "craft": 9,
+          "materials": 8,
+          "soundness": 6
+        },
+        "A": {
+          "brief": 6,
+          "craft": 4,
+          "materials": 5,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W03",
+      "brief": {
+        "style": "domed museum",
+        "height": "20",
+        "brief": "white stone base, a front colonnade and a copper-green dome"
+      },
+      "scores": {
+        "H": {
+          "brief": 9,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "C": {
+          "brief": 5,
+          "craft": 4,
+          "materials": 5,
+          "soundness": 6
+        },
+        "B": {
+          "brief": 9,
+          "craft": 9,
+          "materials": 8,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 3,
+          "materials": 3,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W04",
+      "brief": {
+        "style": "clock tower",
+        "height": "28",
+        "brief": "sandstone shaft with a clock face on each side and a pyramid roof"
+      },
+      "scores": {
+        "C": {
+          "brief": 3,
+          "craft": 3,
+          "materials": 2,
+          "soundness": 7
+        },
+        "H": {
+          "brief": 8,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 3,
+          "craft": 3,
+          "materials": 2,
+          "soundness": 5
+        },
+        "B": {
+          "brief": 9,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W05",
+      "brief": {
+        "style": "art deco hotel",
+        "height": "40",
+        "brief": "cream facade with vertical gold fins and a stepped tower top"
+      },
+      "scores": {
+        "C": {
+          "brief": 5,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 8
+        },
+        "H": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 4,
+          "craft": 3,
+          "materials": 3,
+          "soundness": 6
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W06",
+      "brief": {
+        "style": "lighthouse",
+        "height": "34",
+        "brief": "tapered white tower with red bands and a glazed lantern room"
+      },
+      "scores": {
+        "C": {
+          "brief": 7,
+          "craft": 4,
+          "materials": 5,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 7,
+          "craft": 4,
+          "materials": 5,
+          "soundness": 9
+        },
+        "H": {
+          "brief": 9,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 9,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W07",
+      "brief": {
+        "style": "pagoda",
+        "height": "30",
+        "brief": "five tiers with upturned red eaves and dark tiled roofs on a stone base"
+      },
+      "scores": {
+        "C": {
+          "brief": 3,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 4
+        },
+        "H": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 9,
+          "craft": 9,
+          "materials": 8,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 4,
+          "craft": 3,
+          "materials": 3,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W08",
+      "brief": {
+        "style": "mini stadium",
+        "height": "12",
+        "brief": "oval stands around a green pitch with four floodlight masts"
+      },
+      "scores": {
+        "A": {
+          "brief": 3,
+          "craft": 3,
+          "materials": 3,
+          "soundness": 6
+        },
+        "C": {
+          "brief": 3,
+          "craft": 2,
+          "materials": 2,
+          "soundness": 6
+        },
+        "H": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 9,
+          "craft": 9,
+          "materials": 9,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W09",
+      "brief": {
+        "style": "glass office tower",
+        "height": "52",
+        "brief": "blue-green curtain-wall glass with thin steel mullions and a stepped crown"
+      },
+      "scores": {
+        "B": {
+          "brief": 9,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "C": {
+          "brief": 5,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 7
+        },
+        "H": {
+          "brief": 8,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 5,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W10",
+      "brief": {
+        "style": "shrine garden",
+        "height": "7",
+        "brief": "red torii gates, stone lanterns and a small pond on gravel"
+      },
+      "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        },
+        "C": {
+          "brief": 5,
+          "craft": 3,
+          "materials": 4,
+          "soundness": 7
+        },
+        "H": {
+          "brief": 9,
+          "craft": 9,
+          "materials": 8,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 4,
+          "craft": 3,
+          "materials": 3,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W11",
+      "brief": {
+        "style": "mediterranean villa",
+        "height": "9",
+        "brief": "white stucco walls, terracotta roof, arched loggia and a small pool"
+      },
+      "scores": {
+        "C": {
+          "brief": 3,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 4,
+          "craft": 3,
+          "materials": 3,
+          "soundness": 5
+        },
+        "B": {
+          "brief": 9,
+          "craft": 9,
+          "materials": 9,
+          "soundness": 9
+        },
+        "H": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W12",
+      "brief": {
+        "style": "brutalist block",
+        "height": "24",
+        "brief": "raw concrete, deep recessed windows and a cantilevered top floor"
+      },
+      "scores": {
+        "A": {
+          "brief": 4,
+          "craft": 4,
+          "materials": 3,
+          "soundness": 6
+        },
+        "C": {
+          "brief": 4,
+          "craft": 5,
+          "materials": 4,
+          "soundness": 7
+        },
+        "H": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 6,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 5,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W13",
+      "brief": {
+        "style": "twin towers",
+        "height": "60",
+        "brief": "two slim dark-glass towers joined by a high skybridge"
+      },
+      "scores": {
+        "A": {
+          "brief": 4,
+          "craft": 3,
+          "materials": 3,
+          "soundness": 6
+        },
+        "C": {
+          "brief": 4,
+          "craft": 4,
+          "materials": 3,
+          "soundness": 5
+        },
+        "B": {
+          "brief": 5,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "H": {
+          "brief": 5,
+          "craft": 6,
+          "materials": 5,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W14",
+      "brief": {
+        "style": "timber pavilion",
+        "height": "8",
+        "brief": "open timber post-and-beam frame with a slatted roof over a wooden deck"
+      },
+      "scores": {
+        "H": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 5,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "C": {
+          "brief": 5,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 6
+        },
+        "A": {
+          "brief": 6,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W15",
+      "brief": {
+        "style": "greenhouse",
+        "height": "10",
+        "brief": "glass barrel vault on a white frame with planting beds inside"
+      },
+      "scores": {
+        "H": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 4,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 7,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 7
+        },
+        "C": {
+          "brief": 4,
+          "craft": 3,
+          "materials": 5,
+          "soundness": 4
+        },
+        "B": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 5,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W16",
+      "brief": {
+        "style": "modern library",
+        "height": "16",
+        "brief": "stacked offset boxes clad in timber with large glass openings"
+      },
+      "scores": {
+        "C": {
+          "brief": 3,
+          "craft": 5,
+          "materials": 4,
+          "soundness": 8
+        },
+        "H": {
+          "brief": 7,
+          "craft": 8,
+          "materials": 6,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 9,
+          "craft": 9,
+          "materials": 9,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 4,
+          "soundness": 7
+        }
+      }
+    }
+  ]
+}

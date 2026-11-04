@@ -1,0 +1,17 @@
+{
+  "H": {
+    "wall_s": 1483,
+    "to_last_declared_s": 1481,
+    "tokens": 6975670,
+    "tool_calls": 259,
+    "images": 163,
+    "sessions": 25,
+    "declared": 16,
+    "objective": {
+      "buildings_fully_correct": 16,
+      "checks_passed": 48,
+      "checks_total": 48
+    },
+    "stop_reason": null
+  }
+}
