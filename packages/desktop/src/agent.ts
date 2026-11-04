@@ -15,6 +15,7 @@
 import { createServer, type IncomingMessage } from "node:http";
 import { execFile, spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { appendFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import sharp from "sharp";
@@ -44,6 +45,24 @@ const env = { ...process.env, DISPLAY };
 type Shot = { revision: string; raw: Buffer; png: Buffer; text?: TextNode[] };
 const shots = new Map<string, Shot>();
 const outcomes = new Map<string, Delivery>();
+/** Executions in progress: a retried request joins the running one. */
+const running = new Map<string, Promise<Delivery>>();
+// Outcomes survive a restart: an intent without an outcome is uncertain.
+try {
+  for (const line of readFileSync(JOURNAL, "utf8").split("\n")) {
+    if (!line) continue;
+    const j = JSON.parse(line);
+    if (j.kind === "intent")
+      outcomes.set(j.operation_id, {
+        status: "unknown",
+        reason: "agent_restarted_during_input",
+      });
+    else if (j.kind === "outcome") {
+      const { kind: _k, operation_id, ...d } = j;
+      outcomes.set(operation_id, d as Delivery);
+    }
+  }
+} catch {}
 let queue: Promise<unknown> = Promise.resolve();
 /** One display, one actor: captures and inputs are serialized. */
 const serial = <T>(f: () => Promise<T>) => {
@@ -197,13 +216,25 @@ async function inject(actions: Action[]) {
     await quiet();
   }
 }
-async function execute(body: {
+function execute(body: {
   revision: string;
   actions: Action[];
   operation_id: string;
 }): Promise<Delivery> {
   const prior = outcomes.get(body.operation_id);
-  if (prior) return prior;
+  if (prior) return Promise.resolve(prior);
+  let p = running.get(body.operation_id);
+  if (!p) {
+    p = executeOnce(body).finally(() => running.delete(body.operation_id));
+    running.set(body.operation_id, p);
+  }
+  return p;
+}
+async function executeOnce(body: {
+  revision: string;
+  actions: Action[];
+  operation_id: string;
+}): Promise<Delivery> {
   const decided = shots.get(body.revision);
   if (!decided) return { status: "blocked", reason: "frame_expired" };
   const now = await grab().catch(() => null);
@@ -281,7 +312,7 @@ async function json(req: IncomingMessage) {
   for await (const c of req) s += c;
   return JSON.parse(s || "{}");
 }
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   const reply = (code: number, body: unknown) => {
     res.writeHead(code, { "content-type": "application/json" });
     res.end(JSON.stringify(body));
@@ -319,4 +350,9 @@ createServer(async (req, res) => {
   } catch (e) {
     reply(500, { error: String(e).slice(0, 200) });
   }
-}).listen(PORT, "0.0.0.0");
+});
+// Keep idle connections open longer than the client's keep-alive (4 s), so a
+// reused connection is never closed under a request (seen as "fetch failed").
+server.keepAliveTimeout = 120_000;
+server.headersTimeout = 125_000;
+server.listen(PORT, "0.0.0.0");

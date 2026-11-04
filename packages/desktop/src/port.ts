@@ -24,8 +24,9 @@ export class DesktopPort implements SurfacePort {
     if (!base) throw Error("unknown_surface");
     return base + path;
   }
-  /** Reads (/frame, /text, /probe) retry while the path is down (a tunnel
-   * reconnecting); /execute is never retried here. */
+  /** Requests retry while the path is down (a tunnel reconnecting, a stale
+   * connection reset). /execute too: the agent runs each operation_id at
+   * most once and answers a repeat with its outcome. */
   private async call<T>(
     surface: string,
     path: string,
@@ -38,7 +39,7 @@ export class DesktopPort implements SurfacePort {
         const unreachable = /fetch failed|ECONNREFUSED|ECONNRESET/.test(
           String((e as any)?.cause ?? e),
         );
-        if (path === "/execute" || !unreachable || attempt >= 6) throw e;
+        if (!unreachable || attempt >= 6) throw e;
         await new Promise((r) => setTimeout(r, 2500 * attempt));
       }
   }
