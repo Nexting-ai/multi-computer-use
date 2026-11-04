@@ -59,7 +59,26 @@ A director with sixteen parallel refiners reached 7.4 in under half the time (24
 
 [S1 report](docs/validation/2026-11-03-s1-city-block.md) · [S2 report](docs/validation/2026-11-03-s2-refiners.md)
 
-### 4. Safe under faults
+### 4. A rainforest airport: more desktops per agent did not help
+
+Sixteen different pieces of one scene: an airliner, a waterfall, a toucan statue, a temple ruin. The test was whether giving each agent three desktops would improve the pieces: try three ideas in one decision, compare them in one image, keep the best.
+
+| | One agent | **One agent per piece** | One agent per piece, three desktops |
+|---|---:|---:|---:|
+| Blind quality per piece | 5.32 | **7.50** | 6.33 |
+| Whole scene | 7.25 | **7.50** | 5.75 |
+| Wall time | 27 min | **14 min** | 59 min |
+| Model tokens | 2.3M | 9.2M | 37.1M |
+
+The simplest arm won. One agent per piece on its own desktop was the fastest and the best.
+
+The three-desktop agents won some pieces clearly, for example the waterfall and the cable car. But they spent much of their time on the fleet interface: templates, exemplar views and render windows that drifted apart. Their servers also saturated when three renders ran at once, and two pieces were never finished.
+
+Fleet policies are built for screens that repeat. That is where cases 1 and 2 gain, and for one-off creative work they are overhead. A smoke test of a single director over all sixteen pieces was also cheaper but much worse (5.2 against 7.9), so it was not run.
+
+[Report](docs/validation/2026-11-04-s4-airport.md)
+
+### 5. Safe under faults
 
 The fault suite has 22 deterministic scenarios in real Chrome, each run with its safeguard on and off. With the safeguards on, there were zero misrouted inputs and zero duplicates:
 - a wrong policy is contained by the canary;

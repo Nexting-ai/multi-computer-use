@@ -8,6 +8,7 @@ import { StackScreen, readField } from "../src/stack.js";
 import { ProgressLedger } from "../src/workset.js";
 import { gray, crop, maskFor, locate, acceptable } from "../src/align.js";
 import type { Action, Frame, SurfacePort, TextNode } from "../src/index.js";
+import { actionSchema } from "../src/index.js";
 
 const W = 320,
   H = 240,
@@ -322,6 +323,85 @@ test("task-table inputs: each surface types its own row; the screen is not read 
     await expect(
       stack.run(policy(apps.A1, view, { inputs: ["code"] })),
     ).rejects.toThrow("input_shadows_field");
+  } finally {
+    await s.clean();
+  }
+});
+
+test("assign: the model's own per-surface values in one decision, only on assigned surfaces", async () => {
+  const apps = { A1: app(1), A2: app(2), A3: app(3) };
+  const s = await setup(apps, 1);
+  const stack = new StackScreen(s.port, s.ledger, Object.keys(apps), {
+    settle_ms: 300,
+  });
+  try {
+    const view = (await stack.observe(["A1"])).views[0]!.view_id;
+    const p = policy(apps.A1, view, {
+      inputs: ["edit"],
+      assign: {
+        A1: { edit: apps.A1.cases[0]!.code },
+        A3: { edit: apps.A3.cases[0]!.code },
+      },
+    });
+    p.steps[1] = { kind: "type", text: "{edit}" } as never;
+    p.verify = { field: "receipt", contains: ["{edit}", "{choice}"] };
+    const r = await stack.run(p);
+    expect(r.counts).toEqual({ verified: 2 });
+    expect(apps.A1.saved[0]!.text).toBe(apps.A1.cases[0]!.code);
+    expect(apps.A3.saved[0]!.text).toBe(apps.A3.cases[0]!.code);
+    expect(apps.A2.saved).toEqual([]);
+    // An input must be assigned on every targeted surface.
+    await expect(
+      stack.run(
+        policy(apps.A1, view, {
+          inputs: ["edit"],
+          surfaces: ["A1", "A2"],
+          assign: { A1: { edit: "x" } },
+        }),
+      ),
+    ).rejects.toThrow("unknown_input");
+    await expect(
+      stack.run(
+        policy(apps.A1, view, {
+          inputs: ["edit"],
+          assign: { Z9: { edit: "x" } },
+        }),
+      ),
+    ).rejects.toThrow("unknown_surface");
+  } finally {
+    await s.clean();
+  }
+});
+
+test("free task: a policy without a post-condition delivers and is checked by looking; an item task requires one", async () => {
+  const apps = { A1: app(1), A2: app(2) };
+  const s = await setup(apps, 1);
+  const free = new StackScreen(s.port, s.ledger, Object.keys(apps), {
+    settle_ms: 300,
+    contract: "free",
+  });
+  const item = new StackScreen(s.port, s.ledger, Object.keys(apps), {
+    settle_ms: 300,
+  });
+  try {
+    const view = (await free.observe(["A1"])).views[0]!.view_id;
+    const p = policy(apps.A1, view, {
+      inputs: ["edit"],
+      assign: {
+        A1: { edit: apps.A1.cases[0]!.code },
+        A2: { edit: apps.A2.cases[0]!.code },
+      },
+    });
+    p.steps[1] = { kind: "type", text: "{edit}" } as never;
+    delete (p as any).verify;
+    const r = await free.run(p);
+    expect(r.counts).toEqual({ delivered: 2 });
+    expect(apps.A1.saved[0]!.text).toBe(apps.A1.cases[0]!.code);
+    expect(apps.A2.saved[0]!.text).toBe(apps.A2.cases[0]!.code);
+    const view2 = (await item.observe(["A1"])).views[0]!.view_id;
+    const q = policy(apps.A1, view2);
+    delete (q as any).verify;
+    await expect(item.run(q)).rejects.toThrow("verify_required");
   } finally {
     await s.clean();
   }
@@ -1089,4 +1169,14 @@ test("click_text avoids the part of a target covered by another element", async 
       },
     ]),
   ).toBeNull();
+});
+
+test("key names are case-insensitive with common aliases", () => {
+  const keys = (k: string[]) =>
+    (actionSchema.parse({ kind: "key_chord", keys: k }) as any).keys;
+  expect(keys(["CTRL", "a"])).toEqual(["Ctrl", "a"]);
+  expect(keys(["esc"])).toEqual(["Escape"]);
+  expect(keys(["f12"])).toEqual(["F12"]);
+  expect(keys(["Cmd", "Return"])).toEqual(["Meta", "Enter"]);
+  expect(() => keys(["Hyper"])).toThrow();
 });

@@ -16,12 +16,13 @@ async function retry<T>(f: () => Promise<T>, idempotent = false): Promise<T> {
       return await f();
     } catch (e: any) {
       const unreached =
-        /Connection (to \S+ port \d+ )?(closed|reset|refused|timed out)|Operation timed out|kex_exchange|banner exchange/i.test(
+        /Connection (to \S+ port \d+ )?(closed|reset|refused|timed out)|Operation timed out|No route to host|kex_exchange|banner exchange/i.test(
           String(e?.stderr ?? e),
         );
       const dropped = idempotent && /ssh 255/.test(String(e?.message));
-      if (!(unreached || dropped) || attempt >= 6) throw e;
-      await new Promise((r) => setTimeout(r, 2000 * attempt));
+      // Up to about five minutes: these paths drop for a minute or more.
+      if (!(unreached || dropped) || attempt >= 10) throw e;
+      await new Promise((r) => setTimeout(r, Math.min(60_000, 5000 * attempt)));
     }
 }
 

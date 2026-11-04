@@ -3,7 +3,7 @@
  * the saved work with the fixed surroundings, render the 10 s orbit with
  * Eevee split across hosts, and encode it.
  *
- *   node --import tsx lab/workloads/film.ts <city|modules> <run-artifacts-dir> <hosts.json> <out-dir> [city|street]
+ *   node --import tsx lab/workloads/film.ts <city|modules> <run-artifacts-dir> <hosts.json> <out-dir> [city|street] [town|jungle]
  *
  * <run-artifacts-dir> holds Wnn/work.tar (from a run's artifacts).
  */
@@ -15,13 +15,8 @@ import { fileURLToPath } from "node:url";
 import { host } from "./host.js";
 
 const run = promisify(execFile);
-const [mode, src, hostsPath, out, base = "city"] = process.argv.slice(2) as [
-  string,
-  string,
-  string,
-  string,
-  string?,
-];
+const [mode, src, hostsPath, out, base = "city", theme = "town"] =
+  process.argv.slice(2) as [string, string, string, string, string?, string?];
 const hosts = JSON.parse(await readFile(hostsPath, "utf8")).map(host);
 await mkdir(join(out, "frames"), { recursive: true });
 const work = "/root/film";
@@ -46,7 +41,7 @@ for (const id of (await readdir(src)).filter((d) => /^W\d+$/.test(d)).sort()) {
 const input = mode === "city" ? `/p/in/W01/${base}.blend` : "/p/in";
 await first.sh(
   blender(
-    `blender -b --factory-startup --python /p/assemble.py -- ${mode} ${input} /p/final.blend ${base} >/dev/null 2>&1; ls /p/final.blend`,
+    `blender -b --factory-startup --python /p/assemble.py -- ${mode} ${input} /p/final.blend ${base} ${theme} >/dev/null 2>&1; ls /p/final.blend`,
   ),
 );
 await first.get(`${work}/final.blend`, join(out, "final.blend"));
@@ -61,11 +56,21 @@ await Promise.all(
       await h.sh(`rm -rf ${work} && mkdir -p ${work}/out/frames`);
       await h.put(join(out, "final.blend"), `${work}/final.blend`);
     }
+    // Rendering takes minutes: it runs detached on the host and is polled
+    // with short commands, so a dropped connection cannot interrupt it.
     await h.sh(
-      blender(
+      `docker rm -f film-render >/dev/null 2>&1; ${blender(
         `blender -b /p/final.blend -s ${s} -e ${e} -a >/dev/null 2>&1; true`,
-      ),
+      ).replace("docker run --rm", "docker run -d --name film-render")}`,
     );
+    for (;;) {
+      await new Promise((r) => setTimeout(r, 15_000));
+      const running = await h
+        .sh("docker ps -q -f name=^film-render$")
+        .catch(() => "unknown"); // a dropped poll: ask again
+      if (!running.trim()) break;
+    }
+    await h.sh("docker rm -f film-render >/dev/null 2>&1; true");
     await h.sh(`cd ${work}/out/frames && tar -cf ${work}/frames-${i}.tar .`);
     await h.get(`${work}/frames-${i}.tar`, join(out, `frames-${i}.tar`));
     await run("tar", [

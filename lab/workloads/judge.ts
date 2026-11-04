@@ -18,11 +18,12 @@ import {
   readdir,
   stat,
 } from "node:fs/promises";
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomInt } from "node:crypto";
 import { host } from "./host.js";
+import { claude, resultText } from "./claude.js";
 import { PLANS, plotCentre } from "./studio.js";
 
 const [outArg, hostsPath, seedArg, ...specs] = process.argv.slice(2) as [
@@ -38,7 +39,9 @@ const arms = specs.map((s) => {
   return { arm, mode, dir };
 });
 // JUDGE_PLAN: block (default, sixteen buildings) or street (thirty-two houses).
-const plan = PLANS[(process.env.JUDGE_PLAN as "block" | "street") ?? "block"];
+const plan =
+  PLANS[(process.env.JUDGE_PLAN as "block" | "street" | "airport") ?? "block"];
+const noun = plan.noun ?? "building";
 // JUDGE_LIMIT judges only the first plots (pipeline checks).
 const briefs = new Map(
   [...plan.briefs(Number(seedArg), plan.cols * plan.rows)].slice(
@@ -79,7 +82,12 @@ for (const a of arms) {
     ),
     `${work}/module_shot.py`,
   );
-  const sources = a.mode === "city" ? ["W01"] : missing;
+  // A piece without a saved file (never declared) gets no photo: it is
+  // judged on an empty image and scores 1.
+  const sources = [];
+  for (const id of a.mode === "city" ? ["W01"] : missing)
+    if (await stat(join(a.dir, id, "work.tar")).catch(() => null))
+      sources.push(id);
   for (const id of sources) {
     await h.sh(`mkdir -p ${work}/${id}`);
     await h.put(join(a.dir, id, "work.tar"), `${work}/${id}/work.tar`);
@@ -117,48 +125,13 @@ for (const a of arms)
 if (sizes.size > 1) throw Error(`judge_unequal_photos:${[...sizes].join(",")}`);
 
 // 2. Blind comparative scoring, one plot at a time.
-const RUBRIC = `Score each building photo from 1 (poor) to 10 (excellent) on:
+const RUBRIC = `Score each ${noun} photo from 1 (poor) to 10 (excellent) on:
 - brief: matches the brief (type, listed features, colours, target height relative to the 20 m plot);
 - craft: detail and construction quality (distinct parts, openings, believable proportions);
 - materials: fitting, varied materials and colours;
 - soundness: nothing floating, clipping or broken; stays on its plot.
 Judge only what is visible. A missing or empty photo scores 1 on everything.
 Answer with JSON only: {"X": {"brief": n, "craft": n, "materials": n, "soundness": n}, ...} for every letter given.`;
-
-function claude(cwd: string, prompt: string): Promise<string> {
-  return new Promise((resolveOut, reject) => {
-    const args = [
-      "-p",
-      prompt,
-      "--tools",
-      "Read",
-      "--output-format",
-      "json",
-      "--no-session-persistence",
-      "--setting-sources",
-      "project",
-      "--disable-slash-commands",
-      "--model",
-      "sonnet",
-    ];
-    // The operator's launcher applies the required Anthropic egress.
-    const p = spawn("zsh", ["-ic", 'claude "$@"', "zsh", ...args], {
-      cwd,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: Object.fromEntries(
-        Object.entries(process.env).filter(
-          ([k]) => !/proxy/i.test(k) && k !== "NODE_USE_ENV_PROXY",
-        ),
-      ),
-    });
-    let stdout = "";
-    p.stdout.on("data", (c) => (stdout += c));
-    p.on("error", reject);
-    p.on("close", (code) =>
-      code === 0 ? resolveOut(stdout) : reject(Error(`claude ${code}`)),
-    );
-  });
-}
 
 const previous: any[] = only
   ? JSON.parse(await readFile(join(out, "judge-raw.json"), "utf8"))
@@ -179,16 +152,8 @@ for (const [id, b] of briefs) {
       join(out, "shots", arm, `${id}.png`),
       join(dir, `${letters[i]}.png`),
     ).catch(async () => writeFile(join(dir, `${letters[i]}.png`), ""));
-  const prompt = `Brief for this plot: a ${b.style}, about ${b.height} m tall: ${b.brief}.\nRead the photos ${letters.map((l) => `${l}.png`).join(", ")} in this directory (each shows one candidate building on the same 20 x 20 m plot).\n${RUBRIC}`;
-  const raw = await claude(dir, prompt);
-  // The launcher may print status lines before claude's JSON result.
-  const line = raw
-    .trim()
-    .split("\n")
-    .reverse()
-    .find((l) => l.startsWith("{") && l.includes('"result"'));
-  if (!line) throw Error("judge_no_result:" + raw.slice(0, 200));
-  const text = JSON.parse(line).result as string;
+  const prompt = `Brief for this plot: a ${b.style}, about ${b.height} m tall: ${b.brief}.\nRead the photos ${letters.map((l) => `${l}.png`).join(", ")} in this directory (each shows one candidate ${noun} on the same 20 x 20 m plot).\n${RUBRIC}`;
+  const text = resultText(await claude(dir, prompt));
   const scores = JSON.parse(
     text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1),
   );

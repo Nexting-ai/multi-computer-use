@@ -14,6 +14,7 @@ import {
   mkdir,
   appendFile,
   unlink,
+  copyFile,
 } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
@@ -57,7 +58,18 @@ import { kicad } from "../workloads/kicad.js";
 import { studio, PLANS } from "../workloads/studio.js";
 import type { Workload } from "../workloads/types.js";
 
-const ARMS = ["P-V", "P-T", "B-V", "B-T", "S", "F", "H", "M"] as const;
+const ARMS = [
+  "P-V",
+  "P-T",
+  "B-V",
+  "B-T",
+  "S",
+  "F",
+  "H",
+  "M",
+  "R",
+  "X",
+] as const;
 type Arm = (typeof ARMS)[number];
 const schema = z.strictObject({
   binary: z.string(),
@@ -81,9 +93,13 @@ const schema = z.strictObject({
         "city",
         "street",
         "street-many",
+        "airport",
+        "airport-many",
       ]),
       image: z.string(),
       port: z.number().int().optional(),
+      /** Studio tasks: desktops per piece (arm X tries ideas in parallel). */
+      variants: z.number().int().min(1).max(8).optional(),
       /** Resources of one desktop (default 2 vCPU, 4 GB). */
       cpus: z.number().positive().optional(),
       memory: z.string().optional(),
@@ -115,6 +131,10 @@ const schema = z.strictObject({
   refine_max_calls: z.number().int().positive().default(24),
   refine_deadline_ms: z.number().int().min(60000).default(1200000),
   refine_rounds: z.number().int().min(1).max(3).default(2),
+  /** Arm R: rounds, each a fresh director session (build, then refine). */
+  rounds: z.number().int().min(1).max(8).default(5),
+  /** Arm R: tool calls per round (iteration happens across rounds). */
+  round_max_calls: z.number().int().min(4).default(16),
   /** Per-surface sessions running at once (1 = sequential, as in E1). */
   workset_parallel: z.number().int().min(1).max(32).default(1),
   stack_concurrency: z.number().int().min(1).max(100).default(64),
@@ -159,11 +179,18 @@ const workload: Workload =
                 desktopOptions(W),
                 PLANS.block,
               )
-            : studio(
-                W.kind === "street-many" ? "many" : "studio",
-                desktopOptions(W),
-                PLANS.street,
-              );
+            : W.kind === "street" || W.kind === "street-many"
+              ? studio(
+                  W.kind === "street-many" ? "many" : "studio",
+                  desktopOptions(W),
+                  PLANS.street,
+                )
+              : studio(
+                  W.kind === "airport-many" ? "many" : "studio",
+                  desktopOptions(W),
+                  PLANS.airport,
+                  W.variants ?? 1,
+                );
 const free = workload.declared;
 const steps = workload.items;
 
@@ -185,7 +212,7 @@ const t = (name: string, description: string, s: z.ZodType): Tool => ({
   type: "function",
   name,
   description,
-  inputSchema: z.toJSONSchema(s),
+  inputSchema: z.toJSONSchema(s, { io: "input" }),
 });
 const perSurfaceTools = (text: boolean): Tool[] => [
   t(
@@ -222,16 +249,20 @@ const perSurfaceTools = (text: boolean): Tool[] => [
   ),
 ];
 const fleetRunDescription = (vision: boolean) =>
-  "Broadcast ONE decision over many surfaces (Z). All rectangles/points are pixels of the exemplar view_id. template: the stable task area enclosing everything referenced; the host finds it on every surface by pixel registration (translation tolerated) and never touches a surface where it does not match. " +
+  "Broadcast ONE decision over many surfaces (Z). All rectangles/points are pixels of the exemplar view_id. template: the stable task area enclosing everything referenced; the host finds it on every surface by pixel registration (translation tolerated) and never touches a surface where it does not match. Choose it on interface parts that look the same on every surface (menus, toolbars, panel headers) and put areas whose content differs per surface (documents, editors, viewports, previews) in ignore; at least a quarter of the template must stay unmasked, so keep it tight around the stable parts. " +
   (vision
     ? "fields: named rectangles whose content varies; YOU provide their values per surface in `values` (from a fleet_crops contact sheet, crops_id), one item per surface per run; there is no text channel. "
     : "fields: named rectangles whose text varies (values only, not labels: text nodes whose centre lies inside are concatenated); the host reads their exact text via the platform text channel, so you never transcribe values. ") +
-  "inputs: columns of the host task table shown in the task; steps type or choose them like fields, per surface, so you never transcribe them. items: how many items this policy performs per surface in this run (use one policy per item when items differ). " +
+  "inputs: columns of the host task table shown in the task; steps type or choose them like fields, per surface, so you never transcribe them. " +
+  (vision
+    ? ""
+    : "assign: your own per-surface values for inputs ({surface_id: {name: text}}), e.g. a different script for each surface in one decision; the policy then runs only on the assigned surfaces, and assigned inputs need no task-table column. ") +
+  "items: how many items this policy performs per surface in this run (use one policy per item when items differ). " +
   "ignore: other pixels inside the template that legitimately change (counters, headings, selection highlight, input contents, receipts not declared as fields). Every click target is also checked locally against the exemplar (keep value fields off click targets); a surface whose target looks different gets no input. steps (ordered): click{x,y}; type_field{field}; choose{field,cases[{equals,x,y,label}],otherwise?{x,y,label}} clicks the case whose equals exactly matches the field value; otherwise covers any other non-empty value; no match => surface untouched and reported; " +
   (vision
     ? ""
     : "click_text{field|text} clicks the unique text/control inside the template whose text equals the field value or literal; ") +
-  "key_chord. verify: post-condition of a field after the steps, {field,equals} or {field,contains:[...]} with placeholders {fieldname} and {choice} (a post-condition without placeholders only proves the steps ran and is reported as weak)" +
+  "key_chord. verify (optional only in free tasks, where you check the effect by looking): post-condition of a field after the steps, {field,equals} or {field,contains:[...]} with placeholders {fieldname} and {choice} (a post-condition without placeholders only proves the steps ran and is reported as weak)" +
   (vision
     ? " (in vision mode it is not checked by the host; you confirm receipts with fleet_confirm)"
     : "") +
@@ -322,6 +353,42 @@ const refineDirectorPrompt = (
       } ${forward} Progress: `;
 const refinerPrompt = (id: string, row: Record<string, string>, note: string) =>
   `You refine one building on desktop ${id}: Blender, collection Module on a 20 x 20 m plot centred at the origin. Brief: a ${row.style ?? "building"}, about ${row.height ?? "?"} m tall: ${row.brief ?? ""}. A base version already exists (built by a shared script whose helper functions are in the text editor's module.py; reuse them). Director's notes: ${note}\nImprove the building to meet the brief and the notes, with the interface or Blender's Python (text editor + Alt+P, or the console): render a preview (F12), look, fix what is wrong, save (Ctrl+S). Stay inside the plot and near the target height. A long script can keep Blender busy for minutes: use desktop_wait, then observe again. Your budget is small; stop once it meets the brief. End with one sentence on what you changed. Use only Blender; never repeat delivered or unknown input. ${forward}`;
+const notesSchema = z.strictObject({
+  notes: z.record(z.string(), z.string().min(1).max(1500)),
+});
+const roundTools: Tool[] = [
+  ...directorTools,
+  t(
+    "round_notes",
+    "Notes for your next round (a fresh session that sees only these notes, the task and the screens): notes maps a desktop id to what its piece consists of (object names, how it was built) and what to improve next. Replaces the notes of the listed desktops.",
+    notesSchema,
+  ),
+];
+const roundsRule =
+  "In this task fleet_run policies are steps: each applies once per desktop per run (canary first, then the rest), is verified by its post-condition, and never completes an item; declared desktops are skipped. Here verify may be omitted: each desktop then reports delivered (template matched, input sent) and you check the effect by looking, e.g. with fleet_overview. A rejected policy returns the reason: fix it and run it again.";
+const roundPrompt = (
+  task: string,
+  ids: string[],
+  round: number,
+  rounds: number,
+  notes: Record<string, string>,
+  policies: unknown[],
+  calls: number,
+) =>
+  round === 0
+    ? `${task}\nYou alone direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}), each holding a different piece, in ${rounds} rounds; this is round 1. A fresh session runs each round, with a budget of ${calls} tool calls, so whatever you need later goes into round_notes. This round: (1) take one exemplar with fleet_observe and write a policy whose \`type\` step pastes {code} into Blender's text editor, runs it (Alt+P) and saves; (2) build a first version of EVERY piece with ONE fleet_run whose assign gives each desktop its own script (inputs ["code"]): the pieces differ, so write each script for its own brief; (3) render a preview on every desktop with one fleet_run and review them all in one fleet_overview; (4) call round_notes for every desktop, then end your turn. The round is not over until every piece has a first version. ${roundsRule} ${forward} Starting progress: `
+    : `${task}\nYou alone direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}), each holding a different piece. Round ${round + 1} of ${rounds}; a fresh session runs each round, with a budget of ${calls} tool calls, so make one review-edit-review pass and leave further work to the next round. Your notes from the last round: ${JSON.stringify(notes)}. Policies that ran earlier (their view_ids stay valid; reuse them, with a new assign, when they fit the screens): ${JSON.stringify(policies)}. This round: (1) review the current state of every piece in one fleet_overview (render previews everywhere with one fleet_run first if the screens do not show fresh renders; zoom into a single desktop with desktop_observe only when its tile is too small to judge); (2) improve every piece that falls short of its brief with ONE fleet_run whose assign holds each desktop's own edit script, making several concrete improvements per piece (change, add or replace objects in collection Module; keep what is good; end by saving); (3) render again, review in one fleet_overview and fix failures; (4) declare every finished piece with desktop_done and call round_notes for the rest. ${
+        round === rounds - 1
+          ? "This is the final round: declare every acceptable piece before you end."
+          : "Then end your turn."
+      } ${roundsRule} ${forward} Progress: `;
+const explorePrompt = (
+  task: string,
+  piece: string,
+  row: Record<string, string>,
+  ids: string[],
+) =>
+  `${task}\nYou build one piece, ${piece}: a ${row.style ?? "piece"}, about ${row.height ?? "?"} m tall: ${row.brief ?? ""}. You have ${ids.length} desktops (${ids.join(", ")}), each with the same empty plot, so you can try ${ids.length} ideas at once. Work in passes. Each pass sends every desktop its own complete build script in ONE fleet_run (assign; inputs ["code"]; a \`type\` step pastes {code} into the text editor, then run it with Alt+P); every script first deletes everything in collection Module, then builds the whole piece and saves. Then render a preview on every desktop with one fleet_run and compare them in one fleet_overview (zoom into one desktop with desktop_observe when a tile is too small to judge). First pass: ${ids.length} clearly different designs. Later passes: keep the best design and send ${ids.length} improved variations of it (fix what is wrong, add detail and better materials, try bolder and finer changes). Finish with your best version saved on one desktop and declare only that desktop with desktop_done. ${roundsRule} ${forward} Progress: `;
 const finalMessage = (agent: any) =>
   ((agent?.status?.items ?? []) as any[])
     .filter((i) => i.type === "agentMessage")
@@ -437,6 +504,8 @@ await writeFile(
         F: directorTools,
         H: refineDirectorTools,
         M: directorTools,
+        R: roundTools,
+        X: directorTools,
       },
     },
     null,
@@ -766,6 +835,92 @@ for (const blk of blocks)
           parallel: o.workset_parallel,
         },
       );
+    /** The director's fleet and per-surface desks over every surface. */
+    const fleet = (contract: "item" | "free", ids: string[] = lab.surfaces) => {
+      const stack = new StackScreen(lab.port, ledger, ids, {
+        concurrency: o.stack_concurrency,
+        contract,
+        ...(lab.inputs ? { inputs: lab.inputs } : {}),
+        ...(workload.settle_ms ? { settle_ms: workload.settle_ms } : {}),
+        evidence: {
+          source: saveSource,
+          delivery: delivery("stack-deliveries.jsonl"),
+        },
+      });
+      const runtime = new ManagedScreen(
+        lab.port,
+        ledger,
+        lab.surfaces,
+        ids,
+        false,
+        {
+          max_scope: ids.length,
+          source: (f) => saveSource(f, "director"),
+          delivery: (request, receipt) =>
+            delivery("deliveries.jsonl")({
+              director: true,
+              request,
+              receipt,
+              at: new Date().toISOString(),
+            }),
+          contract,
+        },
+      );
+      const handle = async (
+        name: string,
+        args: unknown,
+      ): Promise<{ views: any[]; rest: unknown }> => {
+        if (name === "fleet_observe") {
+          const q = await stack.observe(fleetObserve.parse(args).surfaces);
+          return { views: q.views, rest: { errors: q.errors, fleet: q.fleet } };
+        }
+        if (name === "fleet_run") {
+          const { views, ...rest } = await stack.run(args);
+          return { views, rest };
+        }
+        if (name === "fleet_overview") {
+          const q = overviewSchema.parse(args);
+          const ov = await stack.overview(q.surfaces, q.region);
+          const meta = await sharp(ov.png).metadata();
+          return {
+            views: [
+              {
+                png: ov.png,
+                width: meta.width,
+                height: meta.height,
+                overview: ov.surfaces,
+              },
+            ],
+            rest: { fleet: ov.fleet },
+          };
+        }
+        const handled = desk(runtime, ids, false, name, args);
+        if (!handled) throw Error("unknown_tool");
+        return handled;
+      };
+      return { stack, runtime, handle };
+    };
+    /** Like the per-surface worksets, a director's session that ended
+     * before its work was done (an early end, or a model-service error) is
+     * continued in a new session, at most twice; the desktops keep their
+     * state and the new session is told so. */
+    const resumable = async (
+      path: string,
+      run: (path: string, resumed: string) => Promise<any>,
+      done: (agent: any) => boolean,
+    ) => {
+      for (let attempt = 0; ; attempt++) {
+        const agent = await run(
+          attempt ? `${path}-continued-${attempt}` : path,
+          attempt
+            ? " (Continued in a new session: the work is not finished; the desktops keep their state, so check it and carry on.) "
+            : "",
+        );
+        if (done(agent) || attempt >= 2) return agent;
+        if (agent?.stop_reason === "run_failed")
+          await new Promise((r) => setTimeout(r, 60_000));
+      }
+    };
     const phases: Record<string, unknown> = {};
     try {
       await writeFile(join(directory, "tools.jsonl"), "");
@@ -814,35 +969,7 @@ for (const blk of blocks)
       } else if (arm === "F" || arm === "M") {
         // The director: fleet policies for shared work, per-surface tools for
         // what differs, and one-image reviews of the whole fleet.
-        const stack = new StackScreen(lab.port, ledger, lab.surfaces, {
-          concurrency: o.stack_concurrency,
-          contract: free ? "free" : "item",
-          ...(lab.inputs ? { inputs: lab.inputs } : {}),
-          ...(workload.settle_ms ? { settle_ms: workload.settle_ms } : {}),
-          evidence: {
-            source: saveSource,
-            delivery: delivery("stack-deliveries.jsonl"),
-          },
-        });
-        const runtime = new ManagedScreen(
-          lab.port,
-          ledger,
-          lab.surfaces,
-          lab.surfaces,
-          false,
-          {
-            max_scope: lab.surfaces.length,
-            source: (f) => saveSource(f, "director"),
-            delivery: (request, receipt) =>
-              delivery("deliveries.jsonl")({
-                director: true,
-                request,
-                receipt,
-                at: new Date().toISOString(),
-              }),
-            contract: free ? "free" : "item",
-          },
-        );
+        const { runtime, handle } = fleet(free ? "free" : "item");
         await session(
           "sessions/director",
           directorTools,
@@ -850,109 +977,21 @@ for (const blk of blocks)
             ? masterPrompt(lab.task, lab.surfaces)
             : directorPrompt(lab.task, lab.surfaces)) +
             JSON.stringify(ledger.summary()),
-          async (name, args) => {
-            if (name === "fleet_observe") {
-              const q = await stack.observe(fleetObserve.parse(args).surfaces);
-              return {
-                views: q.views,
-                rest: { errors: q.errors, fleet: q.fleet },
-              };
-            }
-            if (name === "fleet_run") {
-              const { views, ...rest } = await stack.run(args);
-              return { views, rest };
-            }
-            if (name === "fleet_overview") {
-              const q = overviewSchema.parse(args);
-              const ov = await stack.overview(q.surfaces, q.region);
-              const meta = await sharp(ov.png).metadata();
-              return {
-                views: [
-                  {
-                    png: ov.png,
-                    width: meta.width,
-                    height: meta.height,
-                    overview: ov.surfaces,
-                  },
-                ],
-                rest: { fleet: ov.fleet },
-              };
-            }
-            const handled = desk(runtime, lab.surfaces, false, name, args);
-            if (!handled) throw Error("unknown_tool");
-            return handled;
-          },
+          handle,
         );
         await context.run(-1, () => runtime.drain());
       } else if (arm === "H") {
         // Director + parallel refiners: a shared base for every desktop,
         // then one refiner per desktop applying the director's notes, then a
         // director review (up to refine_rounds rounds).
-        const stack = new StackScreen(lab.port, ledger, lab.surfaces, {
-          concurrency: o.stack_concurrency,
-          contract: "free",
-          ...(lab.inputs ? { inputs: lab.inputs } : {}),
-          ...(workload.settle_ms ? { settle_ms: workload.settle_ms } : {}),
-          evidence: {
-            source: saveSource,
-            delivery: delivery("stack-deliveries.jsonl"),
-          },
-        });
-        const directorDesk = new ManagedScreen(
-          lab.port,
-          ledger,
-          lab.surfaces,
-          lab.surfaces,
-          false,
-          {
-            max_scope: lab.surfaces.length,
-            source: (f) => saveSource(f, "director"),
-            delivery: (request, receipt) =>
-              delivery("deliveries.jsonl")({
-                director: true,
-                request,
-                receipt,
-                at: new Date().toISOString(),
-              }),
-            contract: "free",
-          },
-        );
+        const { runtime: directorDesk, handle } = fleet("free");
         let plan: Record<string, string> = {};
         const director = async (name: string, args: unknown) => {
-          if (name === "fleet_observe") {
-            const q = await stack.observe(fleetObserve.parse(args).surfaces);
-            return {
-              views: q.views,
-              rest: { errors: q.errors, fleet: q.fleet },
-            };
-          }
-          if (name === "fleet_run") {
-            const { views, ...rest } = await stack.run(args);
-            return { views, rest };
-          }
-          if (name === "fleet_overview") {
-            const q = overviewSchema.parse(args);
-            const ov = await stack.overview(q.surfaces, q.region);
-            const meta = await sharp(ov.png).metadata();
-            return {
-              views: [
-                {
-                  png: ov.png,
-                  width: meta.width,
-                  height: meta.height,
-                  overview: ov.surfaces,
-                },
-              ],
-              rest: { fleet: ov.fleet },
-            };
-          }
           if (name === "refine_plan") {
             plan = refinePlanSchema.parse(args).notes;
             return { views: [], rest: { planned: Object.keys(plan) } };
           }
-          const handled = desk(directorDesk, lab.surfaces, false, name, args);
-          if (!handled) throw Error("unknown_tool");
-          return handled;
+          return handle(name, args);
         };
         let reports: Record<string, string> = {};
         for (let round = 0; round <= o.refine_rounds; round++) {
@@ -1012,6 +1051,98 @@ for (const blk of blocks)
           );
         }
         await context.run(-1, () => directorDesk.drain());
+      } else if (arm === "R") {
+        // One director, rounds of fresh sessions: each round reviews every
+        // piece in one image and sends each desktop its own edit in one
+        // decision (fleet_run with assign); notes carry over between rounds.
+        const { runtime, handle } = fleet("free");
+        let notes: Record<string, string> = {};
+        // Policies that ran, by request id, without their per-surface values.
+        const policies = new Map<string, unknown>();
+        const director = async (name: string, args: unknown) => {
+          if (name === "round_notes") {
+            notes = { ...notes, ...notesSchema.parse(args).notes };
+            return { views: [], rest: { noted: Object.keys(notes) } };
+          }
+          const out = await handle(name, args);
+          const counts = (out.rest as any)?.counts ?? {};
+          if (
+            name === "fleet_run" &&
+            (counts.prepared ?? 0) + (counts.verified ?? 0) > 0
+          ) {
+            const { assign: _a, ...shape } = args as any;
+            policies.delete(shape.request_id);
+            policies.set(shape.request_id, shape);
+            while (policies.size > 4)
+              policies.delete(policies.keys().next().value!);
+          }
+          return out;
+        };
+        for (let round = 0; round < o.rounds; round++) {
+          if (lab.surfaces.every((id) => ledger.get(id).state !== "ready"))
+            break;
+          await resumable(
+            `sessions/round-${round}`,
+            (path, resumed) =>
+              session(
+                path,
+                roundTools,
+                roundPrompt(
+                  lab.task,
+                  lab.surfaces,
+                  round,
+                  o.rounds,
+                  notes,
+                  [...policies.values()],
+                  o.round_max_calls,
+                ) +
+                  resumed +
+                  JSON.stringify(ledger.summary()),
+                director,
+                { calls: o.round_max_calls },
+              ),
+            // A round is over when its session ends normally.
+            (agent) => agent?.stop_reason !== "run_failed",
+          );
+        }
+        await context.run(-1, () => runtime.drain());
+      } else if (arm === "X") {
+        // One agent per piece with several desktops: each pass tries one idea
+        // per desktop in a single decision and keeps the best (arm X).
+        const pieces = new Map<string, string[]>();
+        for (const id of lab.surfaces) {
+          const piece = lab.inputs?.[id]?.piece ?? id;
+          pieces.set(piece, [...(pieces.get(piece) ?? []), id]);
+        }
+        const queue = [...pieces];
+        await Promise.all(
+          Array.from({ length: o.workset_parallel }, async () => {
+            for (let next = queue.shift(); next; next = queue.shift()) {
+              const [piece, ids] = next;
+              const { runtime, handle } = fleet("free", ids);
+              await resumable(
+                `sessions/piece-${piece}`,
+                (path, resumed) =>
+                  session(
+                    path,
+                    directorTools,
+                    explorePrompt(
+                      lab.task,
+                      piece,
+                      lab.inputs?.[ids[0]!] ?? {},
+                      ids,
+                    ) +
+                      resumed +
+                      JSON.stringify(ledger.summary()),
+                    handle,
+                  ),
+                // The piece is done once one of its desktops is declared.
+                () => ids.some((id) => ledger.get(id).completed > 0),
+              );
+              await context.run(-1, () => runtime.drain());
+            }
+          }),
+        );
       } else if (arm === "S") {
         const script = new ScriptScreen(lab.port, ledger, lab.surfaces, {
           contract: free ? "free" : "item",
@@ -1044,7 +1175,7 @@ for (const blk of blocks)
       // Leftovers (and the per-surface arms themselves) use per-surface worksets.
       const t1 = performance.now();
       // The director (F) owns its fleet: no hand-off to per-surface agents.
-      if (arm !== "F" && arm !== "H" && arm !== "M")
+      if (!["F", "H", "M", "R", "X"].includes(arm))
         await perSurface(arm === "P-T" || arm === "B-T" || arm === "S");
       phases.worksets = {
         elapsed_ms: Math.round(performance.now() - t1),
@@ -1069,8 +1200,38 @@ for (const blk of blocks)
             at: new Date().toISOString(),
           }),
         );
-        const scores = await lab.grade();
+        let scores = await lab.grade();
         await lab.collect?.(join(directory, "artifacts"));
+        if (arm === "X") {
+          // A piece's result is the one desktop its agent declared.
+          const chosen: Record<string, string | null> = {};
+          for (const id of lab.surfaces) {
+            const piece = lab.inputs?.[id]?.piece ?? id;
+            chosen[piece] ??= null;
+            if (ledger.get(id).completed > 0 && !chosen[piece])
+              chosen[piece] = id;
+          }
+          await writeFile(
+            join(directory, "chosen.json"),
+            JSON.stringify(chosen, null, 2),
+          );
+          for (const [piece, id] of Object.entries(chosen))
+            if (id) {
+              await mkdir(join(directory, "pieces", piece), {
+                recursive: true,
+              });
+              await copyFile(
+                join(directory, "artifacts", id, "work.tar"),
+                join(directory, "pieces", piece, "work.tar"),
+              ).catch(() => {});
+            }
+          scores = Object.entries(chosen).map(([piece, id]) => {
+            const s = scores.find((x: any) => x.surface_id === id);
+            return s
+              ? { ...s, surface_id: piece, chosen: id }
+              : { surface_id: piece, success: false, wrong: false, commits: 0 };
+          });
+        }
         const row = {
           block: blk.block,
           arm,
@@ -1086,7 +1247,7 @@ for (const blk of blocks)
             (n: number, s: any) => n + (s.commits ?? 0),
             0,
           ),
-          total: o.count,
+          total: scores.length,
           tokens: usage.totalTokens,
           usage,
           inferences:

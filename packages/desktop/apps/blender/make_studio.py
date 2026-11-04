@@ -88,7 +88,7 @@ slab = material("Plot", (0.55, 0.55, 0.53))
 plot("Module", 0, 0, slab)
 environment(0, 0, 60, 50, 24, 30)  # frames a 60 m tower on its plot
 script(
-    "# Build the brief's building inside the collection 'Module'.\n"
+    "# Build the brief's model inside the collection 'Module'.\n"
     "# Plot: 20 x 20 m centred at the origin, ground at z = 0. Metres.\n"
     "# Run with Alt+P. Render a preview with F12; save with Ctrl+S.\n"
 )
@@ -119,5 +119,5 @@ def many(path, cols, rows, intro):
 
 
 # Sixteen plots (the city block) and thirty-two (the street) on one desktop.
-many("/opt/app/city.blend", 4, 4, "# Build each brief's building inside its plot's collection P01..P16.\n")
+many("/opt/app/city.blend", 4, 4, "# Build each brief's model inside its plot's collection P01..P16.\n")
 many("/opt/app/street.blend", 8, 4, "# Build each row's house inside its plot's collection P01..P32.\n")

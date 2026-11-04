@@ -2,11 +2,12 @@
 every arm; not part of the agents' work).
 
   blender -b --factory-startup --python assemble.py -- city <city.blend> <out.blend>
-  blender -b --factory-startup --python assemble.py -- modules <dir> <out.blend> [base]
+  blender -b --factory-startup --python assemble.py -- modules <dir> <out.blend> [base] [theme]
 
 `city`: one desktop built every plot in city.blend. `modules`: <dir>/Wnn/
 studio.blend each hold one plot's collection Module, placed on plot Pnn.
-The fixed surroundings (streets, trees, street lights, evening light) and a
+The fixed surroundings (theme town: streets, trees, street lights; theme
+jungle: a rainforest clearing with paths, a runway and a river), evening light and a
 10 s orbit at 24 fps are added; frames are rendered separately with Eevee."""
 import math
 import os
@@ -18,6 +19,7 @@ import mathutils
 args = sys.argv[sys.argv.index("--") + 1:]
 mode, source, out = args[:3]
 base = args[3] if len(args) > 3 else "city"  # city (4 x 4) or street (8 x 4)
+THEME = args[4] if len(args) > 4 else "town"  # town (streets) or jungle
 
 if mode == "city":
     bpy.ops.wm.open_mainfile(filepath=source)
@@ -96,57 +98,130 @@ pole = material("Pole", (0.2, 0.2, 0.22), 0.4)
 lamp = material("Lamp", (1.0, 0.82, 0.55), 0.3, emit=25)
 grass = material("Grass", (0.22, 0.36, 0.17))
 
-W, H = COLS * SPACING + 40, ROWS * SPACING + 40  # paved area
-box((W * 3, H * 3, 0.2), (0, 0, -0.32), grass)
-box((W, H, 0.1), (0, 0, -0.25), asphalt)
-# Streets run between the plots: xs along y, ys along x.
+W, H = COLS * SPACING + 40, ROWS * SPACING + 40  # the plots' area
 xs = [(i - COLS / 2) * SPACING for i in range(COLS + 1)]
 ys = [(j - ROWS / 2) * SPACING for j in range(ROWS + 1)]
-for x in xs:  # dashed centre lines
-    for t in range(-int(H / 2) + 20, int(H / 2) - 19, 6):
-        box((0.25, 2.5, 0.02), (x, t, -0.19), paint)
-for y in ys:
-    for t in range(-int(W / 2) + 20, int(W / 2) - 19, 6):
-        box((2.5, 0.25, 0.02), (t, y, -0.19), paint)
 
-# One tree and one street light, instanced along the streets.
-proto = bpy.data.collections.new("Prototypes")
-bpy.ops.mesh.primitive_cylinder_add(radius=0.25, depth=3, location=(0, 0, 1.5))
-trunk = bpy.context.active_object
-trunk.data.materials.append(bark)
-bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=2.2, location=(0, 0, 4.2))
-crown = bpy.context.active_object
-crown.data.materials.append(leaf)
-bpy.ops.mesh.primitive_cylinder_add(radius=0.1, depth=6, location=(0, 0, 3))
-post = bpy.context.active_object
-post.data.materials.append(pole)
-bpy.ops.mesh.primitive_uv_sphere_add(radius=0.35, location=(0, 0, 6.1))
-bulb = bpy.context.active_object
-bulb.data.materials.append(lamp)
-tree_col = bpy.data.collections.new("Tree")
-light_col = bpy.data.collections.new("StreetLight")
-for o, c in ((trunk, tree_col), (crown, tree_col), (post, light_col), (bulb, light_col)):
-    for u in o.users_collection:
-        u.objects.unlink(o)
-    c.objects.link(o)
+# Prototypes, instanced many times: a tree, a street light, a palm.
+def proto(name, parts):
+    col = bpy.data.collections.new(name)
+    for o in parts:
+        for u in o.users_collection:
+            u.objects.unlink(o)
+        col.objects.link(o)
+    return col
 
 
-def instance(col, x, y):
+def part(op, mat, **kw):
+    op(**kw)
+    o = bpy.context.active_object
+    o.data.materials.append(mat)
+    return o
+
+
+tree_col = proto("Tree", [
+    part(bpy.ops.mesh.primitive_cylinder_add, bark, radius=0.25, depth=3, location=(0, 0, 1.5)),
+    part(bpy.ops.mesh.primitive_ico_sphere_add, leaf, subdivisions=2, radius=2.2, location=(0, 0, 4.2)),
+])
+light_col = proto("StreetLight", [
+    part(bpy.ops.mesh.primitive_cylinder_add, pole, radius=0.1, depth=6, location=(0, 0, 3)),
+    part(bpy.ops.mesh.primitive_uv_sphere_add, lamp, radius=0.35, location=(0, 0, 6.1)),
+])
+
+
+def instance(col, x, y, scale=1.0, turn=0.0):
     e = bpy.data.objects.new(col.name, None)
     e.instance_type = "COLLECTION"
     e.instance_collection = col
     e.location = (x, y, 0)
+    e.scale = (scale, scale, scale)
+    e.rotation_euler = (0, 0, turn)
     dressing.objects.link(e)
 
 
-side = 3.6
-for x in xs:
-    for t in range(-int(H / 2) + 25, int(H / 2) - 24, 10):
-        instance(tree_col if (t // 10) % 2 else light_col, x + side, t + 5)
-for y in ys:
-    for t in range(-int(W / 2) + 25, int(W / 2) - 24, 10):
-        instance(light_col if (t // 10) % 2 else tree_col, t + 5, y - side)
+if THEME == "town":
+    # Paved streets between the plots: xs run along y, ys along x.
+    box((W * 3, H * 3, 0.2), (0, 0, -0.32), grass)
+    box((W, H, 0.1), (0, 0, -0.25), asphalt)
+    for x in xs:  # dashed centre lines
+        for t in range(-int(H / 2) + 20, int(H / 2) - 19, 6):
+            box((0.25, 2.5, 0.02), (x, t, -0.19), paint)
+    for y in ys:
+        for t in range(-int(W / 2) + 20, int(W / 2) - 19, 6):
+            box((2.5, 0.25, 0.02), (t, y, -0.19), paint)
+    side = 3.6
+    for x in xs:
+        for t in range(-int(H / 2) + 25, int(H / 2) - 24, 10):
+            instance(tree_col if (t // 10) % 2 else light_col, x + side, t + 5)
+    for y in ys:
+        for t in range(-int(W / 2) + 25, int(W / 2) - 24, 10):
+            instance(light_col if (t // 10) % 2 else tree_col, t + 5, y - side)
+else:
+    # A clearing in a rainforest: dirt paths between the plots, a runway on
+    # one side, a river on the other, dense jungle all around.
+    import random
 
+    rnd = random.Random(7)
+    soil = material("Soil", (0.32, 0.2, 0.12), 0.9)
+    moss = material("Moss", (0.12, 0.26, 0.09))
+    water = material("Water", (0.08, 0.32, 0.36), 0.05)
+    dark_leaf = material("DarkLeaves", (0.07, 0.24, 0.08))
+    palm_leaf = material("PalmLeaves", (0.2, 0.42, 0.12))
+    runway_light = material("RunwayLight", (0.6, 0.85, 1.0), 0.3, emit=30)
+    plaza = material("Plaza", (0.55, 0.5, 0.4), 0.85)  # sandstone plots
+    for o in scene.objects:
+        if o.name.endswith("_plot") and o.type == "MESH":
+            o.data.materials.clear()
+            o.data.materials.append(plaza)
+    box((W * 4, H * 4, 0.2), (0, 0, -0.32), moss)
+    box((W, H, 0.1), (0, 0, -0.25), grass)
+    for x in xs:
+        box((4, H, 0.04), (x, 0, -0.19), soil)
+    for y in ys:
+        box((W, 4, 0.04), (0, y, -0.19), soil)
+    run_y = -H / 2 - 28
+    box((W + 160, 30, 0.1), (0, run_y, -0.22), asphalt)
+    edge_light = proto("RunwayLight", [
+        part(bpy.ops.mesh.primitive_uv_sphere_add, runway_light, radius=0.3, location=(0, 0, 0.1)),
+    ])
+    for t in range(-int((W + 140) / 2), int((W + 140) / 2), 14):
+        box((7, 0.5, 0.02), (t, run_y, -0.16), paint)
+        for edge in (-15.5, 15.5):
+            instance(edge_light, t, run_y + edge)
+    box((W + 300, 26, 0.1), (0, H / 2 + 40, -0.28), water)
+    # Jungle trees and palms: tall trunks with layered crowns.
+    jungle = proto("JungleTree", [
+        part(bpy.ops.mesh.primitive_cylinder_add, bark, radius=0.45, depth=12, location=(0, 0, 6)),
+        part(bpy.ops.mesh.primitive_ico_sphere_add, dark_leaf, subdivisions=2, radius=4.5, location=(0, 0, 12.5)),
+        part(bpy.ops.mesh.primitive_ico_sphere_add, leaf, subdivisions=2, radius=3.2, location=(2.2, 1.0, 10.5)),
+    ])
+    fronds = []
+    for k in range(7):
+        a = k / 7 * math.tau
+        f = part(bpy.ops.mesh.primitive_cube_add, palm_leaf, size=1, location=(math.cos(a) * 2.2, math.sin(a) * 2.2, 8.6))
+        f.scale = (4.4, 0.7, 0.05)
+        f.rotation_euler = (0, math.radians(18), a)
+        fronds.append(f)
+    palm = proto("Palm", [
+        part(bpy.ops.mesh.primitive_cylinder_add, bark, radius=0.22, depth=9, location=(0, 0, 4.5)),
+        *fronds,
+    ])
+    placed = 0
+    while placed < 520:
+        x = rnd.uniform(-W * 1.4, W * 1.4)
+        y = rnd.uniform(-H * 1.6, H * 1.6)
+        if abs(x) < W / 2 + 6 and abs(y) < H / 2 + 6:
+            continue  # the clearing
+        if abs(y - run_y) < 22 and abs(x) < (W + 160) / 2 + 4:
+            continue  # the runway
+        if abs(y - (H / 2 + 40)) < 15:
+            continue  # the river
+        instance(jungle if rnd.random() < 0.65 else palm, x, y, rnd.uniform(0.8, 1.5), rnd.uniform(0, math.tau))
+        placed += 1
+    # Palms and lanterns along the clearing's paths.
+    for x in xs:
+        for t in range(-int(H / 2) + 25, int(H / 2) - 24, 12):
+            instance(palm if (t // 12) % 2 else light_col, x + 3.2, t + 6, 0.7)
 # Evening light: low warm sun, soft blue sky, Eevee with bloom and AO.
 for o in scene.objects:
     if o.type == "LIGHT" and o.data.type == "SUN":
@@ -155,7 +230,8 @@ for o in scene.objects:
         o.data.angle = math.radians(3)
         o.rotation_euler = (math.radians(68), 0, math.radians(-50))
 world = scene.world
-world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.42, 0.55, 0.78, 1)
+sky = (0.42, 0.55, 0.78, 1) if THEME == "town" else (0.55, 0.62, 0.66, 1)  # humid haze
+world.node_tree.nodes["Background"].inputs["Color"].default_value = sky
 world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.7
 scene.render.engine = "BLENDER_EEVEE"
 ee = scene.eevee
