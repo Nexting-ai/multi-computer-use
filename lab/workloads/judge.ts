@@ -18,8 +18,9 @@ import {
   readdir,
   stat,
 } from "node:fs/promises";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { randomInt } from "node:crypto";
 import { host } from "./host.js";
 import { PLANS, plotCentre } from "./studio.js";
@@ -68,6 +69,16 @@ for (const a of arms) {
   if (!missing.length) continue;
   const work = `/root/judge-${a.arm}`;
   await h.sh(`rm -rf ${work} && mkdir -p ${work}/out`);
+  // The repository's module_shot.py, not the copy baked into the image.
+  await h.put(
+    fileURLToPath(
+      new URL(
+        "../../packages/desktop/apps/blender/module_shot.py",
+        import.meta.url,
+      ),
+    ),
+    `${work}/module_shot.py`,
+  );
   const sources = a.mode === "city" ? ["W01"] : missing;
   for (const id of sources) {
     await h.sh(`mkdir -p ${work}/${id}`);
@@ -81,7 +92,7 @@ for (const a of arms) {
       a.mode === "city"
         ? [`/p/W01/${plan.scene}.blend`, `P${id.slice(1)}`]
         : [`/p/${id}/studio.blend`, "Module"];
-    return `[ -f ${file} ] && blender -b ${file} --python /opt/app/module_shot.py -- ${col} ${x} ${y} /p/out/${id}.png >/dev/null 2>&1`;
+    return `[ -f ${file} ] && blender -b ${file} --python /p/module_shot.py -- ${col} ${x} ${y} /p/out/${id}.png >/dev/null 2>&1`;
   });
   await h.sh(
     `docker run --rm -e DISPLAY=:9 -v ${work}:/p --entrypoint bash mcu-blender -c 'Xvfb :9 -screen 0 960x720x24 +extension GLX >/dev/null 2>&1 & for i in $(seq 50); do xdpyinfo -display :9 >/dev/null 2>&1 && break; sleep 0.2; done; ${jobs.join("; ")}; true'`,
@@ -91,6 +102,19 @@ for (const a of arms) {
       .get(`${work}/out/${id}.png`, join(shots, `${id}.png`))
       .catch(() => {});
 }
+
+// Every photo must have the same size, or the comparison is not blind to the
+// arm (a smaller photo shows less detail).
+const sizes = new Set<string>();
+for (const a of arms)
+  for (const id of briefs.keys()) {
+    const f = join(out, "shots", a.arm, `${id}.png`);
+    if ((await stat(f).catch(() => null))?.size)
+      sizes.add(
+        execFileSync("magick", ["identify", "-format", "%wx%h", f]).toString(),
+      );
+  }
+if (sizes.size > 1) throw Error(`judge_unequal_photos:${[...sizes].join(",")}`);
 
 // 2. Blind comparative scoring, one plot at a time.
 const RUBRIC = `Score each building photo from 1 (poor) to 10 (excellent) on:
