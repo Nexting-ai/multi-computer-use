@@ -218,7 +218,7 @@ async function docker(
       const unreached =
         host.kind === "ssh" &&
         e.code === 255 &&
-        /Connection (closed|reset|refused|timed out)|kex_exchange|banner exchange/i.test(
+        /Connection (to \S+ port \d+ )?(closed|reset|refused|timed out)|connect to host .*(Operation timed out|No route to host)|kex_exchange|banner exchange/i.test(
           String(e.stderr),
         );
       if (!unreached || attempt >= 5) throw e;
