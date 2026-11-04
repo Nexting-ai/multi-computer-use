@@ -343,8 +343,11 @@ export function studio(
   variant: "studio" | "many",
   o: DesktopOptions,
   plan: Plan = PLANS.block,
+  /** Desktops per piece (one agent tries ideas on several desktops). */
+  variants = 1,
 ): Workload {
   const many = variant === "many";
+  if (many && variants > 1) throw Error("variants_need_studio");
   const total = plan.cols * plan.rows;
   const noun = plan.noun ?? "building";
   const base = desktopWorkload<Brief>(
@@ -354,8 +357,20 @@ export function studio(
       settle_ms: 60_000,
       summary: many
         ? `Blender is open on ${plan.what}: ${total} empty 20 x 20 m plots (collections P01..P${total}; their coordinates are in module.py). Build every plot's ${noun} from the task table below (row Wnn is plot Pnn). ${plan.note ? plan.note + " " : ""}${quality(noun)} Each plot is one item: declare it done when its ${noun} is finished and saved.`
-        : `This is ${plan.what}. Each surface runs Blender on one empty 20 x 20 m plot. Build that surface's ${noun} from its row of the task table, inside the collection Module. ${plan.note ? plan.note + " " : ""}${quality(noun)} One item per surface: declare it done when the ${noun} is finished and saved.`,
-      rows: (seed, count) => plan.briefs(seed, count),
+        : variants > 1
+          ? `This is ${plan.what}. Each surface runs Blender on one empty 20 x 20 m plot; each ${noun} has ${variants} surfaces (column piece) to try ideas on, inside the collection Module. ${plan.note ? plan.note + " " : ""}${quality(noun)} One item per ${noun}: declare done only the one surface holding its finished, saved version.`
+          : `This is ${plan.what}. Each surface runs Blender on one empty 20 x 20 m plot. Build that surface's ${noun} from its row of the task table, inside the collection Module. ${plan.note ? plan.note + " " : ""}${quality(noun)} One item per surface: declare it done when the ${noun} is finished and saved.`,
+      // With variants, consecutive desktops share one piece's brief.
+      rows: (seed, count) => {
+        if (variants === 1) return plan.briefs(seed, count);
+        const pieces = [...plan.briefs(seed, Math.ceil(count / variants))];
+        return new Map(
+          Array.from({ length: count }, (_, i) => {
+            const [piece, brief] = pieces[Math.floor(i / variants)]!;
+            return [`W${String(i + 1).padStart(2, "0")}`, { ...brief, piece }];
+          }),
+        );
+      },
       grader: [
         "blender",
         "-b",

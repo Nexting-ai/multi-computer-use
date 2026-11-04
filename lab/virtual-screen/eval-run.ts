@@ -14,6 +14,7 @@ import {
   mkdir,
   appendFile,
   unlink,
+  copyFile,
 } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
@@ -57,7 +58,18 @@ import { kicad } from "../workloads/kicad.js";
 import { studio, PLANS } from "../workloads/studio.js";
 import type { Workload } from "../workloads/types.js";
 
-const ARMS = ["P-V", "P-T", "B-V", "B-T", "S", "F", "H", "M", "R"] as const;
+const ARMS = [
+  "P-V",
+  "P-T",
+  "B-V",
+  "B-T",
+  "S",
+  "F",
+  "H",
+  "M",
+  "R",
+  "X",
+] as const;
 type Arm = (typeof ARMS)[number];
 const schema = z.strictObject({
   binary: z.string(),
@@ -86,6 +98,8 @@ const schema = z.strictObject({
       ]),
       image: z.string(),
       port: z.number().int().optional(),
+      /** Studio tasks: desktops per piece (arm X tries ideas in parallel). */
+      variants: z.number().int().min(1).max(8).optional(),
       /** Resources of one desktop (default 2 vCPU, 4 GB). */
       cpus: z.number().positive().optional(),
       memory: z.string().optional(),
@@ -175,6 +189,7 @@ const workload: Workload =
                   W.kind === "airport-many" ? "many" : "studio",
                   desktopOptions(W),
                   PLANS.airport,
+                  W.variants ?? 1,
                 );
 const free = workload.declared;
 const steps = workload.items;
@@ -367,6 +382,13 @@ const roundPrompt = (
           ? "This is the final round: declare every acceptable piece before you end."
           : "Then end your turn."
       } ${roundsRule} ${forward} Progress: `;
+const explorePrompt = (
+  task: string,
+  piece: string,
+  row: Record<string, string>,
+  ids: string[],
+) =>
+  `${task}\nYou build one piece, ${piece}: a ${row.style ?? "piece"}, about ${row.height ?? "?"} m tall: ${row.brief ?? ""}. You have ${ids.length} desktops (${ids.join(", ")}), each with the same empty plot, so you can try ${ids.length} ideas at once. Work in passes. Each pass sends every desktop its own complete build script in ONE fleet_run (assign; inputs ["code"]; a \`type\` step pastes {code} into the text editor, then run it with Alt+P); every script first deletes everything in collection Module, then builds the whole piece and saves. Then render a preview on every desktop with one fleet_run and compare them in one fleet_overview (zoom into one desktop with desktop_observe when a tile is too small to judge). First pass: ${ids.length} clearly different designs. Later passes: keep the best design and send ${ids.length} improved variations of it (fix what is wrong, add detail and better materials, try bolder and finer changes); repeat while it keeps improving. Finish with your best version saved on one desktop and declare only that desktop with desktop_done. ${roundsRule} ${forward} Progress: `;
 const finalMessage = (agent: any) =>
   ((agent?.status?.items ?? []) as any[])
     .filter((i) => i.type === "agentMessage")
@@ -483,6 +505,7 @@ await writeFile(
         H: refineDirectorTools,
         M: directorTools,
         R: roundTools,
+        X: directorTools,
       },
     },
     null,
@@ -813,8 +836,8 @@ for (const blk of blocks)
         },
       );
     /** The director's fleet and per-surface desks over every surface. */
-    const fleet = (contract: "item" | "free") => {
-      const stack = new StackScreen(lab.port, ledger, lab.surfaces, {
+    const fleet = (contract: "item" | "free", ids: string[] = lab.surfaces) => {
+      const stack = new StackScreen(lab.port, ledger, ids, {
         concurrency: o.stack_concurrency,
         contract,
         ...(lab.inputs ? { inputs: lab.inputs } : {}),
@@ -828,10 +851,10 @@ for (const blk of blocks)
         lab.port,
         ledger,
         lab.surfaces,
-        lab.surfaces,
+        ids,
         false,
         {
-          max_scope: lab.surfaces.length,
+          max_scope: ids.length,
           source: (f) => saveSource(f, "director"),
           delivery: (request, receipt) =>
             delivery("deliveries.jsonl")({
@@ -871,7 +894,7 @@ for (const blk of blocks)
             rest: { fleet: ov.fleet },
           };
         }
-        const handled = desk(runtime, lab.surfaces, false, name, args);
+        const handled = desk(runtime, ids, false, name, args);
         if (!handled) throw Error("unknown_tool");
         return handled;
       };
@@ -1054,6 +1077,35 @@ for (const blk of blocks)
           );
         }
         await context.run(-1, () => runtime.drain());
+      } else if (arm === "X") {
+        // One agent per piece with several desktops: each pass tries one idea
+        // per desktop in a single decision and keeps the best (arm X).
+        const pieces = new Map<string, string[]>();
+        for (const id of lab.surfaces) {
+          const piece = lab.inputs?.[id]?.piece ?? id;
+          pieces.set(piece, [...(pieces.get(piece) ?? []), id]);
+        }
+        const queue = [...pieces];
+        await Promise.all(
+          Array.from({ length: o.workset_parallel }, async () => {
+            for (let next = queue.shift(); next; next = queue.shift()) {
+              const [piece, ids] = next;
+              const { runtime, handle } = fleet("free", ids);
+              await session(
+                `sessions/piece-${piece}`,
+                directorTools,
+                explorePrompt(
+                  lab.task,
+                  piece,
+                  lab.inputs?.[ids[0]!] ?? {},
+                  ids,
+                ) + JSON.stringify(ledger.summary()),
+                handle,
+              );
+              await context.run(-1, () => runtime.drain());
+            }
+          }),
+        );
       } else if (arm === "S") {
         const script = new ScriptScreen(lab.port, ledger, lab.surfaces, {
           contract: free ? "free" : "item",
@@ -1086,7 +1138,7 @@ for (const blk of blocks)
       // Leftovers (and the per-surface arms themselves) use per-surface worksets.
       const t1 = performance.now();
       // The director (F) owns its fleet: no hand-off to per-surface agents.
-      if (arm !== "F" && arm !== "H" && arm !== "M" && arm !== "R")
+      if (!["F", "H", "M", "R", "X"].includes(arm))
         await perSurface(arm === "P-T" || arm === "B-T" || arm === "S");
       phases.worksets = {
         elapsed_ms: Math.round(performance.now() - t1),
@@ -1111,8 +1163,38 @@ for (const blk of blocks)
             at: new Date().toISOString(),
           }),
         );
-        const scores = await lab.grade();
+        let scores = await lab.grade();
         await lab.collect?.(join(directory, "artifacts"));
+        if (arm === "X") {
+          // A piece's result is the one desktop its agent declared.
+          const chosen: Record<string, string | null> = {};
+          for (const id of lab.surfaces) {
+            const piece = lab.inputs?.[id]?.piece ?? id;
+            chosen[piece] ??= null;
+            if (ledger.get(id).completed > 0 && !chosen[piece])
+              chosen[piece] = id;
+          }
+          await writeFile(
+            join(directory, "chosen.json"),
+            JSON.stringify(chosen, null, 2),
+          );
+          for (const [piece, id] of Object.entries(chosen))
+            if (id) {
+              await mkdir(join(directory, "pieces", piece), {
+                recursive: true,
+              });
+              await copyFile(
+                join(directory, "artifacts", id, "work.tar"),
+                join(directory, "pieces", piece, "work.tar"),
+              ).catch(() => {});
+            }
+          scores = Object.entries(chosen).map(([piece, id]) => {
+            const s = scores.find((x: any) => x.surface_id === id);
+            return s
+              ? { ...s, surface_id: piece, chosen: id }
+              : { surface_id: piece, success: false, wrong: false, commits: 0 };
+          });
+        }
         const row = {
           block: blk.block,
           arm,
@@ -1128,7 +1210,7 @@ for (const blk of blocks)
             (n: number, s: any) => n + (s.commits ?? 0),
             0,
           ),
-          total: o.count,
+          total: scores.length,
           tokens: usage.totalTokens,
           usage,
           inferences:
