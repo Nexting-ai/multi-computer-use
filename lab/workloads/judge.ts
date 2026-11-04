@@ -82,7 +82,12 @@ for (const a of arms) {
     ),
     `${work}/module_shot.py`,
   );
-  const sources = a.mode === "city" ? ["W01"] : missing;
+  // A piece without a saved file (never declared) gets no photo: it is
+  // judged on an empty image and scores 1.
+  const sources = [];
+  for (const id of a.mode === "city" ? ["W01"] : missing)
+    if (await stat(join(a.dir, id, "work.tar")).catch(() => null))
+      sources.push(id);
   for (const id of sources) {
     await h.sh(`mkdir -p ${work}/${id}`);
     await h.put(join(a.dir, id, "work.tar"), `${work}/${id}/work.tar`);
