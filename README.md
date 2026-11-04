@@ -1,89 +1,122 @@
-# Computer Use Fleet
+# multi-computer-use
 
-**One decision, many computers.** A harness that lets one Computer Use model operate a fleet of desktops through a single decision per screen layout, instead of one agent loop per machine.
+**One agent, many computers.** A harness that lets one Computer Use agent operate many desktops at once. The agent decides once, the runtime applies that decision to every machine, and the agent checks all of them in one look.
 
-By Nexting AI.
+By [Nexting AI](https://nexting.ai).
 
-## The idea
+![A street of 32 houses, designed once in Blender and built on 32 desktops](docs/assets/s3/street.gif)
 
-Ordinary Computer Use runs one screenshot→think→click loop per computer. With 100 computers, that means 100 loops and roughly 100× the model calls.
+## Cases
 
-Most fleets repeat the same screen: the same back office in many accounts, or the same form across many tickets. This harness treats the set of computers as a third axis (Z), similar to a batch dimension in vectorized code:
+Every case was preregistered before it ran and is reported as measured, failures included. Unless noted, the model is `gpt-6-astra` (medium). Each case links its full report.
 
-1. The model looks at **one** example screen and writes a policy. The policy names the stable template area, the fields whose values differ per machine, the steps to take, and the post-condition that proves success.
-2. The runtime applies that policy to **every** computer independently:
-   - locates the template on each screen;
-   - reads each machine's values through the accessibility text channel, so the model never transcribes data;
-   - checks that each click lands on the same element as in the example;
+### 1. A street of 32 houses in Blender
+
+One house design, 32 variations: width, floors, colours, roof and balcony differ per plot. All three arms are agents working through the Blender screen (interface and Blender's Python), each house on its own plot.
+
+| | One agent, one desktop | **The harness: 1 agent, 32 desktops** | 32 agents, 32 desktops |
+|---|---:|---:|---:|
+| Blind quality (1–10) | 6.99 | **7.66** | 7.09 |
+| Wall time | **4.7 min** | 13.5 min | 35.7 min |
+| Model tokens | **0.30M** | 0.85M | 13.31M |
+| Screenshots sent to the model | 6 | 13 | 252 |
+| Built, on plot, right height | 96/96 | 96/96 | 96/96 |
+
+![Four plots from each arm](docs/assets/s3/compare-a-m-b.jpg)
+
+How the harness ran it:
+1. The agent polished the design once on desktop 1.
+2. It applied the design to all 32 desktops as one policy, each desktop with its own parameters.
+3. It reviewed the 32 renders in [one overview image](docs/assets/s3/m-fleet-overview.jpg).
+
+Against 32 independent agents it used **6.4% of the tokens** and took 2.6× less time, and its houses scored higher. The independent agents each re-derived the design and drifted. A single agent looping one script was fastest, but built plainer houses.
+
+[Report](docs/validation/2026-11-04-s3-street.md) · films: [harness](docs/assets/s3/M-harness.mp4), [32 agents](docs/assets/s3/B-32-agents.mp4), [one agent](docs/assets/s3/A-one-agent.mp4)
+
+### 2. The same back office on 100 desktops
+
+Three items to file in a business back office, on each of 100 desktops, run three times. The baseline is conventional per-machine Computer Use, 13 agents in parallel. Grading reads the server's records.
+
+| | The harness | Per-machine, 13 in parallel |
+|---|---:|---:|
+| Model tokens | **0.17M** | 15.17M (~90× more) |
+| Model sessions | **1** | 13 |
+| Items correct | **900/900** | 896/900 |
+| Wall time | 312 s | 312 s |
+
+- **Model calls stop growing with the number of machines.** 300 items took 12 inferences, against 580 for the per-machine baseline.
+- **Values are read, not transcribed.** Each machine's values come from a text channel. When the model transcribed 100 values from images instead, 8.4% were wrong.
+- **Different layouts cost about one decision each.** With 20 layouts the harness used 0.69M tokens, against 5–7M for per-machine operation. With 100 all-different layouts the advantage disappears, but correctness does not drop.
+- **Second model:** Claude Sonnet 5.5 showed the same ~100× saving at identical correctness.
+
+[Report](docs/validation/2026-10-31-e1p-parallel-baseline.md) · [results page](docs/showcase/z-broadcast.html)
+
+### 3. Sixteen different buildings: where it does not save tokens
+
+A city block of 16 buildings that all differ: a pagoda, a glass tower, a lighthouse. When the director wrote one generic script for all sixteen, it was cheap but plain, scoring about 4.5 of 10. Sixteen agents, one per building, scored 8.0.
+
+A director with sixteen parallel refiners reached 7.4 in under half the time (24.7 vs 54.5 min), but used *more* tokens (6.98M vs 4.32M). When every item needs its own decisions, each one costs an agent's attention whichever way the work is organised. The harness pays off where items share a decision, as in cases 1 and 2.
+
+[S1 report](docs/validation/2026-11-03-s1-city-block.md) · [S2 report](docs/validation/2026-11-03-s2-refiners.md)
+
+### 4. Safe under faults
+
+The fault suite has 22 deterministic scenarios in real Chrome, each run with its safeguard on and off. With the safeguards on, there were zero misrouted inputs and zero duplicates:
+- a wrong policy is contained by the canary;
+- an input with a lost reply is closed only from evidence;
+- moved controls, reordered labels and occluded buttons are caught;
+- unbound clicks are refused before any input.
+
+### Not yet: arbitrary websites
+
+On unseen MiniWoB++ tasks, three preregistered rounds scored 581, 507 and 560 of 600, against 600 for per-machine operation. All four error mechanisms now have fixes under test. The held-out round [F3](docs/validation/2026-10-31-preregistration-f3.md) has not run yet.
+
+## How it works
+
+Ordinary Computer Use runs one screenshot→think→click loop per computer. This harness treats the set of computers as a third axis (Z), like a batch dimension:
+
+1. **The agent looks at one example screen and writes a policy:**
+   - the stable template;
+   - the fields that differ per machine;
+   - the steps, including typing per-machine text such as `{floors}`;
+   - the post-condition that proves success.
+2. **The runtime applies the policy to every machine independently.** On each one it:
+   - registers the template;
+   - reads that machine's values from a text channel (accessibility tree, or OCR on desktops);
+   - checks that each click lands on the intended element;
    - executes, then verifies the post-condition on that machine.
-3. A **canary** runs first. If the policy is wrong, at most one machine is affected. Machines that do not match are left untouched and grouped by appearance, so the model can handle each group with one more decision.
+3. **A canary runs first.** Machines that do not match are left untouched and grouped by appearance.
+4. **The agent reviews the results** in one tiled overview and fixes what differs, by another policy or on a single desktop.
 
-Every input is written to a durable ledger before it is sent. An input whose outcome is uncertain is never replayed. It is closed only when fresh evidence shows the effect happened.
-
-## Results
-
-All experiments were preregistered before they ran. Grading reads server-side business records (or MiniWoB's own reward), never the runtime's own report. Failures and deviations are kept in the reports. Model: `gpt-6-astra` (medium) unless noted.
-
-**100 desktops × 3 items × 3 blocks.** Baseline: conventional per-machine Computer Use running **13 agents in parallel**.
-
-| | Fleet harness | Per-machine, 13 in parallel |
-|---|---|---|
-| Model tokens | **0.17M** | 15.17M (**~90× more**) |
-| Concurrent model sessions | **1** | 13 |
-| Items correct | **900 / 900** | 896 / 900 |
-| Wall time (3 blocks) | 312 s | 312 s |
-
-Speed is a tie. An earlier version of these results reported large speedups; those came from a baseline that ran one agent at a time, and they have been withdrawn ([E1-P report](docs/validation/2026-10-31-e1p-parallel-baseline.md)). **The gain is cost and concurrency:** the same throughput and accuracy for about 1% of the tokens, from a single model session.
-
-**Other findings**
-
-- **Model calls stop growing with N.** Three runs of 300 items took 12 inferences in total; the per-machine baseline took 580.
-- **Ablation: the savings and the accuracy come from different mechanisms.** Broadcasting gives the cost reduction. Machine-read values give the accuracy: when the model transcribed 100 values from images, 8.4% were wrong, versus 0 when values were read from the text channel. Even a strong "let the model write a batch script" baseline used 3× the tokens.
-- **The results hold for a second model.** Claude Sonnet 5.5 used ~100× fewer tokens on the same tasks, with identical correctness.
-- **Heterogeneity costs about one decision per distinct layout.** With 20 layout classes, a run still used 0.69M tokens, against 5–7M for per-machine operation. When every machine looks different (K = 100), the advantage disappears; correctness does not drop.
-- **Safety under fault injection: zero misrouted inputs and zero duplicates.** The suite has 22 deterministic scenarios in real Chrome, each with the safeguard switched on and off:
-  - a wrong policy is contained by the canary;
-  - lost replies are closed only from evidence;
-  - controls that moved, reordered labels and occluded buttons are caught;
-  - unbound clicks and truncated values are refused before any input. These last scenarios replay the model's own failing policies from the held-out runs.
-
-**Where it does not yet work: general web tasks.** On third-party MiniWoB++ tasks the team had never seen, three preregistered rounds missed the non-inferiority bar: 581, 507 and 560 of 600, against 600 for per-machine operation. The 152 broadcast errors fall into four mechanisms; all four now have fixes with on/off controls in the fault suite. A fourth held-out round ([F3](docs/validation/2026-10-31-preregistration-f3.md)) is preregistered but has not run. **Current claim: fleets that share a screen layout. No claim yet for arbitrary websites.**
-
-Full reports (in Chinese), data and the results page are in [`docs/`](docs). Open [`docs/showcase/z-broadcast.html`](docs/showcase/z-broadcast.html) in a browser for the charts.
+Every input is written to a durable ledger before it is sent. An input whose outcome is uncertain is never replayed.
 
 ## Try it
 
-You need Node ≥ 24, pnpm and Google Chrome. Set `CU_CHROME` to the Chrome binary if it is not at the macOS default path.
+You need Node ≥ 24, pnpm and Google Chrome (`CU_CHROME` if not at the macOS default path).
 
 ```sh
 pnpm install
 pnpm check          # typecheck + unit tests
-pnpm fault-suite    # 22 fault-injection scenarios in local headless Chrome (~15 min)
+pnpm fault-suite    # 22 fault-injection scenarios in headless Chrome (~15 min, no model)
 ```
 
-The fault suite needs no model and is fully deterministic. Results go to `.local/fault-suite/fault-suite.json`.
-
-To run a small model evaluation (up to 12 local Chrome surfaces), edit [`examples/local-eval.json`](examples/local-eval.json) to point at your Codex CLI and its auth file, then run:
+For a small model evaluation on local Chrome surfaces, point [`examples/local-eval.json`](examples/local-eval.json) at your Codex CLI and run:
 
 ```sh
 node --import tsx lab/virtual-screen/eval-run.ts examples/local-eval.json
-node --import tsx lab/virtual-screen/eval-analyze.ts .local
 ```
 
-Set `"agent": "claude"` to drive Claude Code instead, through an MCP bridge. The 100-desktop server-fleet tooling used in the reports is not included in this repository.
+Desktop apps (Blender, KiCad) run in Linux containers (`packages/desktop`). Build an image with `docker build -f packages/desktop/image/Dockerfile --build-arg APP=blender packages/desktop`, then list your Docker hosts in the workload config.
 
 ## Layout
 
 | Path | What |
 |---|---|
-| `packages/virtual-screen/src/stack.ts` | The fleet runtime: policies, canary, per-machine pipeline, semantic binding, exception grouping |
-| `packages/virtual-screen/src/align.ts` | Template registration and per-target local checks |
-| `packages/virtual-screen/src/cdp.ts` | Chrome DevTools surface port: frames, input, accessibility text channel |
-| `packages/virtual-screen/src/workset.ts` | Durable progress ledger and per-machine worksets (the baseline) |
-| `packages/virtual-screen/src/managed.ts`, `script.ts` | Per-machine and "model writes a script" baselines |
-| `lab/virtual-screen/` | Workloads (synthetic business forms and MiniWoB++), preregistered runner, analysis, fault suite, results page |
-| `lab/vendor/miniwob/` | Pinned MiniWoB++ subset (MIT, see its LICENSE) |
-| `docs/decisions/` | Design decisions 010 (worksets) and 011 (this harness) |
+| `packages/virtual-screen/src/stack.ts` | The runtime: policies, canary, per-machine pipeline, binding, overview |
+| `packages/virtual-screen/src/cdp.ts` | Chrome surfaces: frames, input, accessibility text |
+| `packages/desktop/` | Linux desktop surfaces: container image, agent (frames, OCR, input), fleet launcher, Blender and KiCad apps |
+| `lab/virtual-screen/` | Preregistered runner, arms, analysis, fault suite |
+| `lab/workloads/` | Workloads (web forms, MiniWoB++, Blender, KiCad), blind judge, films |
 | `docs/validation/` | Preregistrations, reports and raw data |
 
 ## License

@@ -13,6 +13,7 @@ import {
   type Delivery,
 } from "./index.js";
 import sharp from "sharp";
+import { tileSheet } from "./sheet.js";
 import {
   acceptable,
   register,
@@ -38,6 +39,12 @@ const field = z.string().regex(/^[a-z][a-z0-9_]{0,31}$/);
 const step = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("click"), x: coordinate, y: coordinate }),
   z.strictObject({ kind: z.literal("type_field"), field }),
+  /** Literal text with {placeholders} filled per surface from fields and
+   * inputs (e.g. one parametric script, each surface with its own row). */
+  z.strictObject({
+    kind: z.literal("type"),
+    text: z.string().min(1).max(20000),
+  }),
   z.strictObject({
     kind: z.literal("choose"),
     field,
@@ -86,6 +93,10 @@ export const policySchema = z.strictObject({
     .min(1)
     .max(8),
   ignore: z.array(rect).max(8).optional(),
+  /** Columns of the host's task table used by this policy (e.g. a spec sheet
+   * row per surface). Steps use them like fields; they are never read from
+   * the screen and never transcribed by the model. */
+  inputs: z.array(field).max(8).optional(),
   steps: z.array(step).min(1).max(12),
   verify: z.union([
     z.strictObject({ field, equals: z.string().min(1).max(512) }),
@@ -98,6 +109,9 @@ export const policySchema = z.strictObject({
   /** item: one durable task item per execution (default). prepare: clear an
    * interruption once per surface; never counts as task progress. */
   mode: z.enum(["item", "prepare"]).optional(),
+  /** Items this policy performs per surface in this run (default: until the
+   * surface is complete). Tasks whose items differ use one policy each. */
+  items: z.number().int().min(1).max(100).optional(),
   surfaces: z.array(z.string()).min(1).max(100).optional(),
   dry_run: z.boolean().optional(),
   /** Vision mode only: model-transcribed field values per surface, bound to the
@@ -160,6 +174,8 @@ type Compiled = {
   spec: TemplateSpec;
   /** Per click point (absolute, exemplar coordinates): the element it acts on. */
   bindings: Map<string, Binding | null>;
+  /** Items each surface had completed when this run first reached it. */
+  baseline: Map<string, number>;
 };
 type Binding = { role: string; text: string };
 type Observation = {
@@ -176,6 +192,9 @@ const inside = (r: Rect, outer: Rect) =>
   r.y + r.height <= outer.y + outer.height;
 const point = (x: number, y: number, outer: Rect) =>
   inside({ x, y, width: 1, height: 1 }, outer);
+/** Placeholder names in a literal text step. */
+const placeholders = (t: string) =>
+  [...t.matchAll(/\{([a-z][a-z0-9_]{0,31})\}/g)].map((m) => m[1]!);
 /** Fields whose reading becomes input or a choice. */
 const valueFields = (p: Policy) =>
   new Set(
@@ -184,7 +203,9 @@ const valueFields = (p: Policy) =>
         ? [s.field]
         : s.kind === "click_text" && s.field
           ? [s.field]
-          : [],
+          : s.kind === "type"
+            ? placeholders(s.text)
+            : [],
     ),
   );
 /** The smallest element containing a point. */
@@ -251,13 +272,31 @@ export function expect(p: Policy, values: Record<string, string>) {
       : { absent: values[p.verify.field] ?? "" };
 }
 export type Expected = ReturnType<typeof expect>;
-export const satisfied = (e: Expected, seen: string | undefined) =>
-  seen !== undefined &&
-  ("equals" in e
-    ? seen === e.equals
+/** Text channels disagree on whitespace (OCR reads "12m" or "12 m"), so
+ * post-conditions compare text with all whitespace removed. */
+const squash = (t: string) => t.replace(/\s+/g, "");
+export const satisfied = (e: Expected, seen: string | undefined) => {
+  if (seen === undefined) return false;
+  const s = squash(seen);
+  return "equals" in e
+    ? s === squash(e.equals)
     : "contains" in e
-      ? e.contains.every((t) => seen.includes(t))
-      : e.absent !== "" && !seen.includes(e.absent));
+      ? e.contains.every((t) => s.includes(squash(t)))
+      : e.absent !== "" && !s.includes(squash(e.absent));
+};
+/** A post-condition from an earlier delivery's values, or null when that
+ * delivery lacks this policy's placeholders (it belongs to another item). */
+function rebuild(
+  p: Policy,
+  prior: { values: Record<string, string>; choice: string },
+): Expected | null {
+  try {
+    return expect(p, { ...prior.values, choice: prior.choice });
+  } catch (e) {
+    if (String(e).includes("unknown_placeholder")) return null;
+    throw e;
+  }
+}
 export function fill(template: string, values: Record<string, string>) {
   return template.replace(/\{([a-z][a-z0-9_]{0,31})\}/g, (_, k: string) => {
     if (!(k in values)) throw Error("unknown_placeholder:" + k);
@@ -315,6 +354,14 @@ export class StackScreen {
        * channel anywhere; values and receipts are transcribed by the model
        * from fleet_crops contact sheets (ablation B-V). */
       values?: "text" | "vision";
+      /** item (default): a policy run delivers and verifies task items.
+       * free: the model declares items done itself (open-ended work such as
+       * building a model); every policy is a step that applies once per
+       * surface per run, verified, never counted as an item, and finished
+       * (declared) surfaces are left alone. */
+      contract?: "item" | "free";
+      /** Task table supplied by the host: surface id -> column -> value. */
+      inputs?: Record<string, Record<string, string>>;
       /** Ablation only: false clicks text centres without avoiding occlusion. */
       occlusion?: boolean;
       /** Ablation only: false disables semantic binding of clicks and fields. */
@@ -365,6 +412,55 @@ export class StackScreen {
       png: frame.png,
     };
   }
+  /**
+   * Review a fleet in one image: every listed surface (default all), cropped
+   * to `region` when given, tiled with its id. Read-only; not an exemplar
+   * (planning uses observe).
+   */
+  async overview(
+    ids: string[] = this.surfaces,
+    region?: Rect,
+    tile = { width: 480, height: 300 },
+  ) {
+    if (!ids.length || ids.length > 100)
+      throw Error("invalid_overview_targets");
+    for (const id of ids) this.z(id);
+    const shots = await Promise.all(
+      ids.map(async (id) => {
+        try {
+          const f = await bounded(
+            this.port.capture(id),
+            30000,
+            "capture_timeout",
+          );
+          const png = region
+            ? await sharp(f.png)
+                .extract({
+                  left: region.x,
+                  top: region.y,
+                  width: Math.min(region.width, f.width - region.x),
+                  height: Math.min(region.height, f.height - region.y),
+                })
+                .png()
+                .toBuffer()
+            : f.png;
+          return { label: `${id} (Z${this.z(id)})`, png };
+        } catch (e) {
+          const png = await sharp({
+            create: { width: 16, height: 10, channels: 3, background: "#400" },
+          })
+            .png()
+            .toBuffer();
+          return { label: `${id}: ${String(e).slice(0, 40)}`, png };
+        }
+      }),
+    );
+    return {
+      png: await tileSheet(shots, tile),
+      surfaces: ids,
+      fleet: this.ledger.summary(),
+    };
+  }
   async observe(ids: string[]) {
     if (!ids.length || ids.length > 4 || new Set(ids).size !== ids.length)
       throw Error("invalid_observation_targets");
@@ -405,17 +501,31 @@ export class StackScreen {
     }
     for (const r of p.ignore ?? [])
       if (!inside(r, t)) throw Error("ignore_outside_template");
+    const columns = new Set(
+      Object.values(this.options.inputs ?? {}).flatMap((row) =>
+        Object.keys(row),
+      ),
+    );
+    const usable = new Set(names);
+    for (const i of p.inputs ?? []) {
+      if (names.has(i)) throw Error("input_shadows_field:" + i);
+      if (!columns.has(i)) throw Error("unknown_input:" + i);
+      usable.add(i);
+    }
     let choose = 0;
     for (const s of p.steps) {
       if (s.kind === "click" && !point(s.x, s.y, t))
         throw Error("click_outside_template");
       if (
         (s.kind === "type_field" || s.kind === "choose") &&
-        !names.has(s.field)
+        !usable.has(s.field)
       )
         throw Error("unknown_field:" + s.field);
-      if (s.kind === "click_text" && s.field && !names.has(s.field))
+      if (s.kind === "click_text" && s.field && !usable.has(s.field))
         throw Error("unknown_field:" + s.field);
+      if (s.kind === "type")
+        for (const name of placeholders(s.text))
+          if (!usable.has(name)) throw Error("unknown_placeholder:" + name);
       if (s.kind === "choose") {
         choose++;
         if (new Set(s.cases.map((c) => c.equals)).size !== s.cases.length)
@@ -448,7 +558,16 @@ export class StackScreen {
       crops_id: _ci,
       ...shape
     } = p;
-    if (p.mode === "prepare" && p.steps.some((s) => s.kind === "type_field"))
+    if (
+      p.mode === "prepare" &&
+      this.options.contract !== "free" &&
+      (p.inputs?.length ||
+        p.steps.some(
+          (s) =>
+            s.kind === "type_field" ||
+            (s.kind === "type" && placeholders(s.text).length),
+        ))
+    )
       throw Error("prepare_cannot_type_task_values");
     const id = createHash("sha256")
       .update(JSON.stringify({ shape, template: v.frame.revision }))
@@ -512,6 +631,7 @@ export class StackScreen {
       tpl,
       spec: { key: id, png, masked, fields, points },
       bindings,
+      baseline: new Map(),
     };
   }
   /**
@@ -544,6 +664,9 @@ export class StackScreen {
           `field_cuts_text:${f.name}:${JSON.stringify(cut.text)} (a value field must cover whole text runs; read this value per surface instead)`,
         );
     }
+    // OCR sees text, not controls (icons have no text): clicks are held by
+    // the pixel registration and the per-target local check instead.
+    if (this.port.textChannel === "ocr") return bindings;
     const points = p.steps.flatMap((s) =>
       s.kind === "click"
         ? [{ x: s.x, y: s.y }]
@@ -634,6 +757,16 @@ export class StackScreen {
       });
     return { values, dx, dy };
   }
+  /** This surface's row of the host task table, for the policy's inputs. */
+  private given(c: Compiled, id: string, frame: Frame) {
+    const out: Record<string, string> = {};
+    for (const i of c.policy.inputs ?? []) {
+      const v = this.options.inputs?.[id]?.[i];
+      if (!v) throw new Exception("no_input_value", i, frame);
+      out[i] = v;
+    }
+    return out;
+  }
   private async evidence(f: Frame, purpose: string) {
     if (f.png.length) await this.options.evidence?.source?.(f, purpose);
   }
@@ -673,6 +806,12 @@ export class StackScreen {
         if (!v) throw new Exception("field_empty", s.field, frame);
         actions.push({ kind: "type_text", text: v });
         typed.push(v);
+      } else if (s.kind === "type") {
+        for (const name of placeholders(s.text))
+          if (!values[name]) throw new Exception("field_empty", name, frame);
+        const text = fill(s.text, values);
+        actions.push({ kind: "type_text", text });
+        typed.push(text);
       } else if (s.kind === "choose") {
         const v = values[s.field]!,
           k =
@@ -815,8 +954,19 @@ export class StackScreen {
       try {
         if (this.port.probeText) {
           // Screenshot-free wait; only a satisfied probe earns a bound observation.
-          const probe = this.values(c, await this.port.probeText(id), hint)
-            .values[c.policy.verify.field];
+          const f = c.policy.fields.find(
+            (f) => f.name === c.policy.verify.field,
+          )!;
+          const region = {
+            ...f.rect,
+            x: f.rect.x + hint.x - c.policy.template.x,
+            y: f.rect.y + hint.y - c.policy.template.y,
+          };
+          const probe = this.values(
+            c,
+            await this.port.probeText(id, region),
+            hint,
+          ).values[c.policy.verify.field];
           // Probes read at the last proven offset; every third miss falls
           // through to a full registration in case the layout moved.
           if (!satisfied(receipt, probe) && ++misses % 3 !== 0) {
@@ -931,12 +1081,12 @@ export class StackScreen {
           // A corrected policy may verify an earlier delivery: the expected
           // receipt is rebuilt from the values read BEFORE that input.
           const prior = this.dispatched.get(id);
-          if (!prior) return result({ reason: "verification_requires_model" });
+          // Only a policy whose post-condition can be built from that
+          // delivery's values may verify it (not a later item's policy).
+          const expected = prior && rebuild(c.policy, prior);
+          if (!expected)
+            return result({ reason: "verification_requires_model" });
           if (!hint) hint = this.registered(await this.observeAt(c, id));
-          const expected = expect(c.policy, {
-            ...prior.values,
-            choice: prior.choice,
-          });
           if (dry) {
             const o = await this.observeAt(c, id, hint);
             const { values } = this.values(c, o.nodes, hint);
@@ -970,11 +1120,10 @@ export class StackScreen {
             prior.operation !== row.operation_id
           )
             return result({ reason: "unknown", detail: row.reason });
+          const expected = rebuild(c.policy, prior);
+          if (!expected)
+            return result({ reason: "unknown", detail: row.reason });
           if (!hint) hint = this.registered(await this.observeAt(c, id));
-          const expected = expect(c.policy, {
-            ...prior.values,
-            choice: prior.choice,
-          });
           const s = await this.settle(c, id, expected, hint, "resolve");
           hint = s.hint;
           if (!s.ok)
@@ -984,9 +1133,15 @@ export class StackScreen {
         }
         if (row.state !== "ready")
           return result({ reason: row.state, detail: row.reason });
-        if ((c.policy.mode ?? "item") === "prepare")
+        if (
+          (c.policy.mode ?? "item") === "prepare" ||
+          this.options.contract === "free"
+        )
           return await this.prepare(c, id, deadline, dry, result);
         if (items >= limit) return result({ status: "canary" });
+        if (!c.baseline.has(id)) c.baseline.set(id, row.completed);
+        if (row.completed - c.baseline.get(id)! >= (c.policy.items ?? Infinity))
+          return result({ status: "verified" });
         if (Date.now() > deadline)
           return result({ status: "skipped", reason: "run_deadline" });
         // The frame that verified the previous item is current evidence; the
@@ -999,7 +1154,9 @@ export class StackScreen {
         const frame = o.frame;
         const m = this.registered(o);
         hint = m;
-        const { values, dx, dy } = this.values(c, o.nodes, m);
+        const read = this.values(c, o.nodes, m);
+        const { dx, dy } = read;
+        const values = { ...read.values, ...this.given(c, id, frame) };
         const p = this.plan(c, values, dx, dy, frame, o.nodes);
         if (dry) {
           await this.evidence(frame, "dry_run");
@@ -1125,7 +1282,9 @@ export class StackScreen {
       const o = await this.observeAt(c, id);
       const frame = o.frame;
       const m = this.registered(o);
-      const { values, dx, dy } = this.values(c, o.nodes, m);
+      const read = this.values(c, o.nodes, m);
+      const { dx, dy } = read;
+      const values = { ...read.values, ...this.given(c, id, frame) };
       const p = this.plan(c, values, dx, dy, frame, o.nodes);
       if (dry)
         return result({
@@ -1157,7 +1316,10 @@ export class StackScreen {
         continue;
       }
       if (d.status === "unknown") {
-        await this.ledger.block(id, "prepare_unknown_effect");
+        // An item task cannot continue on an uncertain state; in a free task
+        // the model inspects the surface and decides (nothing is replayed).
+        if (this.options.contract !== "free")
+          await this.ledger.block(id, "prepare_unknown_effect");
         return result({ reason: "unknown_effect", detail: d.reason });
       }
       if (r.observation) {

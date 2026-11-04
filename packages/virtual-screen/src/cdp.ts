@@ -406,6 +406,15 @@ export class CdpSurfacePort implements SurfacePort {
               ArrowUp: 38,
               ArrowRight: 39,
               ArrowDown: 40,
+              Delete: 46,
+              Home: 36,
+              End: 35,
+              PageUp: 33,
+              PageDown: 34,
+              // F1..F12
+              ...Object.fromEntries(
+                Array.from({ length: 12 }, (_, i) => [`F${i + 1}`, 112 + i]),
+              ),
             };
             const params = {
               key: key === "Space" ? " " : key,

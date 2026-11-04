@@ -1,0 +1,1115 @@
+{
+  "summary": {
+    "A": {
+      "brief": 6.84,
+      "craft": 6,
+      "materials": 6.69,
+      "soundness": 8.41,
+      "overall": 6.99
+    },
+    "M": {
+      "brief": 7.72,
+      "craft": 7.53,
+      "materials": 7,
+      "soundness": 8.38,
+      "overall": 7.66
+    },
+    "B": {
+      "brief": 6.69,
+      "craft": 7.38,
+      "materials": 6.28,
+      "soundness": 8,
+      "overall": 7.09
+    }
+  },
+  "results": [
+    {
+      "id": "W01",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 9 m wide, 3 floors, sage cladding (#8FA58A), oxblood door (#5E1F1E), dark grey standing-seam metal roof, no balcony",
+        "width": "9",
+        "floors": "3",
+        "cladding": "8FA58A",
+        "door": "5E1F1E",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "M": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 5,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 8,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W02",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8 m wide, 3 floors, slate blue cladding (#4A6378), white door (#F2F2EE), red clay tiles roof, no balcony",
+        "width": "8",
+        "floors": "3",
+        "cladding": "4A6378",
+        "door": "F2F2EE",
+        "roof": "red clay tiles",
+        "balcony": "no"
+      },
+      "scores": {
+        "A": {
+          "brief": 8,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 5,
+          "craft": 7,
+          "materials": 5,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W03",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7.5 m wide, 2 floors, off-white cladding (#E9E4D6), teal door (#2E7D7A), red clay tiles roof, no balcony",
+        "width": "7.5",
+        "floors": "2",
+        "cladding": "E9E4D6",
+        "door": "2E7D7A",
+        "roof": "red clay tiles",
+        "balcony": "no"
+      },
+      "scores": {
+        "M": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W04",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7 m wide, 2 floors, mustard cladding (#D6A93A), teal door (#2E7D7A), red clay tiles roof, no balcony",
+        "width": "7",
+        "floors": "2",
+        "cladding": "D6A93A",
+        "door": "2E7D7A",
+        "roof": "red clay tiles",
+        "balcony": "no"
+      },
+      "scores": {
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 7
+        },
+        "A": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 8,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W05",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8.5 m wide, 3 floors, off-white cladding (#E9E4D6), black door (#1E1E1E), red clay tiles roof, a timber balcony on the upper floor",
+        "width": "8.5",
+        "floors": "3",
+        "cladding": "E9E4D6",
+        "door": "1E1E1E",
+        "roof": "red clay tiles",
+        "balcony": "yes"
+      },
+      "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 7
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
+        "M": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W06",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8.5 m wide, 3 floors, off-white cladding (#E9E4D6), oxblood door (#5E1F1E), red clay tiles roof, a timber balcony on the upper floor",
+        "width": "8.5",
+        "floors": "3",
+        "cladding": "E9E4D6",
+        "door": "5E1F1E",
+        "roof": "red clay tiles",
+        "balcony": "yes"
+      },
+      "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W07",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 9 m wide, 2 floors, charcoal cladding (#35363A), white door (#F2F2EE), red clay tiles roof, no balcony",
+        "width": "9",
+        "floors": "2",
+        "cladding": "35363A",
+        "door": "F2F2EE",
+        "roof": "red clay tiles",
+        "balcony": "no"
+      },
+      "scores": {
+        "A": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 8,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 6,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W08",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8.5 m wide, 3 floors, ochre cladding (#C8912E), teal door (#2E7D7A), dark grey standing-seam metal roof, a timber balcony on the upper floor",
+        "width": "8.5",
+        "floors": "3",
+        "cladding": "C8912E",
+        "door": "2E7D7A",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "yes"
+      },
+      "scores": {
+        "A": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 7
+        },
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W09",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8 m wide, 2 floors, charcoal cladding (#35363A), teal door (#2E7D7A), dark grey standing-seam metal roof, no balcony",
+        "width": "8",
+        "floors": "2",
+        "cladding": "35363A",
+        "door": "2E7D7A",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "M": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 7,
+          "craft": 8,
+          "materials": 6,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W10",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 6.5 m wide, 2 floors, falu red cladding (#8E2B22), white door (#F2F2EE), red clay tiles roof, no balcony",
+        "width": "6.5",
+        "floors": "2",
+        "cladding": "8E2B22",
+        "door": "F2F2EE",
+        "roof": "red clay tiles",
+        "balcony": "no"
+      },
+      "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 9
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W11",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 6.5 m wide, 2 floors, slate blue cladding (#4A6378), oxblood door (#5E1F1E), red clay tiles roof, a timber balcony on the upper floor",
+        "width": "6.5",
+        "floors": "2",
+        "cladding": "4A6378",
+        "door": "5E1F1E",
+        "roof": "red clay tiles",
+        "balcony": "yes"
+      },
+      "scores": {
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 8,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W12",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 9 m wide, 3 floors, forest green cladding (#2F5233), black door (#1E1E1E), dark grey standing-seam metal roof, no balcony",
+        "width": "9",
+        "floors": "3",
+        "cladding": "2F5233",
+        "door": "1E1E1E",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "B": {
+          "brief": 7,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
+        "M": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W13",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7.5 m wide, 2 floors, forest green cladding (#2F5233), white door (#F2F2EE), red clay tiles roof, a timber balcony on the upper floor",
+        "width": "7.5",
+        "floors": "2",
+        "cladding": "2F5233",
+        "door": "F2F2EE",
+        "roof": "red clay tiles",
+        "balcony": "yes"
+      },
+      "scores": {
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W14",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7 m wide, 3 floors, ochre cladding (#C8912E), teal door (#2E7D7A), dark grey standing-seam metal roof, no balcony",
+        "width": "7",
+        "floors": "3",
+        "cladding": "C8912E",
+        "door": "2E7D7A",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 9
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W15",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7 m wide, 3 floors, mustard cladding (#D6A93A), teal door (#2E7D7A), red clay tiles roof, a timber balcony on the upper floor",
+        "width": "7",
+        "floors": "3",
+        "cladding": "D6A93A",
+        "door": "2E7D7A",
+        "roof": "red clay tiles",
+        "balcony": "yes"
+      },
+      "scores": {
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 7
+        },
+        "B": {
+          "brief": 5,
+          "craft": 7,
+          "materials": 5,
+          "soundness": 6
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W16",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7.5 m wide, 2 floors, falu red cladding (#8E2B22), oxblood door (#5E1F1E), red clay tiles roof, a timber balcony on the upper floor",
+        "width": "7.5",
+        "floors": "2",
+        "cladding": "8E2B22",
+        "door": "5E1F1E",
+        "roof": "red clay tiles",
+        "balcony": "yes"
+      },
+      "scores": {
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 7
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 5,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W17",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8 m wide, 3 floors, charcoal cladding (#35363A), oxblood door (#5E1F1E), red clay tiles roof, no balcony",
+        "width": "8",
+        "floors": "3",
+        "cladding": "35363A",
+        "door": "5E1F1E",
+        "roof": "red clay tiles",
+        "balcony": "no"
+      },
+      "scores": {
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 5,
+          "craft": 6,
+          "materials": 5,
+          "soundness": 7
+        },
+        "A": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 8,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W18",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8.5 m wide, 2 floors, charcoal cladding (#35363A), white door (#F2F2EE), dark grey standing-seam metal roof, no balcony",
+        "width": "8.5",
+        "floors": "2",
+        "cladding": "35363A",
+        "door": "F2F2EE",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "M": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W19",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8 m wide, 3 floors, sage cladding (#8FA58A), oxblood door (#5E1F1E), red clay tiles roof, a timber balcony on the upper floor",
+        "width": "8",
+        "floors": "3",
+        "cladding": "8FA58A",
+        "door": "5E1F1E",
+        "roof": "red clay tiles",
+        "balcony": "yes"
+      },
+      "scores": {
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 7
+        },
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 5,
+          "soundness": 7
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W20",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7.5 m wide, 3 floors, off-white cladding (#E9E4D6), oxblood door (#5E1F1E), red clay tiles roof, a timber balcony on the upper floor",
+        "width": "7.5",
+        "floors": "3",
+        "cladding": "E9E4D6",
+        "door": "5E1F1E",
+        "roof": "red clay tiles",
+        "balcony": "yes"
+      },
+      "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W21",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8 m wide, 3 floors, charcoal cladding (#35363A), black door (#1E1E1E), dark grey standing-seam metal roof, no balcony",
+        "width": "8",
+        "floors": "3",
+        "cladding": "35363A",
+        "door": "1E1E1E",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "M": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W22",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 6.5 m wide, 3 floors, charcoal cladding (#35363A), oxblood door (#5E1F1E), dark grey standing-seam metal roof, a timber balcony on the upper floor",
+        "width": "6.5",
+        "floors": "3",
+        "cladding": "35363A",
+        "door": "5E1F1E",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "yes"
+      },
+      "scores": {
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 6,
+          "craft": 8,
+          "materials": 5,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W23",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 6.5 m wide, 3 floors, sage cladding (#8FA58A), teal door (#2E7D7A), dark grey standing-seam metal roof, no balcony",
+        "width": "6.5",
+        "floors": "3",
+        "cladding": "8FA58A",
+        "door": "2E7D7A",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W24",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8.5 m wide, 3 floors, charcoal cladding (#35363A), white door (#F2F2EE), dark grey standing-seam metal roof, no balcony",
+        "width": "8.5",
+        "floors": "3",
+        "cladding": "35363A",
+        "door": "F2F2EE",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 7,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W25",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7.5 m wide, 3 floors, forest green cladding (#2F5233), oxblood door (#5E1F1E), red clay tiles roof, a timber balcony on the upper floor",
+        "width": "7.5",
+        "floors": "3",
+        "cladding": "2F5233",
+        "door": "5E1F1E",
+        "roof": "red clay tiles",
+        "balcony": "yes"
+      },
+      "scores": {
+        "A": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 5,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 9,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W26",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7.5 m wide, 3 floors, slate blue cladding (#4A6378), white door (#F2F2EE), dark grey standing-seam metal roof, a timber balcony on the upper floor",
+        "width": "7.5",
+        "floors": "3",
+        "cladding": "4A6378",
+        "door": "F2F2EE",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "yes"
+      },
+      "scores": {
+        "B": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 5,
+          "soundness": 7
+        },
+        "A": {
+          "brief": 7,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 7
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W27",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 7 m wide, 2 floors, slate blue cladding (#4A6378), white door (#F2F2EE), red clay tiles roof, no balcony",
+        "width": "7",
+        "floors": "2",
+        "cladding": "4A6378",
+        "door": "F2F2EE",
+        "roof": "red clay tiles",
+        "balcony": "no"
+      },
+      "scores": {
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 5,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W28",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 6.5 m wide, 3 floors, charcoal cladding (#35363A), white door (#F2F2EE), dark grey standing-seam metal roof, a timber balcony on the upper floor",
+        "width": "6.5",
+        "floors": "3",
+        "cladding": "35363A",
+        "door": "F2F2EE",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "yes"
+      },
+      "scores": {
+        "M": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 7
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 7
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W29",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 6.5 m wide, 3 floors, forest green cladding (#2F5233), white door (#F2F2EE), dark grey standing-seam metal roof, no balcony",
+        "width": "6.5",
+        "floors": "3",
+        "cladding": "2F5233",
+        "door": "F2F2EE",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W30",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 6.5 m wide, 3 floors, sage cladding (#8FA58A), oxblood door (#5E1F1E), red clay tiles roof, no balcony",
+        "width": "6.5",
+        "floors": "3",
+        "cladding": "8FA58A",
+        "door": "5E1F1E",
+        "roof": "red clay tiles",
+        "balcony": "no"
+      },
+      "scores": {
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 5,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 8,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W31",
+      "brief": {
+        "style": "nordic house",
+        "height": "11",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 8.5 m wide, 2 floors, mustard cladding (#D6A93A), teal door (#2E7D7A), dark grey standing-seam metal roof, no balcony",
+        "width": "8.5",
+        "floors": "2",
+        "cladding": "D6A93A",
+        "door": "2E7D7A",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "A": {
+          "brief": 7,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        },
+        "M": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        }
+      }
+    },
+    {
+      "id": "W32",
+      "brief": {
+        "style": "nordic house",
+        "height": "14",
+        "brief": "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth; 6.5 m wide, 3 floors, charcoal cladding (#35363A), black door (#1E1E1E), dark grey standing-seam metal roof, no balcony",
+        "width": "6.5",
+        "floors": "3",
+        "cladding": "35363A",
+        "door": "1E1E1E",
+        "roof": "dark grey standing-seam metal",
+        "balcony": "no"
+      },
+      "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 9
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Every application window opens maximised with a title bar; dialogs
+     are centred on top. One desktop, no virtual workspaces. -->
+<openbox_config xmlns="http://openbox.org/3.4/rc">
+  <focus><focusNew>yes</focusNew><followMouse>no</followMouse></focus>
+  <placement><policy>Smart</policy><center>yes</center></placement>
+  <theme><name>Clearlooks</name><titleLayout>NLIMC</titleLayout>
+    <font place="ActiveWindow"><name>DejaVu Sans</name><size>11</size><weight>Bold</weight></font>
+    <font place="InactiveWindow"><name>DejaVu Sans</name><size>11</size></font>
+  </theme>
+  <desktops><number>1</number></desktops>
+  <applications>
+    <application type="normal"><maximized>yes</maximized><decor>yes</decor></application>
+  </applications>
+</openbox_config>

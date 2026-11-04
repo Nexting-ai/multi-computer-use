@@ -89,11 +89,14 @@ export class ManagedScreen {
       /** "free": every target is a non-progress action (like dismiss); the
        * caller records completion with ledger.declare. Default "item". */
       contract?: "item" | "free";
+      /** Largest scope (a per-surface operator owns at most 8; a director
+       * that addresses one surface at a time may own the fleet). */
+      max_scope?: number;
     } = {},
   ) {
     if (
       !scope.length ||
-      scope.length > 8 ||
+      scope.length > (evidence.max_scope ?? 8) ||
       new Set(scope).size !== scope.length ||
       scope.some((id) => !allSurfaces.includes(id))
     )
