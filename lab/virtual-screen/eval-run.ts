@@ -900,6 +900,24 @@ for (const blk of blocks)
       };
       return { stack, runtime, handle };
     };
+    /** A session that the model service ended with an error (e.g. at
+     * capacity) is resumed, at most twice, as the per-surface worksets are:
+     * the desktops keep their state and the new session is told so. */
+    const resumable = async (
+      path: string,
+      run: (path: string, resumed: string) => Promise<any>,
+    ) => {
+      for (let attempt = 0; ; attempt++) {
+        const agent = await run(
+          attempt ? `${path}-resumed-${attempt}` : path,
+          attempt
+            ? " (Resumed after a model-service interruption: the desktops keep their state; check it before continuing.) "
+            : "",
+        );
+        if (agent?.stop_reason !== "run_failed" || attempt >= 2) return agent;
+        await new Promise((r) => setTimeout(r, 60_000));
+      }
+    };
     const phases: Record<string, unknown> = {};
     try {
       await writeFile(join(directory, "tools.jsonl"), "");
@@ -1060,20 +1078,24 @@ for (const blk of blocks)
         for (let round = 0; round < o.rounds; round++) {
           if (lab.surfaces.every((id) => ledger.get(id).state !== "ready"))
             break;
-          await session(
-            `sessions/round-${round}`,
-            roundTools,
-            roundPrompt(
-              lab.task,
-              lab.surfaces,
-              round,
-              o.rounds,
-              notes,
-              [...policies.values()],
-              o.round_max_calls,
-            ) + JSON.stringify(ledger.summary()),
-            director,
-            { calls: o.round_max_calls },
+          await resumable(`sessions/round-${round}`, (path, resumed) =>
+            session(
+              path,
+              roundTools,
+              roundPrompt(
+                lab.task,
+                lab.surfaces,
+                round,
+                o.rounds,
+                notes,
+                [...policies.values()],
+                o.round_max_calls,
+              ) +
+                resumed +
+                JSON.stringify(ledger.summary()),
+              director,
+              { calls: o.round_max_calls },
+            ),
           );
         }
         await context.run(-1, () => runtime.drain());
@@ -1091,16 +1113,20 @@ for (const blk of blocks)
             for (let next = queue.shift(); next; next = queue.shift()) {
               const [piece, ids] = next;
               const { runtime, handle } = fleet("free", ids);
-              await session(
-                `sessions/piece-${piece}`,
-                directorTools,
-                explorePrompt(
-                  lab.task,
-                  piece,
-                  lab.inputs?.[ids[0]!] ?? {},
-                  ids,
-                ) + JSON.stringify(ledger.summary()),
-                handle,
+              await resumable(`sessions/piece-${piece}`, (path, resumed) =>
+                session(
+                  path,
+                  directorTools,
+                  explorePrompt(
+                    lab.task,
+                    piece,
+                    lab.inputs?.[ids[0]!] ?? {},
+                    ids,
+                  ) +
+                    resumed +
+                    JSON.stringify(ledger.summary()),
+                  handle,
+                ),
               );
               await context.run(-1, () => runtime.drain());
             }
