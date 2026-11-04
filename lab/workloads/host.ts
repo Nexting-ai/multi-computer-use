@@ -1,6 +1,7 @@
 import { execFile, spawn } from "node:child_process";
 import { createReadStream, createWriteStream } from "node:fs";
 import { promisify } from "node:util";
+import { createGzip } from "node:zlib";
 
 const run = promisify(execFile);
 
@@ -35,7 +36,11 @@ export function host(h: SshHost) {
           });
           let stderr = "";
           p.stderr!.on("data", (c) => (stderr += c));
-          if (from) createReadStream(from).pipe(p.stdin!);
+          // Uploads are gzipped in flight (.blend files shrink ~10x).
+          if (from)
+            createReadStream(from)
+              .pipe(createGzip({ level: 1 }))
+              .pipe(p.stdin!);
           if (to) p.stdout!.pipe(createWriteStream(to));
           p.on("error", reject);
           p.on("close", (code) =>
@@ -51,7 +56,8 @@ export function host(h: SshHost) {
       retry(() =>
         run("ssh", [...h.options, h.destination, cmd], { maxBuffer: 1 << 28 }),
       ).then((r) => r.stdout),
-    put: (local: string, remote: string) => pipe(`cat > '${remote}'`, local),
+    put: (local: string, remote: string) =>
+      pipe(`gzip -dc > '${remote}'`, local),
     get: (remote: string, local: string) =>
       pipe(`cat '${remote}'`, undefined, local),
   };
