@@ -63,8 +63,13 @@ await Promise.all(
         `blender -b /p/final.blend -s ${s} -e ${e} -a >/dev/null 2>&1; true`,
       ).replace("docker run --rm", "docker run -d --name film-render")}`,
     );
-    while ((await h.sh("docker ps -q -f name=^film-render$")).trim())
+    for (;;) {
       await new Promise((r) => setTimeout(r, 15_000));
+      const running = await h
+        .sh("docker ps -q -f name=^film-render$")
+        .catch(() => "unknown"); // a dropped poll: ask again
+      if (!running.trim()) break;
+    }
     await h.sh("docker rm -f film-render >/dev/null 2>&1; true");
     await h.sh(`cd ${work}/out/frames && tar -cf ${work}/frames-${i}.tar .`);
     await h.get(`${work}/frames-${i}.tar`, join(out, `frames-${i}.tar`));
