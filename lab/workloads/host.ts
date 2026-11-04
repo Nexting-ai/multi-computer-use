@@ -16,7 +16,7 @@ async function retry<T>(f: () => Promise<T>, idempotent = false): Promise<T> {
       return await f();
     } catch (e: any) {
       const unreached =
-        /Connection (closed|reset|refused|timed out)|kex_exchange|banner exchange/i.test(
+        /Connection (to \S+ port \d+ )?(closed|reset|refused|timed out)|Operation timed out|kex_exchange|banner exchange/i.test(
           String(e?.stderr ?? e),
         );
       const dropped = idempotent && /ssh 255/.test(String(e?.message));
