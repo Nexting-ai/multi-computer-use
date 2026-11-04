@@ -1,0 +1,116 @@
+{
+  "summary": {
+    "A": {
+      "coherence": 7.75,
+      "craft": 6.5,
+      "richness": 8,
+      "overall": 7.25
+    },
+    "B": {
+      "coherence": 7.5,
+      "craft": 7.25,
+      "richness": 8,
+      "overall": 7.5
+    },
+    "X": {
+      "coherence": 6.5,
+      "craft": 6.5,
+      "richness": 5.75,
+      "overall": 5.75
+    }
+  },
+  "results": [
+    {
+      "view": "0001",
+      "scores": {
+        "A": {
+          "coherence": 8,
+          "craft": 7,
+          "richness": 8,
+          "overall": 7
+        },
+        "B": {
+          "coherence": 8,
+          "craft": 8,
+          "richness": 8,
+          "overall": 8
+        },
+        "X": {
+          "coherence": 7,
+          "craft": 7,
+          "richness": 6,
+          "overall": 6
+        }
+      }
+    },
+    {
+      "view": "0060",
+      "scores": {
+        "X": {
+          "coherence": 6,
+          "craft": 6,
+          "richness": 5,
+          "overall": 5
+        },
+        "B": {
+          "coherence": 7,
+          "craft": 7,
+          "richness": 8,
+          "overall": 7
+        },
+        "A": {
+          "coherence": 7,
+          "craft": 6,
+          "richness": 8,
+          "overall": 7
+        }
+      }
+    },
+    {
+      "view": "0120",
+      "scores": {
+        "B": {
+          "coherence": 7,
+          "craft": 7,
+          "richness": 8,
+          "overall": 7
+        },
+        "A": {
+          "coherence": 8,
+          "craft": 6,
+          "richness": 8,
+          "overall": 7
+        },
+        "X": {
+          "coherence": 7,
+          "craft": 7,
+          "richness": 6,
+          "overall": 6
+        }
+      }
+    },
+    {
+      "view": "0180",
+      "scores": {
+        "X": {
+          "coherence": 6,
+          "craft": 6,
+          "richness": 6,
+          "overall": 6
+        },
+        "B": {
+          "coherence": 8,
+          "craft": 7,
+          "richness": 8,
+          "overall": 8
+        },
+        "A": {
+          "coherence": 8,
+          "craft": 7,
+          "richness": 8,
+          "overall": 8
+        }
+      }
+    }
+  ]
+}

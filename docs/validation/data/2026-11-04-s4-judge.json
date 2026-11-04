@@ -1,0 +1,475 @@
+{
+  "summary": {
+    "A": {
+      "brief": 5.5,
+      "craft": 4.69,
+      "materials": 4.94,
+      "soundness": 6.13,
+      "overall": 5.32
+    },
+    "B": {
+      "brief": 7.5,
+      "craft": 7.56,
+      "materials": 7.31,
+      "soundness": 7.63,
+      "overall": 7.5
+    },
+    "X": {
+      "brief": 6.38,
+      "craft": 6.38,
+      "materials": 5.88,
+      "soundness": 6.69,
+      "overall": 6.33
+    }
+  },
+  "results": [
+    {
+      "id": "W01",
+      "brief": {
+        "style": "treetop rope bridge",
+        "height": "14",
+        "brief": "two treehouse platforms on tall trunks joined by a sagging rope bridge with wooden planks and rope handrails, ladders up both trunks"
+      },
+      "scores": {
+        "A": {
+          "brief": 7,
+          "craft": 5,
+          "materials": 5,
+          "soundness": 8
+        },
+        "X": {
+          "brief": 1,
+          "craft": 1,
+          "materials": 1,
+          "soundness": 1
+        },
+        "B": {
+          "brief": 9,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W02",
+      "brief": {
+        "style": "baggage train",
+        "height": "3",
+        "brief": "a small airport tractor pulling three baggage carts loaded with colourful suitcases and duffel bags"
+      },
+      "scores": {
+        "X": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W03",
+      "brief": {
+        "style": "moored airship",
+        "height": "16",
+        "brief": "a cigar-shaped airship with tail fins and a passenger gondola, its nose tied to a tall mooring mast"
+      },
+      "scores": {
+        "X": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 7
+        },
+        "B": {
+          "brief": 8,
+          "craft": 9,
+          "materials": 8,
+          "soundness": 6
+        },
+        "A": {
+          "brief": 6,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W04",
+      "brief": {
+        "style": "seaplane hangar",
+        "height": "11",
+        "brief": "an arched hangar with a corrugated roof and open front, a small yellow seaplane on floats parked inside, tool racks along the walls"
+      },
+      "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 8
+        },
+        "X": {
+          "brief": 9,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 7
+        }
+      }
+    },
+    {
+      "id": "W05",
+      "brief": {
+        "style": "giant jungle flower",
+        "height": "6",
+        "brief": "a giant rafflesia-like flower sculpture: five thick red petals with pale spots around a deep open centre, leaves at its base"
+      },
+      "scores": {
+        "B": {
+          "brief": 6,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 4,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 7
+        },
+        "X": {
+          "brief": 5,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 5
+        }
+      }
+    },
+    {
+      "id": "W06",
+      "brief": {
+        "style": "control tower",
+        "height": "24",
+        "brief": "a slender concrete control tower wrapped in climbing vines, a wider faceted green-glass cab at the top with a walkway rail and antennas"
+      },
+      "scores": {
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 5,
+          "soundness": 6
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 8
+        },
+        "X": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W07",
+      "brief": {
+        "style": "waterfall cliff",
+        "height": "16",
+        "brief": "a mossy stepped rock cliff with a white waterfall falling into a turquoise pool, ferns and boulders around the pool"
+      },
+      "scores": {
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 7
+        },
+        "X": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 5,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W08",
+      "brief": {
+        "style": "propeller airliner",
+        "height": "6",
+        "brief": "a regional airliner parked on the apron, 18 m long, high wings with two propeller engines, T-tail, rows of cabin windows, white body with a green leaf livery, landing gear and boarding stairs"
+      },
+      "scores": {
+        "X": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 7
+        },
+        "B": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 8,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 5,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 5
+        }
+      }
+    },
+    {
+      "id": "W09",
+      "brief": {
+        "style": "toucan statue",
+        "height": "8",
+        "brief": "a giant toucan statue perched on a rock: black body, white throat, big orange-and-yellow beak, blue eye ring"
+      },
+      "scores": {
+        "B": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 8
+        },
+        "X": {
+          "brief": 5,
+          "craft": 5,
+          "materials": 5,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 4,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W10",
+      "brief": {
+        "style": "radar dome",
+        "height": "18",
+        "brief": "a white geodesic radar dome on a steel lattice tower with a service stair and red warning lights"
+      },
+      "scores": {
+        "X": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 4,
+          "soundness": 6
+        },
+        "B": {
+          "brief": 9,
+          "craft": 9,
+          "materials": 8,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W11",
+      "brief": {
+        "style": "overgrown temple ruin",
+        "height": "15",
+        "brief": "a stepped stone pyramid ruin with a small shrine on top, broken pillars, moss and roots creeping over the stones"
+      },
+      "scores": {
+        "X": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 6,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 5,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W12",
+      "brief": {
+        "style": "stilt jungle lodge",
+        "height": "10",
+        "brief": "a lodge raised on wooden stilts with a steep thatched roof, a wrap-around veranda with railings, steps and hanging lanterns"
+      },
+      "scores": {
+        "X": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 7
+        },
+        "A": {
+          "brief": 5,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 5
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 8
+        }
+      }
+    },
+    {
+      "id": "W13",
+      "brief": {
+        "style": "giant kapok tree",
+        "height": "28",
+        "brief": "a giant rainforest tree with plank buttress roots, a tall grey trunk, layered umbrella canopy and hanging lianas"
+      },
+      "scores": {
+        "B": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "X": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 5,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W14",
+      "brief": {
+        "style": "terminal pavilion",
+        "height": "11",
+        "brief": "an open-sided terminal: timber columns under one huge sweeping leaf-shaped roof with visible ribs, check-in desks and benches beneath"
+      },
+      "scores": {
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 5,
+          "soundness": 6
+        },
+        "B": {
+          "brief": 9,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 9
+        },
+        "X": {
+          "brief": 1,
+          "craft": 1,
+          "materials": 1,
+          "soundness": 1
+        }
+      }
+    },
+    {
+      "id": "W15",
+      "brief": {
+        "style": "cable car station",
+        "height": "14",
+        "brief": "a cable car station with a pitched roof and a big bullwheel, cables leaving the station and a red gondola hanging from them"
+      },
+      "scores": {
+        "A": {
+          "brief": 6,
+          "craft": 4,
+          "materials": 5,
+          "soundness": 4
+        },
+        "X": {
+          "brief": 8,
+          "craft": 9,
+          "materials": 9,
+          "soundness": 7
+        },
+        "B": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 6
+        }
+      }
+    },
+    {
+      "id": "W16",
+      "brief": {
+        "style": "rescue helipad",
+        "height": "9",
+        "brief": "a raised helipad deck on steel stilts with an H marking and edge lights, a red rescue helicopter with rotor blades on it, a stair up"
+      },
+      "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 8,
+          "soundness": 7
+        },
+        "X": {
+          "brief": 9,
+          "craft": 9,
+          "materials": 8,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 4,
+          "craft": 4,
+          "materials": 4,
+          "soundness": 6
+        }
+      }
+    }
+  ]
+}
