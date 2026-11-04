@@ -168,6 +168,7 @@ ee.taa_render_samples = 32
 scene.view_settings.view_transform = "Filmic"
 scene.view_settings.look = "Medium High Contrast"
 scene.render.resolution_x, scene.render.resolution_y = 1280, 720
+scene.render.resolution_percentage = 100
 
 # A 10 s orbit around the block.
 pivot = bpy.data.objects.new("Orbit", None)
