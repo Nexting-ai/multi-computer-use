@@ -116,7 +116,7 @@ const schema = z.strictObject({
   refine_deadline_ms: z.number().int().min(60000).default(1200000),
   refine_rounds: z.number().int().min(1).max(3).default(2),
   /** Per-surface sessions running at once (1 = sequential, as in E1). */
-  workset_parallel: z.number().int().min(1).max(16).default(1),
+  workset_parallel: z.number().int().min(1).max(32).default(1),
   stack_concurrency: z.number().int().min(1).max(100).default(64),
   slots: z
     .array(z.strictObject({ block: z.number().int(), arm: z.enum(ARMS) }))
