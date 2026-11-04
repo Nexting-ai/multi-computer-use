@@ -2,6 +2,8 @@
 
 Preregistration: [2026-11-03-preregistration-s1.md](2026-11-03-preregistration-s1.md), including deviations 1–5. The four failed attempts (infrastructure, caps, a common busy-application note) are kept in `.local/s1/*-fail*` and excluded. Final runs: commit `bf8f991`, seed 9101 (block seed 1593497587), model `gpt-6-astra` medium, one block. Data: [`data/2026-11-03-s1-summary.json`](data/2026-11-03-s1-summary.json), [`data/2026-11-03-s1-judge.json`](data/2026-11-03-s1-judge.json).
 
+**Correction (2026-11-04):** the photos judged here were of unequal size: A's 576 × 432, B's partly smaller than C's 960 × 720. The corrected four-arm judging in the [S2 report](2026-11-03-s2-refiners.md#correction-2026-11-04) gives A 4.34, B 7.97 and C 4.61. The conclusions are unchanged.
+
 ## Results
 
 | | A: one agent, one desktop | B: sixteen agents, sixteen desktops | C: one director, sixteen desktops |

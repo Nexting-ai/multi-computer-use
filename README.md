@@ -16,7 +16,7 @@ One house design, 32 variations: width, floors, colours, roof and balcony differ
 
 | | One agent, one desktop | **The harness: 1 agent, 32 desktops** | 32 agents, 32 desktops |
 |---|---:|---:|---:|
-| Blind quality (1–10) | 7.18 | **7.66** | 7.06 |
+| Blind quality (1–10) | 6.99 | **7.66** | 7.09 |
 | Wall time | **4.7 min** | 13.5 min | 35.7 min |
 | Model tokens | **0.30M** | 0.85M | 13.31M |
 | Screenshots sent to the model | 6 | 13 | 252 |
@@ -53,9 +53,9 @@ Three items to file in a business back office, on each of 100 desktops, run thre
 
 ### 3. Sixteen different buildings: where it does not save tokens
 
-A city block of 16 buildings that all differ: a pagoda, a glass tower, a lighthouse. When the director wrote one generic script for all sixteen, it was cheap but plain, scoring about 4.7 of 10. Sixteen agents, one per building, scored 8.0.
+A city block of 16 buildings that all differ: a pagoda, a glass tower, a lighthouse. When the director wrote one generic script for all sixteen, it was cheap but plain, scoring about 4.5 of 10. Sixteen agents, one per building, scored 8.0.
 
-A director with sixteen parallel refiners reached 7.5 in under half the time (24.7 vs 54.5 min), but used *more* tokens (6.98M vs 4.32M). When every item needs its own decisions, each one costs an agent's attention whichever way the work is organised. The harness pays off where items share a decision, as in cases 1 and 2.
+A director with sixteen parallel refiners reached 7.4 in under half the time (24.7 vs 54.5 min), but used *more* tokens (6.98M vs 4.32M). When every item needs its own decisions, each one costs an agent's attention whichever way the work is organised. The harness pays off where items share a decision, as in cases 1 and 2.
 
 [S1 report](docs/validation/2026-11-03-s1-city-block.md) · [S2 report](docs/validation/2026-11-03-s2-refiners.md)
 

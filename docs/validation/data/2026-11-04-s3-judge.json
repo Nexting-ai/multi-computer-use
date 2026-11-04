@@ -1,25 +1,25 @@
 {
   "summary": {
     "A": {
-      "brief": 7.22,
-      "craft": 6.44,
-      "materials": 6.72,
-      "soundness": 8.34,
-      "overall": 7.18
+      "brief": 6.84,
+      "craft": 6,
+      "materials": 6.69,
+      "soundness": 8.41,
+      "overall": 6.99
     },
     "M": {
-      "brief": 7.84,
-      "craft": 7.47,
-      "materials": 7.13,
-      "soundness": 8.22,
+      "brief": 7.72,
+      "craft": 7.53,
+      "materials": 7,
+      "soundness": 8.38,
       "overall": 7.66
     },
     "B": {
-      "brief": 6.81,
-      "craft": 7.09,
-      "materials": 6.38,
-      "soundness": 7.97,
-      "overall": 7.06
+      "brief": 6.69,
+      "craft": 7.38,
+      "materials": 6.28,
+      "soundness": 8,
+      "overall": 7.09
     }
   },
   "results": [
@@ -38,21 +38,21 @@
       },
       "scores": {
         "M": {
-          "brief": 8,
-          "craft": 8,
-          "materials": 7,
-          "soundness": 9
-        },
-        "A": {
-          "brief": 8,
+          "brief": 7,
           "craft": 7,
           "materials": 7,
           "soundness": 9
         },
         "B": {
-          "brief": 6,
-          "craft": 7,
+          "brief": 5,
+          "craft": 6,
           "materials": 6,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 8,
           "soundness": 9
         }
       }
@@ -71,22 +71,22 @@
         "balcony": "no"
       },
       "scores": {
-        "B": {
-          "brief": 6,
-          "craft": 7,
-          "materials": 6,
+        "A": {
+          "brief": 8,
+          "craft": 6,
+          "materials": 7,
           "soundness": 9
+        },
+        "B": {
+          "brief": 5,
+          "craft": 7,
+          "materials": 5,
+          "soundness": 8
         },
         "M": {
           "brief": 8,
           "craft": 8,
           "materials": 7,
-          "soundness": 9
-        },
-        "A": {
-          "brief": 7,
-          "craft": 6,
-          "materials": 6,
           "soundness": 9
         }
       }
@@ -105,23 +105,23 @@
         "balcony": "no"
       },
       "scores": {
-        "B": {
-          "brief": 6,
-          "craft": 6,
-          "materials": 5,
-          "soundness": 8
-        },
         "M": {
-          "brief": 8,
-          "craft": 8,
-          "materials": 7,
-          "soundness": 9
-        },
-        "A": {
           "brief": 7,
           "craft": 7,
           "materials": 7,
           "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
         }
       }
     },
@@ -141,21 +141,21 @@
       "scores": {
         "M": {
           "brief": 8,
-          "craft": 7,
-          "materials": 7,
+          "craft": 8,
+          "materials": 8,
           "soundness": 9
         },
         "B": {
-          "brief": 8,
+          "brief": 7,
           "craft": 7,
           "materials": 7,
-          "soundness": 8
+          "soundness": 7
         },
         "A": {
-          "brief": 7,
-          "craft": 6,
-          "materials": 7,
-          "soundness": 8
+          "brief": 8,
+          "craft": 7,
+          "materials": 8,
+          "soundness": 9
         }
       }
     },
@@ -173,17 +173,17 @@
         "balcony": "yes"
       },
       "scores": {
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 7
+        },
         "A": {
           "brief": 6,
           "craft": 6,
           "materials": 6,
           "soundness": 9
-        },
-        "B": {
-          "brief": 7,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 7
         },
         "M": {
           "brief": 8,
@@ -208,22 +208,22 @@
       },
       "scores": {
         "B": {
-          "brief": 7,
+          "brief": 8,
           "craft": 7,
           "materials": 7,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
           "soundness": 8
         },
         "M": {
-          "brief": 7,
+          "brief": 8,
           "craft": 7,
           "materials": 7,
-          "soundness": 6
-        },
-        "A": {
-          "brief": 7,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 8
+          "soundness": 7
         }
       }
     },
@@ -241,22 +241,22 @@
         "balcony": "no"
       },
       "scores": {
-        "B": {
-          "brief": 7,
+        "A": {
+          "brief": 8,
           "craft": 7,
-          "materials": 6,
+          "materials": 8,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 6,
+          "craft": 8,
+          "materials": 7,
           "soundness": 9
         },
         "M": {
           "brief": 8,
           "craft": 8,
-          "materials": 7,
-          "soundness": 9
-        },
-        "A": {
-          "brief": 7,
-          "craft": 7,
-          "materials": 6,
+          "materials": 8,
           "soundness": 9
         }
       }
@@ -275,23 +275,23 @@
         "balcony": "yes"
       },
       "scores": {
+        "A": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 8
+        },
         "M": {
           "brief": 8,
           "craft": 8,
-          "materials": 8,
+          "materials": 7,
           "soundness": 7
         },
         "B": {
-          "brief": 5,
-          "craft": 6,
-          "materials": 5,
-          "soundness": 6
-        },
-        "A": {
-          "brief": 8,
+          "brief": 6,
           "craft": 7,
-          "materials": 8,
-          "soundness": 8
+          "materials": 6,
+          "soundness": 7
         }
       }
     },
@@ -315,15 +315,15 @@
           "materials": 6,
           "soundness": 9
         },
+        "A": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 9
+        },
         "B": {
           "brief": 7,
-          "craft": 7,
-          "materials": 6,
-          "soundness": 8
-        },
-        "A": {
-          "brief": 7,
-          "craft": 7,
+          "craft": 8,
           "materials": 6,
           "soundness": 9
         }
@@ -345,21 +345,21 @@
       "scores": {
         "B": {
           "brief": 8,
-          "craft": 7,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
           "materials": 7,
           "soundness": 9
         },
         "M": {
           "brief": 8,
-          "craft": 7,
+          "craft": 8,
           "materials": 7,
-          "soundness": 9
-        },
-        "A": {
-          "brief": 8,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 9
+          "soundness": 8
         }
       }
     },
@@ -377,22 +377,22 @@
         "balcony": "yes"
       },
       "scores": {
-        "A": {
-          "brief": 7,
+        "B": {
+          "brief": 6,
           "craft": 7,
-          "materials": 7,
+          "materials": 6,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 8,
           "soundness": 8
         },
         "M": {
           "brief": 8,
           "craft": 8,
-          "materials": 7,
-          "soundness": 8
-        },
-        "B": {
-          "brief": 6,
-          "craft": 7,
-          "materials": 6,
+          "materials": 8,
           "soundness": 8
         }
       }
@@ -411,22 +411,22 @@
         "balcony": "no"
       },
       "scores": {
-        "M": {
-          "brief": 7,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 9
-        },
         "B": {
           "brief": 7,
-          "craft": 7,
+          "craft": 8,
           "materials": 7,
           "soundness": 9
         },
         "A": {
-          "brief": 7,
+          "brief": 6,
           "craft": 6,
-          "materials": 7,
+          "materials": 6,
+          "soundness": 9
+        },
+        "M": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 6,
           "soundness": 9
         }
       }
@@ -445,23 +445,23 @@
         "balcony": "yes"
       },
       "scores": {
-        "A": {
-          "brief": 7,
-          "craft": 6,
-          "materials": 6,
-          "soundness": 8
-        },
         "M": {
           "brief": 8,
           "craft": 8,
           "materials": 7,
-          "soundness": 7
+          "soundness": 8
         },
         "B": {
           "brief": 8,
           "craft": 8,
           "materials": 8,
-          "soundness": 7
+          "soundness": 8
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 8
         }
       }
     },
@@ -479,23 +479,23 @@
         "balcony": "no"
       },
       "scores": {
-        "A": {
-          "brief": 8,
+        "B": {
+          "brief": 6,
           "craft": 7,
+          "materials": 6,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
           "materials": 7,
           "soundness": 9
         },
         "M": {
           "brief": 8,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 9
-        },
-        "B": {
-          "brief": 6,
           "craft": 8,
           "materials": 7,
-          "soundness": 8
+          "soundness": 9
         }
       }
     },
@@ -513,22 +513,22 @@
         "balcony": "yes"
       },
       "scores": {
-        "A": {
-          "brief": 7,
-          "craft": 6,
-          "materials": 6,
-          "soundness": 8
-        },
         "M": {
           "brief": 8,
-          "craft": 7,
-          "materials": 7,
+          "craft": 8,
+          "materials": 8,
           "soundness": 7
         },
         "B": {
-          "brief": 6,
+          "brief": 5,
           "craft": 7,
-          "materials": 6,
+          "materials": 5,
+          "soundness": 6
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
           "soundness": 7
         }
       }
@@ -547,23 +547,23 @@
         "balcony": "yes"
       },
       "scores": {
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 7
+        },
         "M": {
           "brief": 8,
-          "craft": 7,
+          "craft": 8,
           "materials": 7,
           "soundness": 8
         },
         "B": {
           "brief": 6,
           "craft": 7,
-          "materials": 6,
+          "materials": 5,
           "soundness": 7
-        },
-        "A": {
-          "brief": 8,
-          "craft": 6,
-          "materials": 7,
-          "soundness": 8
         }
       }
     },
@@ -581,21 +581,21 @@
         "balcony": "no"
       },
       "scores": {
-        "B": {
-          "brief": 6,
-          "craft": 7,
-          "materials": 6,
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
           "soundness": 9
+        },
+        "B": {
+          "brief": 5,
+          "craft": 6,
+          "materials": 5,
+          "soundness": 7
         },
         "A": {
           "brief": 8,
           "craft": 7,
-          "materials": 7,
-          "soundness": 9
-        },
-        "M": {
-          "brief": 8,
-          "craft": 8,
           "materials": 8,
           "soundness": 9
         }
@@ -615,23 +615,23 @@
         "balcony": "no"
       },
       "scores": {
+        "M": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 9
+        },
         "A": {
           "brief": 6,
           "craft": 6,
           "materials": 6,
-          "soundness": 8
+          "soundness": 9
         },
         "B": {
-          "brief": 7,
+          "brief": 8,
           "craft": 8,
           "materials": 7,
-          "soundness": 8
-        },
-        "M": {
-          "brief": 7,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 8
+          "soundness": 9
         }
       }
     },
@@ -649,22 +649,22 @@
         "balcony": "yes"
       },
       "scores": {
-        "B": {
-          "brief": 7,
-          "craft": 7,
-          "materials": 6,
-          "soundness": 7
-        },
         "M": {
           "brief": 8,
           "craft": 8,
           "materials": 7,
-          "soundness": 8
+          "soundness": 7
+        },
+        "B": {
+          "brief": 6,
+          "craft": 7,
+          "materials": 5,
+          "soundness": 7
         },
         "A": {
-          "brief": 7,
-          "craft": 6,
-          "materials": 7,
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
           "soundness": 7
         }
       }
@@ -687,19 +687,19 @@
           "brief": 8,
           "craft": 8,
           "materials": 7,
-          "soundness": 8
-        },
-        "M": {
-          "brief": 7,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 6
+          "soundness": 9
         },
         "A": {
           "brief": 6,
           "craft": 6,
           "materials": 6,
           "soundness": 8
+        },
+        "M": {
+          "brief": 8,
+          "craft": 7,
+          "materials": 7,
+          "soundness": 7
         }
       }
     },
@@ -721,19 +721,19 @@
           "brief": 8,
           "craft": 8,
           "materials": 7,
-          "soundness": 8
-        },
-        "A": {
-          "brief": 7,
-          "craft": 6,
-          "materials": 6,
-          "soundness": 8
+          "soundness": 9
         },
         "M": {
-          "brief": 8,
-          "craft": 8,
+          "brief": 7,
+          "craft": 7,
           "materials": 7,
-          "soundness": 8
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 9
         }
       }
     },
@@ -751,22 +751,22 @@
         "balcony": "yes"
       },
       "scores": {
-        "B": {
-          "brief": 6,
-          "craft": 6,
-          "materials": 5,
-          "soundness": 6
-        },
-        "A": {
-          "brief": 8,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 8
-        },
         "M": {
           "brief": 8,
           "craft": 8,
           "materials": 7,
+          "soundness": 8
+        },
+        "A": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 7,
+          "soundness": 8
+        },
+        "B": {
+          "brief": 6,
+          "craft": 8,
+          "materials": 5,
           "soundness": 7
         }
       }
@@ -785,23 +785,23 @@
         "balcony": "no"
       },
       "scores": {
-        "B": {
-          "brief": 7,
-          "craft": 6,
-          "materials": 6,
-          "soundness": 8
-        },
-        "A": {
-          "brief": 8,
-          "craft": 7,
-          "materials": 8,
-          "soundness": 8
-        },
         "M": {
           "brief": 8,
           "craft": 8,
-          "materials": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
           "soundness": 8
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 9
         }
       }
     },
@@ -826,13 +826,13 @@
           "soundness": 9
         },
         "B": {
-          "brief": 8,
+          "brief": 7,
           "craft": 8,
           "materials": 7,
-          "soundness": 9
+          "soundness": 8
         },
         "M": {
-          "brief": 8,
+          "brief": 7,
           "craft": 7,
           "materials": 7,
           "soundness": 9
@@ -853,16 +853,16 @@
         "balcony": "yes"
       },
       "scores": {
-        "B": {
-          "brief": 6,
-          "craft": 7,
-          "materials": 6,
-          "soundness": 8
-        },
         "A": {
           "brief": 8,
-          "craft": 6,
+          "craft": 7,
           "materials": 7,
+          "soundness": 9
+        },
+        "B": {
+          "brief": 5,
+          "craft": 7,
+          "materials": 6,
           "soundness": 8
         },
         "M": {
@@ -887,23 +887,23 @@
         "balcony": "yes"
       },
       "scores": {
-        "M": {
-          "brief": 8,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 8
+        "B": {
+          "brief": 6,
+          "craft": 6,
+          "materials": 5,
+          "soundness": 7
         },
         "A": {
           "brief": 7,
-          "craft": 6,
-          "materials": 7,
-          "soundness": 7
-        },
-        "B": {
-          "brief": 6,
-          "craft": 7,
+          "craft": 5,
           "materials": 6,
           "soundness": 7
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 8
         }
       }
     },
@@ -923,21 +923,21 @@
       "scores": {
         "B": {
           "brief": 6,
-          "craft": 6,
+          "craft": 7,
           "materials": 5,
-          "soundness": 7
+          "soundness": 8
+        },
+        "M": {
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
         },
         "A": {
           "brief": 7,
           "craft": 6,
           "materials": 7,
           "soundness": 8
-        },
-        "M": {
-          "brief": 8,
-          "craft": 8,
-          "materials": 8,
-          "soundness": 9
         }
       }
     },
@@ -955,23 +955,23 @@
         "balcony": "yes"
       },
       "scores": {
+        "M": {
+          "brief": 7,
+          "craft": 6,
+          "materials": 6,
+          "soundness": 7
+        },
         "A": {
           "brief": 6,
           "craft": 5,
           "materials": 6,
           "soundness": 7
         },
-        "M": {
-          "brief": 7,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 7
-        },
         "B": {
           "brief": 8,
           "craft": 8,
           "materials": 7,
-          "soundness": 8
+          "soundness": 7
         }
       }
     },
@@ -989,23 +989,23 @@
         "balcony": "no"
       },
       "scores": {
+        "A": {
+          "brief": 6,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 8
+        },
+        "M": {
+          "brief": 7,
+          "craft": 7,
+          "materials": 6,
+          "soundness": 8
+        },
         "B": {
           "brief": 8,
           "craft": 8,
-          "materials": 8,
-          "soundness": 9
-        },
-        "M": {
-          "brief": 8,
-          "craft": 7,
           "materials": 7,
-          "soundness": 9
-        },
-        "A": {
-          "brief": 7,
-          "craft": 6,
-          "materials": 7,
-          "soundness": 9
+          "soundness": 8
         }
       }
     },
@@ -1025,19 +1025,19 @@
       "scores": {
         "M": {
           "brief": 8,
-          "craft": 7,
+          "craft": 8,
           "materials": 7,
           "soundness": 9
         },
         "B": {
-          "brief": 6,
+          "brief": 5,
           "craft": 7,
           "materials": 6,
           "soundness": 9
         },
         "A": {
           "brief": 8,
-          "craft": 8,
+          "craft": 7,
           "materials": 8,
           "soundness": 9
         }
@@ -1057,6 +1057,12 @@
         "balcony": "no"
       },
       "scores": {
+        "A": {
+          "brief": 7,
+          "craft": 5,
+          "materials": 6,
+          "soundness": 9
+        },
         "B": {
           "brief": 8,
           "craft": 7,
@@ -1064,12 +1070,6 @@
           "soundness": 9
         },
         "M": {
-          "brief": 8,
-          "craft": 7,
-          "materials": 7,
-          "soundness": 9
-        },
-        "A": {
           "brief": 8,
           "craft": 7,
           "materials": 7,
@@ -1091,23 +1091,23 @@
         "balcony": "no"
       },
       "scores": {
-        "A": {
-          "brief": 7,
-          "craft": 6,
-          "materials": 6,
-          "soundness": 8
-        },
         "B": {
-          "brief": 7,
-          "craft": 7,
+          "brief": 8,
+          "craft": 8,
+          "materials": 7,
+          "soundness": 9
+        },
+        "A": {
+          "brief": 6,
+          "craft": 5,
           "materials": 6,
           "soundness": 8
         },
         "M": {
           "brief": 8,
-          "craft": 8,
+          "craft": 7,
           "materials": 7,
-          "soundness": 8
+          "soundness": 9
         }
       }
     }
