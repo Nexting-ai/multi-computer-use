@@ -96,14 +96,18 @@ pole = material("Pole", (0.2, 0.2, 0.22), 0.4)
 lamp = material("Lamp", (1.0, 0.82, 0.55), 0.3, emit=25)
 grass = material("Grass", (0.22, 0.36, 0.17))
 
-extent = max(COLS, ROWS) * SPACING + 40
-box((extent * 3, extent * 3, 0.2), (0, 0, -0.32), grass)
-box((extent, extent, 0.1), (0, 0, -0.25), asphalt)
-lines = sorted({(i - COLS / 2) * SPACING for i in range(COLS + 1)} | {(j - ROWS / 2) * SPACING for j in range(ROWS + 1)})
-for s in lines:  # dashed centre lines on every street
-    for t in range(-int(extent / 2) + 20, int(extent / 2) - 19, 6):
-        box((0.25, 2.5, 0.02), (s, t, -0.19), paint)
-        box((2.5, 0.25, 0.02), (t, s, -0.19), paint)
+W, H = COLS * SPACING + 40, ROWS * SPACING + 40  # paved area
+box((W * 3, H * 3, 0.2), (0, 0, -0.32), grass)
+box((W, H, 0.1), (0, 0, -0.25), asphalt)
+# Streets run between the plots: xs along y, ys along x.
+xs = [(i - COLS / 2) * SPACING for i in range(COLS + 1)]
+ys = [(j - ROWS / 2) * SPACING for j in range(ROWS + 1)]
+for x in xs:  # dashed centre lines
+    for t in range(-int(H / 2) + 20, int(H / 2) - 19, 6):
+        box((0.25, 2.5, 0.02), (x, t, -0.19), paint)
+for y in ys:
+    for t in range(-int(W / 2) + 20, int(W / 2) - 19, 6):
+        box((2.5, 0.25, 0.02), (t, y, -0.19), paint)
 
 # One tree and one street light, instanced along the streets.
 proto = bpy.data.collections.new("Prototypes")
@@ -135,11 +139,13 @@ def instance(col, x, y):
     dressing.objects.link(e)
 
 
-for s in lines:
-    for t in range(-int(extent / 2) + 25, int(extent / 2) - 24, 10):
-        side = 3.6
-        instance(tree_col if (t // 10) % 2 else light_col, s + side, t + 5)
-        instance(light_col if (t // 10) % 2 else tree_col, t + 5, s - side)
+side = 3.6
+for x in xs:
+    for t in range(-int(H / 2) + 25, int(H / 2) - 24, 10):
+        instance(tree_col if (t // 10) % 2 else light_col, x + side, t + 5)
+for y in ys:
+    for t in range(-int(W / 2) + 25, int(W / 2) - 24, 10):
+        instance(light_col if (t // 10) % 2 else tree_col, t + 5, y - side)
 
 # Evening light: low warm sun, soft blue sky, Eevee with bloom and AO.
 for o in scene.objects:
@@ -168,10 +174,11 @@ pivot = bpy.data.objects.new("Orbit", None)
 scene.collection.objects.link(pivot)
 cam = scene.camera
 cam.parent = pivot
-reach = max(COLS, ROWS) * SPACING
-cam.location = (reach * 1.25, -reach * 1.25, reach * 0.7)
+# Close enough that the buildings fill the frame, framed by the paved area.
+reach = math.hypot(W, H) / 2
+cam.location = (reach * 0.67, -reach * 0.67, reach * 0.42)
 aim = bpy.data.objects.new("Aim", None)
-aim.location = (0, 0, 14)
+aim.location = (0, 0, 4)
 scene.collection.objects.link(aim)
 track = cam.constraints.new("TRACK_TO")
 track.target = aim
