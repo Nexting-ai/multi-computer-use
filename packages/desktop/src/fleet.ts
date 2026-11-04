@@ -3,6 +3,7 @@ import { promisify } from "node:util";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
+import { createServer } from "node:net";
 import { DesktopPort } from "./port.js";
 
 const run = promisify(execFile);
@@ -47,6 +48,7 @@ export class DesktopFleet {
 
   static async launch(o: FleetOptions): Promise<DesktopFleet> {
     const base = o.port ?? 17000;
+    for (let i = 0; i < o.count; i++) await free(base + i);
     const surfaces = Array.from(
       { length: o.count },
       (_, i) => `W${String(i + 1).padStart(2, "0")}`,
@@ -237,10 +239,27 @@ const quote = (s: string) =>
   /^[\w@%+=:,./-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`;
 
 /** An SSH port forward that re-establishes itself until closed. */
+/** Live tunnels, killed when this process ends so no forward outlives its
+ * run (an orphaned forward keeps the local ports of a later run). */
+const live = new Set<Tunnel>();
+let hooked = false;
+function hookExit() {
+  if (hooked) return;
+  hooked = true;
+  process.once("exit", () => {
+    for (const t of live) t.close();
+  });
+  const codes = { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 } as const;
+  for (const [signal, code] of Object.entries(codes))
+    process.once(signal, () => process.exit(code));
+}
+
 class Tunnel {
   private proc: ChildProcess | null = null;
   private closed = false;
   constructor(private readonly args: string[]) {
+    hookExit();
+    live.add(this);
     this.start();
   }
   private start() {
@@ -253,6 +272,16 @@ class Tunnel {
   }
   close() {
     this.closed = true;
+    live.delete(this);
     this.proc?.kill();
   }
+}
+
+/** Fails when a local port is taken (e.g. by another run's forward). */
+function free(port: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const s = createServer();
+    s.once("error", () => reject(Error(`local_port_in_use:${port}`)));
+    s.listen(port, "127.0.0.1", () => s.close(() => resolve()));
+  });
 }
