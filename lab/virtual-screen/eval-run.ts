@@ -232,7 +232,7 @@ const perSurfaceTools = (text: boolean): Tool[] => [
   ),
 ];
 const fleetRunDescription = (vision: boolean) =>
-  "Broadcast ONE decision over many surfaces (Z). All rectangles/points are pixels of the exemplar view_id. template: the stable task area enclosing everything referenced; the host finds it on every surface by pixel registration (translation tolerated) and never touches a surface where it does not match. " +
+  "Broadcast ONE decision over many surfaces (Z). All rectangles/points are pixels of the exemplar view_id. template: the stable task area enclosing everything referenced; the host finds it on every surface by pixel registration (translation tolerated) and never touches a surface where it does not match. Choose it on interface parts that look the same on every surface (menus, toolbars, panel headers) and put areas whose content differs per surface (documents, editors, viewports, previews) in ignore. " +
   (vision
     ? "fields: named rectangles whose content varies; YOU provide their values per surface in `values` (from a fleet_crops contact sheet, crops_id), one item per surface per run; there is no text channel. "
     : "fields: named rectangles whose text varies (values only, not labels: text nodes whose centre lies inside are concatenated); the host reads their exact text via the platform text channel, so you never transcribe values. ") +
@@ -355,11 +355,11 @@ const roundPrompt = (
   round: number,
   rounds: number,
   notes: Record<string, string>,
-  policy: unknown,
+  policies: unknown[],
 ) =>
   round === 0
     ? `${task}\nYou alone direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}), each holding a different piece, in ${rounds} rounds; this is round 1. A fresh session runs each round, so whatever you need later goes into round_notes. This round: (1) take one exemplar with fleet_observe and write a policy whose \`type\` step pastes {code} into Blender's text editor, runs it (Alt+P) and saves; (2) build a first version of EVERY piece with ONE fleet_run whose assign gives each desktop its own script (inputs ["code"]): the pieces differ, so write each script for its own brief; (3) render a preview on every desktop with one fleet_run and review them all in one fleet_overview; (4) call round_notes for every desktop, then end your turn. ${roundsRule} ${forward} Starting progress: `
-    : `${task}\nYou alone direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}), each holding a different piece. Round ${round + 1} of ${rounds}; a fresh session runs each round. Your notes from the last round: ${JSON.stringify(notes)}. The last policy that ran (its view_id is still valid; reuse it with a new assign if it fits): ${JSON.stringify(policy)}. This round: (1) review the current state of every piece in one fleet_overview (render previews everywhere with one fleet_run first if the screens do not show fresh renders; zoom into a single desktop with desktop_observe only when its tile is too small to judge); (2) improve every piece that falls short of its brief with ONE fleet_run whose assign holds each desktop's own edit script (change, add or replace objects in collection Module; keep what is good); (3) render again, review in one fleet_overview and fix failures; (4) declare every finished piece with desktop_done and call round_notes for the rest. ${
+    : `${task}\nYou alone direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}), each holding a different piece. Round ${round + 1} of ${rounds}; a fresh session runs each round. Your notes from the last round: ${JSON.stringify(notes)}. Policies that ran earlier (their view_ids stay valid; reuse them, with a new assign, when they fit the screens): ${JSON.stringify(policies)}. This round: (1) review the current state of every piece in one fleet_overview (render previews everywhere with one fleet_run first if the screens do not show fresh renders; zoom into a single desktop with desktop_observe only when its tile is too small to judge); (2) improve every piece that falls short of its brief with ONE fleet_run whose assign holds each desktop's own edit script, making several concrete improvements per piece (change, add or replace objects in collection Module; keep what is good; end by saving); (3) render again, review in one fleet_overview and fix failures; (4) declare every finished piece with desktop_done and call round_notes for the rest. ${
         round === rounds - 1
           ? "This is the final round: declare every acceptable piece before you end."
           : "Then end your turn."
@@ -1010,17 +1010,24 @@ for (const blk of blocks)
         // decision (fleet_run with assign); notes carry over between rounds.
         const { runtime, handle } = fleet("free");
         let notes: Record<string, string> = {};
-        let policy: unknown = null;
+        // Policies that ran, by request id, without their per-surface values.
+        const policies = new Map<string, unknown>();
         const director = async (name: string, args: unknown) => {
           if (name === "round_notes") {
             notes = { ...notes, ...notesSchema.parse(args).notes };
             return { views: [], rest: { noted: Object.keys(notes) } };
           }
           const out = await handle(name, args);
-          // Remember the last policy that ran, without its per-surface values.
-          if (name === "fleet_run" && (out.rest as any)?.policy_id) {
-            const { assign: _a, request_id: _r, ...shape } = args as any;
-            policy = shape;
+          const counts = (out.rest as any)?.counts ?? {};
+          if (
+            name === "fleet_run" &&
+            (counts.prepared ?? 0) + (counts.verified ?? 0) > 0
+          ) {
+            const { assign: _a, ...shape } = args as any;
+            policies.delete(shape.request_id);
+            policies.set(shape.request_id, shape);
+            while (policies.size > 4)
+              policies.delete(policies.keys().next().value!);
           }
           return out;
         };
@@ -1030,14 +1037,9 @@ for (const blk of blocks)
           await session(
             `sessions/round-${round}`,
             roundTools,
-            roundPrompt(
-              lab.task,
-              lab.surfaces,
-              round,
-              o.rounds,
-              notes,
-              policy,
-            ) + JSON.stringify(ledger.summary()),
+            roundPrompt(lab.task, lab.surfaces, round, o.rounds, notes, [
+              ...policies.values(),
+            ]) + JSON.stringify(ledger.summary()),
             director,
           );
         }

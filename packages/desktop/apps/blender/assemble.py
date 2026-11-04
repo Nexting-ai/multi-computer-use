@@ -168,6 +168,11 @@ else:
     dark_leaf = material("DarkLeaves", (0.07, 0.24, 0.08))
     palm_leaf = material("PalmLeaves", (0.2, 0.42, 0.12))
     runway_light = material("RunwayLight", (0.6, 0.85, 1.0), 0.3, emit=30)
+    plaza = material("Plaza", (0.55, 0.5, 0.4), 0.85)  # sandstone plots
+    for o in scene.objects:
+        if o.name.endswith("_plot") and o.type == "MESH":
+            o.data.materials.clear()
+            o.data.materials.append(plaza)
     box((W * 4, H * 4, 0.2), (0, 0, -0.32), moss)
     box((W, H, 0.1), (0, 0, -0.25), grass)
     for x in xs:
