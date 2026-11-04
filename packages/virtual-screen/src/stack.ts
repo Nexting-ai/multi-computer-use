@@ -549,7 +549,9 @@ export class StackScreen {
     }
     if (choose > 1) throw Error("at_most_one_choose");
     if (!p.steps.some((s) => s.kind !== "key_chord"))
-      throw Error("no_effective_step");
+      throw Error(
+        "no_effective_step (keys alone have no checked target: add a click on the element that should receive them)",
+      );
     if (!names.has(p.verify.field)) throw Error("unknown_verify_field");
     if ((p.mode ?? "item") === "item" && "absent" in p.verify)
       throw Error("item_requires_positive_verification");

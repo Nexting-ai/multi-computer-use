@@ -152,21 +152,46 @@ const rect = z.strictObject({
   width: z.number().int().min(1).max(8192),
   height: z.number().int().min(1).max(8192),
 });
+const KEYS =
+  "Ctrl|Alt|Shift|Meta|Enter|Escape|Tab|Backspace|Delete|Space|Home|End|PageUp|PageDown|ArrowUp|ArrowDown|ArrowLeft|ArrowRight";
+const ALIASES: Record<string, string> = {
+  control: "Ctrl",
+  cmd: "Meta",
+  command: "Meta",
+  super: "Meta",
+  win: "Meta",
+  option: "Alt",
+  return: "Enter",
+  esc: "Escape",
+  del: "Delete",
+  bksp: "Backspace",
+  pgup: "PageUp",
+  pgdn: "PageDown",
+  up: "ArrowUp",
+  down: "ArrowDown",
+  left: "ArrowLeft",
+  right: "ArrowRight",
+};
+/** Canonical key name: case-insensitive, with common aliases (CTRL, Esc). */
+export function normalizeKey(k: string) {
+  const l = k.trim().toLowerCase();
+  if (ALIASES[l]) return ALIASES[l];
+  const named = KEYS.split("|").find((n) => n.toLowerCase() === l);
+  if (named) return named;
+  if (/^f(1[0-2]|[1-9])$/.test(l)) return l.toUpperCase();
+  return k.trim();
+}
+const key = z
+  .string()
+  .describe(`${KEYS.replaceAll("|", ", ")}, F1-F12 or one letter/digit`)
+  .transform(normalizeKey)
+  .pipe(z.string().regex(new RegExp(`^(${KEYS}|F[1-9]|F1[0-2]|[a-zA-Z0-9])$`)));
 export const actionSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("click"), x: coordinate, y: coordinate }),
   z.strictObject({ kind: z.literal("type_text"), text: z.string().max(20000) }),
   z.strictObject({
     kind: z.literal("key_chord"),
-    keys: z
-      .array(
-        z
-          .string()
-          .regex(
-            /^(Ctrl|Alt|Shift|Meta|Enter|Escape|Tab|Backspace|Delete|Space|Home|End|PageUp|PageDown|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|F[1-9]|F1[0-2]|[a-zA-Z0-9])$/,
-          ),
-      )
-      .min(1)
-      .max(4),
+    keys: z.array(key).min(1).max(4),
   }),
 ]);
 export const observeSchema = z.strictObject({

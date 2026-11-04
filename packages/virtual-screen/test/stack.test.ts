@@ -8,6 +8,7 @@ import { StackScreen, readField } from "../src/stack.js";
 import { ProgressLedger } from "../src/workset.js";
 import { gray, crop, maskFor, locate, acceptable } from "../src/align.js";
 import type { Action, Frame, SurfacePort, TextNode } from "../src/index.js";
+import { actionSchema } from "../src/index.js";
 
 const W = 320,
   H = 240,
@@ -1134,4 +1135,14 @@ test("click_text avoids the part of a target covered by another element", async 
       },
     ]),
   ).toBeNull();
+});
+
+test("key names are case-insensitive with common aliases", () => {
+  const keys = (k: string[]) =>
+    (actionSchema.parse({ kind: "key_chord", keys: k }) as any).keys;
+  expect(keys(["CTRL", "a"])).toEqual(["Ctrl", "a"]);
+  expect(keys(["esc"])).toEqual(["Escape"]);
+  expect(keys(["f12"])).toEqual(["F12"]);
+  expect(keys(["Cmd", "Return"])).toEqual(["Meta", "Enter"]);
+  expect(() => keys(["Hyper"])).toThrow();
 });
