@@ -56,11 +56,16 @@ await Promise.all(
       await h.sh(`rm -rf ${work} && mkdir -p ${work}/out/frames`);
       await h.put(join(out, "final.blend"), `${work}/final.blend`);
     }
+    // Rendering takes minutes: it runs detached on the host and is polled
+    // with short commands, so a dropped connection cannot interrupt it.
     await h.sh(
-      blender(
+      `docker rm -f film-render >/dev/null 2>&1; ${blender(
         `blender -b /p/final.blend -s ${s} -e ${e} -a >/dev/null 2>&1; true`,
-      ),
+      ).replace("docker run --rm", "docker run -d --name film-render")}`,
     );
+    while ((await h.sh("docker ps -q -f name=^film-render$")).trim())
+      await new Promise((r) => setTimeout(r, 15_000));
+    await h.sh("docker rm -f film-render >/dev/null 2>&1; true");
     await h.sh(`cd ${work}/out/frames && tar -cf ${work}/frames-${i}.tar .`);
     await h.get(`${work}/frames-${i}.tar`, join(out, `frames-${i}.tar`));
     await run("tar", [
