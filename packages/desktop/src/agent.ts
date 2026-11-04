@@ -40,6 +40,8 @@ const QUIET_STILL = Number(process.env.QUIET_STILL ?? 3);
 const QUIET_MAX_MS = Number(process.env.QUIET_MAX_MS ?? 4000);
 const SAME_SCREEN = Number(process.env.SAME_SCREEN ?? 0.0001);
 const epoch = randomUUID();
+/** This desktop's identity, set by the fleet (unset: no check). */
+const DESKTOP_ID = process.env.DESKTOP_ID;
 const env = { ...process.env, DISPLAY };
 
 type Shot = { revision: string; raw: Buffer; png: Buffer; text?: TextNode[] };
@@ -317,6 +319,10 @@ const server = createServer(async (req, res) => {
     res.writeHead(code, { "content-type": "application/json" });
     res.end(JSON.stringify(body));
   };
+  // Every request must name this desktop: a tunnel that lands on another
+  // desktop (e.g. a local port taken by another run) gets an error, never input.
+  if (DESKTOP_ID && req.headers["x-desktop-id"] !== DESKTOP_ID)
+    return reply(421, { error: "wrong_desktop" });
   try {
     if (!ready) return reply(503, { error: "desktop_warming_up" });
     if (req.method === "GET" && req.url === "/frame") {

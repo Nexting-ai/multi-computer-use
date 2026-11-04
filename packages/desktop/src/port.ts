@@ -18,6 +18,8 @@ export class DesktopPort implements SurfacePort {
     /** surface id -> agent base URL */
     private readonly agents: ReadonlyMap<string, string>,
     private readonly timeoutMs = 60_000,
+    /** surface id -> the desktop's identity, sent with every request */
+    private readonly ids: ReadonlyMap<string, string> = new Map(),
   ) {}
   private url(surface: string, path: string) {
     const base = this.agents.get(surface);
@@ -50,7 +52,12 @@ export class DesktopPort implements SurfacePort {
   ): Promise<T> {
     const r = await fetch(this.url(surface, path), {
       method: body === undefined ? "GET" : "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        ...(this.ids.has(surface)
+          ? { "x-desktop-id": this.ids.get(surface)! }
+          : {}),
+      },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       signal: AbortSignal.timeout(this.timeoutMs),
     });

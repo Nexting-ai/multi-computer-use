@@ -2,6 +2,7 @@ import { spawn, execFile, type ChildProcess } from "node:child_process";
 import { promisify } from "node:util";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { randomUUID } from "node:crypto";
 import { DesktopPort } from "./port.js";
 
 const run = promisify(execFile);
@@ -55,11 +56,13 @@ export class DesktopFleet {
       { host: DockerHost; container: string }
     >();
     const agents = new Map<string, string>();
+    const ids = new Map<string, string>();
     const forwards = new Map<DockerHost, string[]>();
     await Promise.all(
       surfaces.map(async (id, i) => {
         const host = o.hosts[i % o.hosts.length]!;
         const container = `${o.name}-${id}`;
+        const identity = `${container}-${randomUUID().slice(0, 8)}`;
         const port = base + i;
         await docker(host, ["rm", "-f", container]).catch(() => {});
         await docker(host, [
@@ -79,6 +82,8 @@ export class DesktopFleet {
               ]
             : []),
           ...(o.memory ? ["--memory", o.memory] : []),
+          "-e",
+          `DESKTOP_ID=${identity}`,
           ...Object.entries(o.env ?? {}).flatMap(([k, v]) => [
             "-e",
             `${k}=${v}`,
@@ -87,6 +92,7 @@ export class DesktopFleet {
         ]);
         placement.set(id, { host, container });
         agents.set(id, `http://127.0.0.1:${port}`);
+        ids.set(id, identity);
         if (host.kind === "ssh")
           forwards.set(host, [
             ...(forwards.get(host) ?? []),
@@ -117,7 +123,7 @@ export class DesktopFleet {
     });
     const fleet = new DesktopFleet(
       surfaces,
-      new DesktopPort(agents),
+      new DesktopPort(agents, undefined, ids),
       placement,
       tunnels,
     );
