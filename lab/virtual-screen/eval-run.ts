@@ -54,10 +54,10 @@ import { runClaude } from "../agents/claude.js";
 import { sequence, miniwob } from "../workloads/web.js";
 import { blender } from "../workloads/blender.js";
 import { kicad } from "../workloads/kicad.js";
-import { studio } from "../workloads/studio.js";
+import { studio, PLANS } from "../workloads/studio.js";
 import type { Workload } from "../workloads/types.js";
 
-const ARMS = ["P-V", "P-T", "B-V", "B-T", "S", "F", "H"] as const;
+const ARMS = ["P-V", "P-T", "B-V", "B-T", "S", "F", "H", "M"] as const;
 type Arm = (typeof ARMS)[number];
 const schema = z.strictObject({
   binary: z.string(),
@@ -74,7 +74,14 @@ const schema = z.strictObject({
     }),
     z.strictObject({ kind: z.literal("miniwob"), task: z.string() }),
     z.strictObject({
-      kind: z.enum(["blender", "kicad", "studio", "city"]),
+      kind: z.enum([
+        "blender",
+        "kicad",
+        "studio",
+        "city",
+        "street",
+        "street-many",
+      ]),
       image: z.string(),
       port: z.number().int().optional(),
       /** Resources of one desktop (default 2 vCPU, 4 GB). */
@@ -146,7 +153,17 @@ const workload: Workload =
         ? blender(desktopOptions(W))
         : W.kind === "kicad"
           ? kicad(desktopOptions(W))
-          : studio(W.kind, desktopOptions(W));
+          : W.kind === "studio" || W.kind === "city"
+            ? studio(
+                W.kind === "city" ? "many" : "studio",
+                desktopOptions(W),
+                PLANS.block,
+              )
+            : studio(
+                W.kind === "street-many" ? "many" : "studio",
+                desktopOptions(W),
+                PLANS.street,
+              );
 const free = workload.declared;
 const steps = workload.items;
 
@@ -273,6 +290,8 @@ const directorTools: Tool[] = [
 ];
 const directorPrompt = (task: string, ids: string[]) =>
   `${task}\nYou direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}) and decide how work is split. Work that is the same everywhere (shared helper code, materials, settings, rendering a preview, saving) is one fleet_run policy for all desktops: a \`type\` step pastes literal text with {placeholders} filled from each desktop's task-table inputs, so one script serves every desktop. Work that differs per desktop uses desktop_observe/desktop_act on that desktop alone. Review progress across the fleet with fleet_overview instead of observing desktops one by one. In this task fleet_run policies are steps: each applies once per desktop per run (canary first, then the rest), is verified by its post-condition, and never completes an item; desktops you have declared done are skipped. Declare each desktop's item with desktop_done when its result is finished and saved. ${forward} Starting progress: `;
+const masterPrompt = (task: string, ids: string[]) =>
+  `${task}\nYou direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}). Every house shares one design and differs only in its row's parameters (the task table's columns, available as fleet_run inputs). Work in four steps. (1) Develop the design once, on ${ids[0]}, with desktop_observe/desktop_act: a parametric Blender script whose parameters are exactly the table's columns. Polish it there: render (F12), look closely, improve, and repeat until it is convincing and detailed. (2) Apply it everywhere with one fleet_run: a \`type\` step pastes the script with {placeholders} for the columns, runs it (Alt+P) and saves. (3) Render previews on every desktop with one fleet_run and review them together with fleet_overview. (4) Fix what is wrong with another broadcast, or with per-desktop tools for a single outlier, then declare every finished desktop with desktop_done. In this task fleet_run policies are steps: each applies once per desktop per run (canary first, then the rest), is verified by its post-condition, and never completes an item; declared desktops are skipped. ${forward} Starting progress: `;
 const refinePlanSchema = z.strictObject({
   notes: z.record(z.string(), z.string().min(1).max(2000)),
 });
@@ -417,6 +436,7 @@ await writeFile(
         S: scriptTools,
         F: directorTools,
         H: refineDirectorTools,
+        M: directorTools,
       },
     },
     null,
@@ -791,7 +811,7 @@ for (const blk of blocks)
             throw Error("unknown_tool");
           },
         );
-      } else if (arm === "F") {
+      } else if (arm === "F" || arm === "M") {
         // The director: fleet policies for shared work, per-surface tools for
         // what differs, and one-image reviews of the whole fleet.
         const stack = new StackScreen(lab.port, ledger, lab.surfaces, {
@@ -826,7 +846,9 @@ for (const blk of blocks)
         await session(
           "sessions/director",
           directorTools,
-          directorPrompt(lab.task, lab.surfaces) +
+          (arm === "M"
+            ? masterPrompt(lab.task, lab.surfaces)
+            : directorPrompt(lab.task, lab.surfaces)) +
             JSON.stringify(ledger.summary()),
           async (name, args) => {
             if (name === "fleet_observe") {
@@ -1022,7 +1044,7 @@ for (const blk of blocks)
       // Leftovers (and the per-surface arms themselves) use per-surface worksets.
       const t1 = performance.now();
       // The director (F) owns its fleet: no hand-off to per-surface agents.
-      if (arm !== "F" && arm !== "H")
+      if (arm !== "F" && arm !== "H" && arm !== "M")
         await perSurface(arm === "P-T" || arm === "B-T" || arm === "S");
       phases.worksets = {
         elapsed_ms: Math.round(performance.now() - t1),

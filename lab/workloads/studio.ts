@@ -3,7 +3,10 @@ import { desktopWorkload, type DesktopOptions } from "./desktop.js";
 import type { Score, Workload } from "./types.js";
 
 /** One building of the block: what to build on one plot. */
-export type Brief = { style: string; height: string; brief: string };
+export type Brief = { style: string; height: string; brief: string } & Record<
+  string,
+  string
+>;
 
 /** Sixteen buildings, deliberately different, each buildable on 20 x 20 m. */
 export const CATALOG: Brief[] = [
@@ -113,36 +116,121 @@ export function block(seed: number, count: number): Map<string, Brief> {
 const QUALITY =
   "Aim for a convincing, detailed building, not a placeholder: real proportions, distinct parts (base, body, top), windows or openings, materials with fitting colours. A long script can keep Blender busy for minutes with a frozen screen: wait (desktop_wait) and observe again before concluding it is unresponsive. Check your work with preview renders (F12) and fix what looks wrong (floating or intersecting parts, wrong scale, flat colours). Stay inside the plot and near the target height. Save (Ctrl+S) when the building is finished. Use the Blender interface and its Python (text editor + Alt+P, or the Python console); no other applications, add-ons or downloads. Unknown or delivered inputs must not be repeated.";
 
+/** The street's shared architecture: every house is this style. */
+export const NORDIC =
+  "a Scandinavian timber house: steep gable roof with deep eaves, vertical board cladding, white window frames with mullions, a front door under a small canopy, a brick chimney and a low stone plinth";
+const CLADDING: [string, string][] = [
+  ["falu red", "8E2B22"],
+  ["ochre", "C8912E"],
+  ["forest green", "2F5233"],
+  ["slate blue", "4A6378"],
+  ["off-white", "E9E4D6"],
+  ["charcoal", "35363A"],
+  ["sage", "8FA58A"],
+  ["mustard", "D6A93A"],
+];
+const DOORS: [string, string][] = [
+  ["white", "F2F2EE"],
+  ["black", "1E1E1E"],
+  ["teal", "2E7D7A"],
+  ["oxblood", "5E1F1E"],
+];
+
+/** Thirty-two variations of one design (seeded). */
+export function street(seed: number, count: number): Map<string, Brief> {
+  const r = rng(seed);
+  const pick = <T>(xs: T[]) => xs[Math.floor(r() * xs.length)]!;
+  return new Map(
+    Array.from({ length: count }, (_, i) => {
+      const floors = r() < 0.6 ? 2 : 3;
+      const width = pick(["6.5", "7", "7.5", "8", "8.5", "9"]);
+      const [cname, chex] = pick(CLADDING);
+      const [dname, dhex] = pick(DOORS);
+      const roof = pick(["dark grey standing-seam metal", "red clay tiles"]);
+      const balcony = r() < 0.4 ? "yes" : "no";
+      const height = String(floors * 3 + 5);
+      return [
+        `W${String(i + 1).padStart(2, "0")}`,
+        {
+          style: "nordic house",
+          height,
+          brief: `${NORDIC}; ${width} m wide, ${floors} floors, ${cname} cladding (#${chex}), ${dname} door (#${dhex}), ${roof} roof, ${balcony === "yes" ? "a timber balcony on the upper floor" : "no balcony"}`,
+          width,
+          floors: String(floors),
+          cladding: chex,
+          door: dhex,
+          roof,
+          balcony,
+        },
+      ];
+    }),
+  );
+}
+
+/** A set of plots: which briefs, how many, and where (many-plot scene). */
+type Plan = {
+  scene: "city" | "street";
+  cols: number;
+  rows: number;
+  briefs: (seed: number, count: number) => Map<string, Brief>;
+  what: string;
+};
+export const PLANS: Record<"block" | "street", Plan> = {
+  block: {
+    scene: "city",
+    cols: 4,
+    rows: 4,
+    briefs: block,
+    what: "a city block of sixteen different buildings",
+  },
+  street: {
+    scene: "street",
+    cols: 8,
+    rows: 4,
+    briefs: street,
+    what: `a street of thirty-two houses of one design, ${NORDIC}, each with its own variations`,
+  },
+};
+
+/** Plot centre of Pn on a plan's grid (30 m spacing). */
+export function plotCentre(n: number, cols = 4, rows = 4) {
+  return {
+    x: (((n - 1) % cols) - (cols - 1) / 2) * 30,
+    y: ((rows - 1) / 2 - Math.floor((n - 1) / cols)) * 30,
+  };
+}
+
 /**
- * The studio task: a city block of sixteen different buildings. `studio`
- * gives each building its own desktop (one plot, collection Module); `city`
- * gives one desktop all sixteen plots (collections P01..P16).
+ * The studio task. `studio` gives each building its own desktop (one plot,
+ * collection Module); `many` gives one desktop every plot (collections
+ * P01..Pnn of the plan's scene).
  */
 export function studio(
-  variant: "studio" | "city",
+  variant: "studio" | "many",
   o: DesktopOptions,
+  plan: Plan = PLANS.block,
 ): Workload {
-  const city = variant === "city";
-  const surfaces = (count: number) => (city ? 1 : count);
+  const many = variant === "many";
+  const total = plan.cols * plan.rows;
   const base = desktopWorkload<Brief>(
     {
       app: "blender",
-      items: city ? 16 : 1,
+      items: many ? total : 1,
       settle_ms: 60_000,
-      summary: city
-        ? `Blender is open on a city block with sixteen empty 20 x 20 m plots (collections P01..P16; their coordinates are in module.py). Build every plot's building from the task table below (row Wnn is plot Pnn). ${QUALITY} Each plot is one item: declare it done when its building is finished and saved.`
-        : `Each surface runs Blender on one empty 20 x 20 m plot. Build that surface's building from its row of the task table, inside the collection Module. ${QUALITY} One item per surface: declare it done when the building is finished and saved.`,
-      rows: (seed, count) => block(seed, count),
+      summary: many
+        ? `Blender is open on ${plan.what}: ${total} empty 20 x 20 m plots (collections P01..P${total}; their coordinates are in module.py). Build every plot's building from the task table below (row Wnn is plot Pnn). ${QUALITY} Each plot is one item: declare it done when its building is finished and saved.`
+        : `This is ${plan.what}. Each surface runs Blender on one empty 20 x 20 m plot. Build that surface's building from its row of the task table, inside the collection Module. ${QUALITY} One item per surface: declare it done when the building is finished and saved.`,
+      rows: (seed, count) => plan.briefs(seed, count),
       grader: [
         "blender",
         "-b",
-        city ? "/work/city.blend" : "/work/studio.blend",
+        many ? `/work/${plan.scene}.blend` : "/work/studio.blend",
         "--python",
         "/opt/app/grade_module.py",
       ],
-      // city: one desktop holds all plots; the wrapper below grades each.
+      // many: one desktop holds all plots; the wrapper below grades each.
       grade: (id, row, g) =>
-        city
+        many
           ? {
               surface_id: id,
               success: false,
@@ -152,15 +240,15 @@ export function studio(
             }
           : gradeBuilding(id, row, g?.Module),
     },
-    { ...o, env: { ...(o.env ?? {}), SCENE: variant } },
+    { ...o, env: { ...(o.env ?? {}), SCENE: many ? plan.scene : "studio" } },
   );
-  if (!city) return base;
-  // One desktop carries every brief; its grade covers all sixteen plots.
+  if (!many) return base;
+  // One desktop carries every brief; its grade covers every plot.
   return {
     ...base,
-    async open(directory, count, seed) {
-      const lab = await base.open(directory, surfaces(count), seed);
-      const briefs = block(seed, 16);
+    async open(directory, _count, seed) {
+      const lab = await base.open(directory, 1, seed);
+      const briefs = plan.briefs(seed, total);
       const table = [...briefs]
         .map(
           ([id, b]) =>
@@ -179,20 +267,12 @@ export function studio(
               id,
               b,
               g[id.replace("W", "P")],
-              plotCentre(Number(id.slice(1))),
+              plotCentre(Number(id.slice(1)), plan.cols, plan.rows),
             ),
           );
         },
       };
     },
-  };
-}
-
-/** Plot centre on the 4 x 4 grid (city.blend). */
-function plotCentre(n: number) {
-  return {
-    x: (((n - 1) % 4) - 1.5) * 30,
-    y: (1.5 - Math.floor((n - 1) / 4)) * 30,
   };
 }
 

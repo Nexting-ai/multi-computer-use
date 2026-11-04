@@ -95,20 +95,29 @@ script(
 ui()
 bpy.ops.wm.save_as_mainfile(filepath="/opt/app/studio.blend")
 
-# Sixteen plots on one desktop.
-reset()
-slab = material("Plot", (0.55, 0.55, 0.53))
-for i in range(GRID * GRID):
-    cx = (i % GRID - (GRID - 1) / 2) * SPACING
-    cy = ((GRID - 1) / 2 - i // GRID) * SPACING
-    plot(f"P{i + 1:02d}", cx, cy, slab)
-environment(0, 0, 150, 95, 25, 32)
-script(
-    "# Build each brief's building inside its plot's collection P01..P16.\n"
-    "# Plots are 20 x 20 m on a 4 x 4 grid, 30 m apart; P01 is top-left,\n"
-    "# P04 top-right, P16 bottom-right. Plot centre of Pn (n = 1..16):\n"
-    "#   x = ((n - 1) % 4 - 1.5) * 30,  y = (1.5 - (n - 1) // 4) * 30\n"
-    "# Ground at z = 0. Metres. Run with Alt+P. Render with F12; save with Ctrl+S.\n"
-)
-ui()
-bpy.ops.wm.save_as_mainfile(filepath="/opt/app/city.blend")
+def many(path, cols, rows, intro):
+    """Plots P01.. on a cols x rows grid, 30 m apart; the layout is stored
+    on the scene so assembly and judging place plots the same way."""
+    reset()
+    slab = material("Plot", (0.55, 0.55, 0.53))
+    for i in range(cols * rows):
+        cx = (i % cols - (cols - 1) / 2) * SPACING
+        cy = ((rows - 1) / 2 - i // cols) * SPACING
+        plot(f"P{i + 1:02d}", cx, cy, slab)
+    scene = bpy.context.scene
+    scene["plot_cols"], scene["plot_rows"], scene["plot_spacing"] = cols, rows, SPACING
+    environment(0, 0, cols * SPACING * 0.62 + 75, 95, 25, 32)
+    script(
+        intro
+        + f"# Plots are 20 x 20 m on a {cols} x {rows} grid, 30 m apart; P01 is top-left,\n"
+        + f"# numbered left to right, then down. Plot centre of Pn (n = 1..{cols * rows}):\n"
+        + f"#   x = ((n - 1) % {cols} - {(cols - 1) / 2}) * 30,  y = ({(rows - 1) / 2} - (n - 1) // {cols}) * 30\n"
+        + "# Ground at z = 0. Metres. Run with Alt+P. Render with F12; save with Ctrl+S.\n"
+    )
+    ui()
+    bpy.ops.wm.save_as_mainfile(filepath=path)
+
+
+# Sixteen plots (the city block) and thirty-two (the street) on one desktop.
+many("/opt/app/city.blend", 4, 4, "# Build each brief's building inside its plot's collection P01..P16.\n")
+many("/opt/app/street.blend", 8, 4, "# Build each row's house inside its plot's collection P01..P32.\n")

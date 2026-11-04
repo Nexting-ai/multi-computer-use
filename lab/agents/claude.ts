@@ -31,12 +31,18 @@ export async function runClaude(o: {
         stop = "tool_budget";
         throw Error("run_stopped");
       }
-      if (!o.tools.some((t) => t.name === name)) throw Error("tool_scope_denied");
+      if (!o.tools.some((t) => t.name === name))
+        throw Error("tool_scope_denied");
       const r = await o.handle(name, args);
       res.setHeader("content-type", "application/json");
       res.end(JSON.stringify(r));
     } catch (e) {
-      res.end(JSON.stringify({ success: false, contentItems: [{ type: "inputText", text: String(e) }] }));
+      res.end(
+        JSON.stringify({
+          success: false,
+          contentItems: [{ type: "inputText", text: String(e) }],
+        }),
+      );
     }
   });
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
@@ -50,8 +56,16 @@ export async function runClaude(o: {
       mcpServers: {
         fleet: {
           command: process.execPath,
-          args: ["--import", "tsx", resolve(import.meta.dirname, "mcp-bridge.ts")],
-          env: { CU_TOOL_URL: `http://127.0.0.1:${port}/`, CU_TOOLS: toolsFile, NO_PROXY: "127.0.0.1,localhost" },
+          args: [
+            "--import",
+            "tsx",
+            resolve(import.meta.dirname, "mcp-bridge.ts"),
+          ],
+          env: {
+            CU_TOOL_URL: `http://127.0.0.1:${port}/`,
+            CU_TOOLS: toolsFile,
+            NO_PROXY: "127.0.0.1,localhost",
+          },
         },
       },
     }),
@@ -80,14 +94,21 @@ export async function runClaude(o: {
   const proc = spawn("zsh", ["-ic", 'claude "$@"', "zsh", ...args], {
     cwd: o.output,
     stdio: ["ignore", "pipe", "pipe"],
-    env: Object.fromEntries(Object.entries(process.env).filter(([k]) => !/proxy/i.test(k) && k !== "NODE_USE_ENV_PROXY")),
+    env: Object.fromEntries(
+      Object.entries(process.env).filter(
+        ([k]) => !/proxy/i.test(k) && k !== "NODE_USE_ENV_PROXY",
+      ),
+    ),
   });
   let transcript = "";
   proc.stdout.on("data", (d) => {
     transcript += d;
     void appendFile(join(o.output, "transcript.jsonl"), d);
   });
-  proc.stderr.on("data", (d) => void appendFile(join(o.output, "stderr.log"), d));
+  proc.stderr.on(
+    "data",
+    (d) => void appendFile(join(o.output, "stderr.log"), d),
+  );
   const timedOut = await new Promise<boolean>((r) => {
     const timer = setTimeout(() => {
       stop ??= "wall_budget";
@@ -116,19 +137,28 @@ export async function runClaude(o: {
   const u = result?.usage;
   const usage: Usage | null = u
     ? {
-        inputTokens: (u.input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0),
+        inputTokens:
+          (u.input_tokens ?? 0) +
+          (u.cache_read_input_tokens ?? 0) +
+          (u.cache_creation_input_tokens ?? 0),
         cachedInputTokens: u.cache_read_input_tokens ?? 0,
         cacheWriteInputTokens: u.cache_creation_input_tokens ?? 0,
         outputTokens: u.output_tokens ?? 0,
         reasoningOutputTokens: 0,
         totalTokens:
-          (u.input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) + (u.output_tokens ?? 0),
+          (u.input_tokens ?? 0) +
+          (u.cache_read_input_tokens ?? 0) +
+          (u.cache_creation_input_tokens ?? 0) +
+          (u.output_tokens ?? 0),
       }
     : null;
   const out = {
     agent: "claude",
     model: o.model,
-    status: { status: result && !result.is_error && !timedOut ? "completed" : "failed", subtype: result?.subtype ?? null },
+    status: {
+      status: result && !result.is_error && !timedOut ? "completed" : "failed",
+      subtype: result?.subtype ?? null,
+    },
     stop_reason: stop,
     elapsed_ms: Math.round(performance.now() - t0),
     usage,

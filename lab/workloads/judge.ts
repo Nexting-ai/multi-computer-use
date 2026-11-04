@@ -22,7 +22,7 @@ import { spawn } from "node:child_process";
 import { join, resolve } from "node:path";
 import { randomInt } from "node:crypto";
 import { host } from "./host.js";
-import { block } from "./studio.js";
+import { PLANS, plotCentre } from "./studio.js";
 
 const [outArg, hostsPath, seedArg, ...specs] = process.argv.slice(2) as [
   string,
@@ -36,18 +36,20 @@ const arms = specs.map((s) => {
   const [mode, dir] = rest.split(":") as ["studio" | "city", string];
   return { arm, mode, dir };
 });
+// JUDGE_PLAN: block (default, sixteen buildings) or street (thirty-two houses).
+const plan = PLANS[(process.env.JUDGE_PLAN as "block" | "street") ?? "block"];
 // JUDGE_LIMIT judges only the first plots (pipeline checks).
 const briefs = new Map(
-  [...block(Number(seedArg), 16)].slice(
+  [...plan.briefs(Number(seedArg), plan.cols * plan.rows)].slice(
     0,
     Number(process.env.JUDGE_LIMIT ?? 16),
   ),
 );
 const h = host(JSON.parse(await readFile(hostsPath, "utf8"))[0]);
-const centre = (n: number) => [
-  (((n - 1) % 4) - 1.5) * 30,
-  (1.5 - Math.floor((n - 1) / 4)) * 30,
-];
+const centre = (n: number) => {
+  const c = plotCentre(n, plan.cols, plan.rows);
+  return [c.x, c.y];
+};
 
 // JUDGE_ONLY=W01,W07 re-judges those plots and keeps every other result.
 const only = process.env.JUDGE_ONLY?.split(",");
@@ -77,7 +79,7 @@ for (const a of arms) {
     const [x, y] = a.mode === "city" ? centre(n) : [0, 0];
     const [file, col] =
       a.mode === "city"
-        ? ["/p/W01/city.blend", `P${id.slice(1)}`]
+        ? [`/p/W01/${plan.scene}.blend`, `P${id.slice(1)}`]
         : [`/p/${id}/studio.blend`, "Module"];
     return `[ -f ${file} ] && blender -b ${file} --python /opt/app/module_shot.py -- ${col} ${x} ${y} /p/out/${id}.png >/dev/null 2>&1`;
   });

@@ -2,7 +2,7 @@
 every arm; not part of the agents' work).
 
   blender -b --factory-startup --python assemble.py -- city <city.blend> <out.blend>
-  blender -b --factory-startup --python assemble.py -- modules <dir> <out.blend>
+  blender -b --factory-startup --python assemble.py -- modules <dir> <out.blend> [base]
 
 `city`: one desktop built every plot in city.blend. `modules`: <dir>/Wnn/
 studio.blend each hold one plot's collection Module, placed on plot Pnn.
@@ -15,19 +15,25 @@ import sys
 import bpy
 import mathutils
 
-mode, source, out = sys.argv[sys.argv.index("--") + 1:][:3]
-GRID, SPACING = 4, 30.0
-
-
-def centre(n):
-    return ((n - 1) % GRID - 1.5) * SPACING, (1.5 - (n - 1) // GRID) * SPACING
-
+args = sys.argv[sys.argv.index("--") + 1:]
+mode, source, out = args[:3]
+base = args[3] if len(args) > 3 else "city"  # city (4 x 4) or street (8 x 4)
 
 if mode == "city":
     bpy.ops.wm.open_mainfile(filepath=source)
 else:
-    bpy.ops.wm.open_mainfile(filepath="/opt/app/city.blend")
-    scene = bpy.context.scene
+    bpy.ops.wm.open_mainfile(filepath=f"/opt/app/{base}.blend")
+scene = bpy.context.scene
+COLS = int(scene.get("plot_cols", 4))
+ROWS = int(scene.get("plot_rows", 4))
+SPACING = float(scene.get("plot_spacing", 30.0))
+
+
+def centre(n):
+    return ((n - 1) % COLS - (COLS - 1) / 2) * SPACING, ((ROWS - 1) / 2 - (n - 1) // COLS) * SPACING
+
+
+if mode != "city":
     for name in sorted(os.listdir(source)):
         path = os.path.join(source, name, "studio.blend")
         if not (name.startswith("W") and os.path.exists(path)):
@@ -87,12 +93,12 @@ pole = material("Pole", (0.2, 0.2, 0.22), 0.4)
 lamp = material("Lamp", (1.0, 0.82, 0.55), 0.3, emit=25)
 grass = material("Grass", (0.22, 0.36, 0.17))
 
-extent = GRID * SPACING + 40
+extent = max(COLS, ROWS) * SPACING + 40
 box((extent * 3, extent * 3, 0.2), (0, 0, -0.32), grass)
 box((extent, extent, 0.1), (0, 0, -0.25), asphalt)
-lines = [-60.0, -30.0, 0.0, 30.0, 60.0]
+lines = sorted({(i - COLS / 2) * SPACING for i in range(COLS + 1)} | {(j - ROWS / 2) * SPACING for j in range(ROWS + 1)})
 for s in lines:  # dashed centre lines on every street
-    for t in range(-60, 61, 6):
+    for t in range(-int(extent / 2) + 20, int(extent / 2) - 19, 6):
         box((0.25, 2.5, 0.02), (s, t, -0.19), paint)
         box((2.5, 0.25, 0.02), (t, s, -0.19), paint)
 
@@ -127,7 +133,7 @@ def instance(col, x, y):
 
 
 for s in lines:
-    for t in range(-55, 56, 10):
+    for t in range(-int(extent / 2) + 25, int(extent / 2) - 24, 10):
         side = 3.6
         instance(tree_col if (t // 10) % 2 else light_col, s + side, t + 5)
         instance(light_col if (t // 10) % 2 else tree_col, t + 5, s - side)
@@ -159,7 +165,8 @@ pivot = bpy.data.objects.new("Orbit", None)
 scene.collection.objects.link(pivot)
 cam = scene.camera
 cam.parent = pivot
-cam.location = (150, -150, 85)
+reach = max(COLS, ROWS) * SPACING
+cam.location = (reach * 1.25, -reach * 1.25, reach * 0.7)
 aim = bpy.data.objects.new("Aim", None)
 aim.location = (0, 0, 14)
 scene.collection.objects.link(aim)
