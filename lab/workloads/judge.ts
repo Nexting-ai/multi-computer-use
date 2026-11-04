@@ -38,7 +38,9 @@ const arms = specs.map((s) => {
   return { arm, mode, dir };
 });
 // JUDGE_PLAN: block (default, sixteen buildings) or street (thirty-two houses).
-const plan = PLANS[(process.env.JUDGE_PLAN as "block" | "street") ?? "block"];
+const plan =
+  PLANS[(process.env.JUDGE_PLAN as "block" | "street" | "airport") ?? "block"];
+const noun = plan.noun ?? "building";
 // JUDGE_LIMIT judges only the first plots (pipeline checks).
 const briefs = new Map(
   [...plan.briefs(Number(seedArg), plan.cols * plan.rows)].slice(
@@ -117,7 +119,7 @@ for (const a of arms)
 if (sizes.size > 1) throw Error(`judge_unequal_photos:${[...sizes].join(",")}`);
 
 // 2. Blind comparative scoring, one plot at a time.
-const RUBRIC = `Score each building photo from 1 (poor) to 10 (excellent) on:
+const RUBRIC = `Score each ${noun} photo from 1 (poor) to 10 (excellent) on:
 - brief: matches the brief (type, listed features, colours, target height relative to the 20 m plot);
 - craft: detail and construction quality (distinct parts, openings, believable proportions);
 - materials: fitting, varied materials and colours;
@@ -179,7 +181,7 @@ for (const [id, b] of briefs) {
       join(out, "shots", arm, `${id}.png`),
       join(dir, `${letters[i]}.png`),
     ).catch(async () => writeFile(join(dir, `${letters[i]}.png`), ""));
-  const prompt = `Brief for this plot: a ${b.style}, about ${b.height} m tall: ${b.brief}.\nRead the photos ${letters.map((l) => `${l}.png`).join(", ")} in this directory (each shows one candidate building on the same 20 x 20 m plot).\n${RUBRIC}`;
+  const prompt = `Brief for this plot: a ${b.style}, about ${b.height} m tall: ${b.brief}.\nRead the photos ${letters.map((l) => `${l}.png`).join(", ")} in this directory (each shows one candidate ${noun} on the same 20 x 20 m plot).\n${RUBRIC}`;
   const raw = await claude(dir, prompt);
   // The launcher may print status lines before claude's JSON result.
   const line = raw

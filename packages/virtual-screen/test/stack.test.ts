@@ -327,6 +327,51 @@ test("task-table inputs: each surface types its own row; the screen is not read 
   }
 });
 
+test("assign: the model's own per-surface values in one decision, only on assigned surfaces", async () => {
+  const apps = { A1: app(1), A2: app(2), A3: app(3) };
+  const s = await setup(apps, 1);
+  const stack = new StackScreen(s.port, s.ledger, Object.keys(apps), {
+    settle_ms: 300,
+  });
+  try {
+    const view = (await stack.observe(["A1"])).views[0]!.view_id;
+    const p = policy(apps.A1, view, {
+      inputs: ["edit"],
+      assign: {
+        A1: { edit: apps.A1.cases[0]!.code },
+        A3: { edit: apps.A3.cases[0]!.code },
+      },
+    });
+    p.steps[1] = { kind: "type", text: "{edit}" } as never;
+    p.verify = { field: "receipt", contains: ["{edit}", "{choice}"] };
+    const r = await stack.run(p);
+    expect(r.counts).toEqual({ verified: 2 });
+    expect(apps.A1.saved[0]!.text).toBe(apps.A1.cases[0]!.code);
+    expect(apps.A3.saved[0]!.text).toBe(apps.A3.cases[0]!.code);
+    expect(apps.A2.saved).toEqual([]);
+    // An input must be assigned on every targeted surface.
+    await expect(
+      stack.run(
+        policy(apps.A1, view, {
+          inputs: ["edit"],
+          surfaces: ["A1", "A2"],
+          assign: { A1: { edit: "x" } },
+        }),
+      ),
+    ).rejects.toThrow("unknown_input");
+    await expect(
+      stack.run(
+        policy(apps.A1, view, {
+          inputs: ["edit"],
+          assign: { Z9: { edit: "x" } },
+        }),
+      ),
+    ).rejects.toThrow("unknown_surface");
+  } finally {
+    await s.clean();
+  }
+});
+
 test("items caps a policy at that many items per surface, canary included", async () => {
   const apps = { A1: app(1), A2: app(2), A3: app(3) };
   const s = await setup(apps); // two items per surface

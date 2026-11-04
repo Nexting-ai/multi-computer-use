@@ -3,7 +3,7 @@
  * the saved work with the fixed surroundings, render the 10 s orbit with
  * Eevee split across hosts, and encode it.
  *
- *   node --import tsx lab/workloads/film.ts <city|modules> <run-artifacts-dir> <hosts.json> <out-dir> [city|street]
+ *   node --import tsx lab/workloads/film.ts <city|modules> <run-artifacts-dir> <hosts.json> <out-dir> [city|street] [town|jungle]
  *
  * <run-artifacts-dir> holds Wnn/work.tar (from a run's artifacts).
  */
@@ -15,13 +15,8 @@ import { fileURLToPath } from "node:url";
 import { host } from "./host.js";
 
 const run = promisify(execFile);
-const [mode, src, hostsPath, out, base = "city"] = process.argv.slice(2) as [
-  string,
-  string,
-  string,
-  string,
-  string?,
-];
+const [mode, src, hostsPath, out, base = "city", theme = "town"] =
+  process.argv.slice(2) as [string, string, string, string, string?, string?];
 const hosts = JSON.parse(await readFile(hostsPath, "utf8")).map(host);
 await mkdir(join(out, "frames"), { recursive: true });
 const work = "/root/film";
@@ -46,7 +41,7 @@ for (const id of (await readdir(src)).filter((d) => /^W\d+$/.test(d)).sort()) {
 const input = mode === "city" ? `/p/in/W01/${base}.blend` : "/p/in";
 await first.sh(
   blender(
-    `blender -b --factory-startup --python /p/assemble.py -- ${mode} ${input} /p/final.blend ${base} >/dev/null 2>&1; ls /p/final.blend`,
+    `blender -b --factory-startup --python /p/assemble.py -- ${mode} ${input} /p/final.blend ${base} ${theme} >/dev/null 2>&1; ls /p/final.blend`,
   ),
 );
 await first.get(`${work}/final.blend`, join(out, "final.blend"));

@@ -113,8 +113,129 @@ export function block(seed: number, count: number): Map<string, Brief> {
   );
 }
 
-const QUALITY =
-  "Aim for a convincing, detailed building, not a placeholder: real proportions, distinct parts (base, body, top), windows or openings, materials with fitting colours. A long script can keep Blender busy for minutes with a frozen screen: wait (desktop_wait) and observe again before concluding it is unresponsive. Check your work with preview renders (F12) and fix what looks wrong (floating or intersecting parts, wrong scale, flat colours). Stay inside the plot and near the target height. Save (Ctrl+S) when the building is finished. Use the Blender interface and its Python (text editor + Alt+P, or the Python console); no other applications, add-ons or downloads. Unknown or delivered inputs must not be repeated.";
+const quality = (noun: string) =>
+  `Aim for a convincing, detailed ${noun}, not a placeholder: ${
+    noun === "building"
+      ? "real proportions, distinct parts (base, body, top), windows or openings"
+      : "real proportions, distinct, recognisable parts and fine details"
+  }, materials with fitting colours. A long script can keep Blender busy for minutes with a frozen screen: wait (desktop_wait) and observe again before concluding it is unresponsive. Check your work with preview renders (F12) and fix what looks wrong (floating or intersecting parts, wrong scale, flat colours). Stay inside the plot and near the target height. Save (Ctrl+S) when the ${noun} is finished. Use the Blender interface and its Python (text editor + Alt+P, or the Python console); no other applications, add-ons or downloads. Unknown or delivered inputs must not be repeated.`;
+
+/** Sixteen pieces of an airport in a rainforest: aircraft, buildings,
+ * landscape, creatures and machines, all different, each on 20 x 20 m. */
+export const AIRPORT: Brief[] = [
+  {
+    style: "propeller airliner",
+    height: "6",
+    brief:
+      "a regional airliner parked on the apron, 18 m long, high wings with two propeller engines, T-tail, rows of cabin windows, white body with a green leaf livery, landing gear and boarding stairs",
+  },
+  {
+    style: "control tower",
+    height: "24",
+    brief:
+      "a slender concrete control tower wrapped in climbing vines, a wider faceted green-glass cab at the top with a walkway rail and antennas",
+  },
+  {
+    style: "terminal pavilion",
+    height: "11",
+    brief:
+      "an open-sided terminal: timber columns under one huge sweeping leaf-shaped roof with visible ribs, check-in desks and benches beneath",
+  },
+  {
+    style: "giant kapok tree",
+    height: "28",
+    brief:
+      "a giant rainforest tree with plank buttress roots, a tall grey trunk, layered umbrella canopy and hanging lianas",
+  },
+  {
+    style: "waterfall cliff",
+    height: "16",
+    brief:
+      "a mossy stepped rock cliff with a white waterfall falling into a turquoise pool, ferns and boulders around the pool",
+  },
+  {
+    style: "seaplane hangar",
+    height: "11",
+    brief:
+      "an arched hangar with a corrugated roof and open front, a small yellow seaplane on floats parked inside, tool racks along the walls",
+  },
+  {
+    style: "treetop rope bridge",
+    height: "14",
+    brief:
+      "two treehouse platforms on tall trunks joined by a sagging rope bridge with wooden planks and rope handrails, ladders up both trunks",
+  },
+  {
+    style: "radar dome",
+    height: "18",
+    brief:
+      "a white geodesic radar dome on a steel lattice tower with a service stair and red warning lights",
+  },
+  {
+    style: "moored airship",
+    height: "16",
+    brief:
+      "a cigar-shaped airship with tail fins and a passenger gondola, its nose tied to a tall mooring mast",
+  },
+  {
+    style: "giant jungle flower",
+    height: "6",
+    brief:
+      "a giant rafflesia-like flower sculpture: five thick red petals with pale spots around a deep open centre, leaves at its base",
+  },
+  {
+    style: "baggage train",
+    height: "3",
+    brief:
+      "a small airport tractor pulling three baggage carts loaded with colourful suitcases and duffel bags",
+  },
+  {
+    style: "rescue helipad",
+    height: "9",
+    brief:
+      "a raised helipad deck on steel stilts with an H marking and edge lights, a red rescue helicopter with rotor blades on it, a stair up",
+  },
+  {
+    style: "overgrown temple ruin",
+    height: "15",
+    brief:
+      "a stepped stone pyramid ruin with a small shrine on top, broken pillars, moss and roots creeping over the stones",
+  },
+  {
+    style: "stilt jungle lodge",
+    height: "10",
+    brief:
+      "a lodge raised on wooden stilts with a steep thatched roof, a wrap-around veranda with railings, steps and hanging lanterns",
+  },
+  {
+    style: "toucan statue",
+    height: "8",
+    brief:
+      "a giant toucan statue perched on a rock: black body, white throat, big orange-and-yellow beak, blue eye ring",
+  },
+  {
+    style: "cable car station",
+    height: "14",
+    brief:
+      "a cable car station with a pitched roof and a big bullwheel, cables leaving the station and a red gondola hanging from them",
+  },
+];
+
+/** The airport's pieces in plot order (seeded). */
+export function airport(seed: number, count: number): Map<string, Brief> {
+  const r = rng(seed);
+  const order = [...AIRPORT];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [order[i], order[j]] = [order[j]!, order[i]!];
+  }
+  return new Map(
+    Array.from({ length: count }, (_, i) => [
+      `W${String(i + 1).padStart(2, "0")}`,
+      order[i % order.length]!,
+    ]),
+  );
+}
 
 /** The street's shared architecture: every house is this style. */
 export const NORDIC =
@@ -174,8 +295,10 @@ type Plan = {
   rows: number;
   briefs: (seed: number, count: number) => Map<string, Brief>;
   what: string;
+  /** What one plot holds (default building). */
+  noun?: string;
 };
-export const PLANS: Record<"block" | "street", Plan> = {
+export const PLANS: Record<"block" | "street" | "airport", Plan> = {
   block: {
     scene: "city",
     cols: 4,
@@ -189,6 +312,14 @@ export const PLANS: Record<"block" | "street", Plan> = {
     rows: 4,
     briefs: street,
     what: `a street of thirty-two houses of one design, ${NORDIC}, each with its own variations`,
+  },
+  airport: {
+    scene: "city",
+    cols: 4,
+    rows: 4,
+    briefs: airport,
+    what: "an airport in a rainforest made of sixteen different pieces (aircraft, buildings, landscape, creatures and machines)",
+    noun: "piece",
   },
 };
 
@@ -212,14 +343,15 @@ export function studio(
 ): Workload {
   const many = variant === "many";
   const total = plan.cols * plan.rows;
+  const noun = plan.noun ?? "building";
   const base = desktopWorkload<Brief>(
     {
       app: "blender",
       items: many ? total : 1,
       settle_ms: 60_000,
       summary: many
-        ? `Blender is open on ${plan.what}: ${total} empty 20 x 20 m plots (collections P01..P${total}; their coordinates are in module.py). Build every plot's building from the task table below (row Wnn is plot Pnn). ${QUALITY} Each plot is one item: declare it done when its building is finished and saved.`
-        : `This is ${plan.what}. Each surface runs Blender on one empty 20 x 20 m plot. Build that surface's building from its row of the task table, inside the collection Module. ${QUALITY} One item per surface: declare it done when the building is finished and saved.`,
+        ? `Blender is open on ${plan.what}: ${total} empty 20 x 20 m plots (collections P01..P${total}; their coordinates are in module.py). Build every plot's ${noun} from the task table below (row Wnn is plot Pnn). ${quality(noun)} Each plot is one item: declare it done when its ${noun} is finished and saved.`
+        : `This is ${plan.what}. Each surface runs Blender on one empty 20 x 20 m plot. Build that surface's ${noun} from its row of the task table, inside the collection Module. ${quality(noun)} One item per surface: declare it done when the ${noun} is finished and saved.`,
       rows: (seed, count) => plan.briefs(seed, count),
       grader: [
         "blender",

@@ -97,6 +97,12 @@ export const policySchema = z.strictObject({
    * row per surface). Steps use them like fields; they are never read from
    * the screen and never transcribed by the model. */
   inputs: z.array(field).max(8).optional(),
+  /** The model's own per-surface values for inputs, e.g. a different edit
+   * script for each surface in one decision. Without `surfaces`, the policy
+   * runs on exactly the assigned surfaces. */
+  assign: z
+    .record(z.string(), z.record(field, z.string().min(1).max(20000)))
+    .optional(),
   steps: z.array(step).min(1).max(12),
   verify: z.union([
     z.strictObject({ field, equals: z.string().min(1).max(512) }),
@@ -507,9 +513,16 @@ export class StackScreen {
       ),
     );
     const usable = new Set(names);
+    const assigned = p.surfaces ?? Object.keys(p.assign ?? {});
+    for (const id of Object.keys(p.assign ?? {}))
+      if (!this.surfaces.includes(id)) throw Error("unknown_surface:" + id);
     for (const i of p.inputs ?? []) {
       if (names.has(i)) throw Error("input_shadows_field:" + i);
-      if (!columns.has(i)) throw Error("unknown_input:" + i);
+      const own =
+        !!p.assign &&
+        assigned.length > 0 &&
+        assigned.every((id) => p.assign?.[id]?.[i]);
+      if (!columns.has(i) && !own) throw Error("unknown_input:" + i);
       usable.add(i);
     }
     let choose = 0;
@@ -761,7 +774,7 @@ export class StackScreen {
   private given(c: Compiled, id: string, frame: Frame) {
     const out: Record<string, string> = {};
     for (const i of c.policy.inputs ?? []) {
-      const v = this.options.inputs?.[id]?.[i];
+      const v = c.policy.assign?.[id]?.[i] ?? this.options.inputs?.[id]?.[i];
       if (!v) throw new Exception("no_input_value", i, frame);
       out[i] = v;
     }
@@ -1721,7 +1734,8 @@ export class StackScreen {
       };
     }
 
-    const ids = p.surfaces ?? this.surfaces;
+    const ids =
+      p.surfaces ?? (p.assign ? Object.keys(p.assign) : this.surfaces);
     for (const id of ids) this.z(id);
     const deadline = Date.now() + (this.options.deadline_ms ?? 600000);
     // Only this run's surfaces are reset; other concurrent runs keep theirs.
