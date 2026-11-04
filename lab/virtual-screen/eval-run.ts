@@ -119,6 +119,8 @@ const schema = z.strictObject({
   refine_rounds: z.number().int().min(1).max(3).default(2),
   /** Arm R: rounds, each a fresh director session (build, then refine). */
   rounds: z.number().int().min(1).max(8).default(5),
+  /** Arm R: tool calls per round (iteration happens across rounds). */
+  round_max_calls: z.number().int().min(4).default(16),
   /** Per-surface sessions running at once (1 = sequential, as in E1). */
   workset_parallel: z.number().int().min(1).max(32).default(1),
   stack_concurrency: z.number().int().min(1).max(100).default(64),
@@ -356,10 +358,11 @@ const roundPrompt = (
   rounds: number,
   notes: Record<string, string>,
   policies: unknown[],
+  calls: number,
 ) =>
   round === 0
-    ? `${task}\nYou alone direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}), each holding a different piece, in ${rounds} rounds; this is round 1. A fresh session runs each round, so whatever you need later goes into round_notes. This round: (1) take one exemplar with fleet_observe and write a policy whose \`type\` step pastes {code} into Blender's text editor, runs it (Alt+P) and saves; (2) build a first version of EVERY piece with ONE fleet_run whose assign gives each desktop its own script (inputs ["code"]): the pieces differ, so write each script for its own brief; (3) render a preview on every desktop with one fleet_run and review them all in one fleet_overview; (4) call round_notes for every desktop, then end your turn. The round is not over until every piece has a first version. ${roundsRule} ${forward} Starting progress: `
-    : `${task}\nYou alone direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}), each holding a different piece. Round ${round + 1} of ${rounds}; a fresh session runs each round. Your notes from the last round: ${JSON.stringify(notes)}. Policies that ran earlier (their view_ids stay valid; reuse them, with a new assign, when they fit the screens): ${JSON.stringify(policies)}. This round: (1) review the current state of every piece in one fleet_overview (render previews everywhere with one fleet_run first if the screens do not show fresh renders; zoom into a single desktop with desktop_observe only when its tile is too small to judge); (2) improve every piece that falls short of its brief with ONE fleet_run whose assign holds each desktop's own edit script, making several concrete improvements per piece (change, add or replace objects in collection Module; keep what is good; end by saving); (3) render again, review in one fleet_overview and fix failures; (4) declare every finished piece with desktop_done and call round_notes for the rest. ${
+    ? `${task}\nYou alone direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}), each holding a different piece, in ${rounds} rounds; this is round 1. A fresh session runs each round, with a budget of ${calls} tool calls, so whatever you need later goes into round_notes. This round: (1) take one exemplar with fleet_observe and write a policy whose \`type\` step pastes {code} into Blender's text editor, runs it (Alt+P) and saves; (2) build a first version of EVERY piece with ONE fleet_run whose assign gives each desktop its own script (inputs ["code"]): the pieces differ, so write each script for its own brief; (3) render a preview on every desktop with one fleet_run and review them all in one fleet_overview; (4) call round_notes for every desktop, then end your turn. The round is not over until every piece has a first version. ${roundsRule} ${forward} Starting progress: `
+    : `${task}\nYou alone direct ${ids.length} desktops (${ids[0]}…${ids.at(-1)}), each holding a different piece. Round ${round + 1} of ${rounds}; a fresh session runs each round, with a budget of ${calls} tool calls, so make one review-edit-review pass and leave further work to the next round. Your notes from the last round: ${JSON.stringify(notes)}. Policies that ran earlier (their view_ids stay valid; reuse them, with a new assign, when they fit the screens): ${JSON.stringify(policies)}. This round: (1) review the current state of every piece in one fleet_overview (render previews everywhere with one fleet_run first if the screens do not show fresh renders; zoom into a single desktop with desktop_observe only when its tile is too small to judge); (2) improve every piece that falls short of its brief with ONE fleet_run whose assign holds each desktop's own edit script, making several concrete improvements per piece (change, add or replace objects in collection Module; keep what is good; end by saving); (3) render again, review in one fleet_overview and fix failures; (4) declare every finished piece with desktop_done and call round_notes for the rest. ${
         round === rounds - 1
           ? "This is the final round: declare every acceptable piece before you end."
           : "Then end your turn."
@@ -1037,10 +1040,17 @@ for (const blk of blocks)
           await session(
             `sessions/round-${round}`,
             roundTools,
-            roundPrompt(lab.task, lab.surfaces, round, o.rounds, notes, [
-              ...policies.values(),
-            ]) + JSON.stringify(ledger.summary()),
+            roundPrompt(
+              lab.task,
+              lab.surfaces,
+              round,
+              o.rounds,
+              notes,
+              [...policies.values()],
+              o.round_max_calls,
+            ) + JSON.stringify(ledger.summary()),
             director,
+            { calls: o.round_max_calls },
           );
         }
         await context.run(-1, () => runtime.drain());
