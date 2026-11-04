@@ -70,19 +70,22 @@ dressing = bpy.data.collections.new("Surroundings")
 scene.collection.children.link(dressing)
 
 
-def put(o):
-    for c in o.users_collection:
-        c.objects.unlink(o)
-    dressing.objects.link(o)
-    return o
+cubes = {}
 
 
 def box(size, loc, mat):
-    bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
-    o = bpy.context.active_object
-    o.scale = size
-    o.data.materials.append(mat)
-    return put(o)
+    # One shared cube mesh per material: thousands of street dashes stay
+    # fast (an operator call per box re-evaluates the whole scene).
+    if mat.name not in cubes:
+        bpy.ops.mesh.primitive_cube_add(size=1)
+        tmp = bpy.context.active_object
+        cubes[mat.name] = tmp.data
+        tmp.data.materials.append(mat)
+        bpy.data.objects.remove(tmp)
+    o = bpy.data.objects.new("Box", cubes[mat.name])
+    o.location, o.scale = loc, size
+    dressing.objects.link(o)
+    return o
 
 
 asphalt = material("Asphalt", (0.09, 0.09, 0.1), 0.6)

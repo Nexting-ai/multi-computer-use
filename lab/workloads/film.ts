@@ -11,6 +11,7 @@ import { readFile, readdir, mkdir } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { host } from "./host.js";
 
 const run = promisify(execFile);
@@ -30,6 +31,13 @@ const blender = (args: string) =>
 // 1. Assemble on the first host.
 const first = hosts[0]!;
 await first.sh(`rm -rf ${work} && mkdir -p ${work}/in ${work}/out/frames`);
+// The repository's assemble.py, not the copy baked into the image.
+await first.put(
+  fileURLToPath(
+    new URL("../../packages/desktop/apps/blender/assemble.py", import.meta.url),
+  ),
+  `${work}/assemble.py`,
+);
 for (const id of (await readdir(src)).filter((d) => /^W\d+$/.test(d)).sort()) {
   await first.sh(`mkdir -p ${work}/in/${id}`);
   await first.put(join(src, id, "work.tar"), `${work}/in/${id}/work.tar`);
@@ -38,7 +46,7 @@ for (const id of (await readdir(src)).filter((d) => /^W\d+$/.test(d)).sort()) {
 const input = mode === "city" ? `/p/in/W01/${base}.blend` : "/p/in";
 await first.sh(
   blender(
-    `blender -b --factory-startup --python /opt/app/assemble.py -- ${mode} ${input} /p/final.blend ${base} >/dev/null 2>&1; ls /p/final.blend`,
+    `blender -b --factory-startup --python /p/assemble.py -- ${mode} ${input} /p/final.blend ${base} >/dev/null 2>&1; ls /p/final.blend`,
   ),
 );
 await first.get(`${work}/final.blend`, join(out, "final.blend"));
