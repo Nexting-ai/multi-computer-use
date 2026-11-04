@@ -118,7 +118,7 @@ const quality = (noun: string) =>
     noun === "building"
       ? "real proportions, distinct parts (base, body, top), windows or openings"
       : "real proportions, distinct, recognisable parts and fine details"
-  }, materials with fitting colours. A long script can keep Blender busy for minutes with a frozen screen: wait (desktop_wait) and observe again before concluding it is unresponsive. Check your work with preview renders (F12; the render window opens over the interface and Escape closes it) and fix what looks wrong (floating or intersecting parts, wrong scale, flat colours). Stay inside the plot and near the target height. Save (Ctrl+S) when the ${noun} is finished. Use the Blender interface and its Python (text editor + Alt+P, or the Python console); no other applications, add-ons or downloads. Unknown or delivered inputs must not be repeated.`;
+  }, materials with fitting colours. A long script can keep Blender busy for minutes with a frozen screen: wait (desktop_wait) and observe again before concluding it is unresponsive. Check your work with preview renders (F12; the render window opens over the interface and Escape closes it) and fix what looks wrong (floating or intersecting parts, wrong scale, flat colours). Stay inside the plot and near the target height. Keep improving it until it fully meets the brief and looks finished. Save (Ctrl+S) when the ${noun} is finished. Use the Blender interface and its Python (text editor + Alt+P, or the Python console); no other applications, add-ons or downloads. Unknown or delivered inputs must not be repeated.`;
 
 /** Sixteen pieces of an airport in a rainforest: aircraft, buildings,
  * landscape, creatures and machines, all different, each on 20 x 20 m. */
