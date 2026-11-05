@@ -171,6 +171,13 @@ export class CdpSurfacePort implements SurfacePort {
           lock: new Gate(1),
         });
         await client.call("Page.enable");
+        // Every surface behaves as a focused, visible page: web apps that
+        // render on animation frames would otherwise stall in background
+        // targets of a shared browser.
+        await client.call("Emulation.setFocusEmulationEnabled", {
+          enabled: true,
+        });
+        await client.call("Page.setWebLifecycleState", { state: "active" });
       }
       return port;
     } catch (e) {

@@ -53,6 +53,7 @@ import { runAstra, type ToolResult, type Tool } from "../benchmark/astra.js";
 import { rng, type Usage } from "../benchmark/metrics.js";
 import { runClaude } from "../agents/claude.js";
 import { sequence, miniwob } from "../workloads/web.js";
+import { odoo } from "../workloads/odoo/workload.js";
 import { blender } from "../workloads/blender.js";
 import { kicad } from "../workloads/kicad.js";
 import { studio, PLANS } from "../workloads/studio.js";
@@ -85,6 +86,8 @@ const schema = z.strictObject({
       variant: z.string().default("uniform"),
     }),
     z.strictObject({ kind: z.literal("miniwob"), task: z.string() }),
+    /** E5: real Odoo companies provisioned by lab/workloads/odoo/cli.ts. */
+    z.strictObject({ kind: z.literal("odoo"), env: z.string() }),
     z.strictObject({
       kind: z.enum([
         "blender",
@@ -167,30 +170,32 @@ const desktopOptions = (w: {
 const workload: Workload =
   W.kind === "sequence"
     ? sequence(W.variant)
-    : W.kind === "miniwob"
-      ? miniwob(W.task)
-      : W.kind === "blender"
-        ? blender(desktopOptions(W))
-        : W.kind === "kicad"
-          ? kicad(desktopOptions(W))
-          : W.kind === "studio" || W.kind === "city"
-            ? studio(
-                W.kind === "city" ? "many" : "studio",
-                desktopOptions(W),
-                PLANS.block,
-              )
-            : W.kind === "street" || W.kind === "street-many"
+    : W.kind === "odoo"
+      ? odoo(W.env)
+      : W.kind === "miniwob"
+        ? miniwob(W.task)
+        : W.kind === "blender"
+          ? blender(desktopOptions(W))
+          : W.kind === "kicad"
+            ? kicad(desktopOptions(W))
+            : W.kind === "studio" || W.kind === "city"
               ? studio(
-                  W.kind === "street-many" ? "many" : "studio",
+                  W.kind === "city" ? "many" : "studio",
                   desktopOptions(W),
-                  PLANS.street,
+                  PLANS.block,
                 )
-              : studio(
-                  W.kind === "airport-many" ? "many" : "studio",
-                  desktopOptions(W),
-                  PLANS.airport,
-                  W.variants ?? 1,
-                );
+              : W.kind === "street" || W.kind === "street-many"
+                ? studio(
+                    W.kind === "street-many" ? "many" : "studio",
+                    desktopOptions(W),
+                    PLANS.street,
+                  )
+                : studio(
+                    W.kind === "airport-many" ? "many" : "studio",
+                    desktopOptions(W),
+                    PLANS.airport,
+                    W.variants ?? 1,
+                  );
 const free = workload.declared;
 const steps = workload.items;
 
