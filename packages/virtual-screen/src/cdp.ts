@@ -30,6 +30,9 @@ const CONTROL_ROLES = [
 function timeoutFor(method: string) {
   if (method.startsWith("Accessibility.") || method.startsWith("Input."))
     return 30_000;
+  // Navigation waits for the server's first response; dozens of pages
+  // loading at once over long paths can take well over 20 s.
+  if (method === "Page.navigate") return 120_000;
   if (method.startsWith("Page.") || method === "Runtime.evaluate")
     return 20_000;
   return 5_000;
