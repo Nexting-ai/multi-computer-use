@@ -163,7 +163,7 @@ export class OdooEnv {
   }
 
   /** Waits until every Odoo answers through its forward. */
-  private async ready(timeoutMs = 300_000) {
+  private async ready(timeoutMs = 900_000) {
     const end = Date.now() + timeoutMs;
     await Promise.all(
       this.file.companies.map(async (c, i) => {
