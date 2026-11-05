@@ -1180,3 +1180,27 @@ test("key names are case-insensitive with common aliases", () => {
   expect(keys(["Cmd", "Return"])).toEqual(["Meta", "Enter"]);
   expect(() => keys(["Hyper"])).toThrow();
 });
+
+test("a thin wide template (a toolbar strip) registers quickly, near its hint or anywhere", () => {
+  const W = 1280,
+    H = 800;
+  const frame = { width: W, height: H, data: new Uint8Array(W * H).fill(240) };
+  // A 1200 x 30 strip with a pattern, placed at (40, 300).
+  const t = { width: 1200, height: 30, data: new Uint8Array(1200 * 30) };
+  for (let y = 0; y < 30; y++)
+    for (let x = 0; x < 1200; x++) {
+      const v = (x * 7 + y * 13) % 200;
+      t.data[y * 1200 + x] = v;
+      frame.data[(300 + y) * W + 40 + x] = v;
+    }
+  const m = new Uint8Array(1200 * 30).fill(1);
+  let t0 = performance.now();
+  expect(locate(frame, t, m, { x: 32, y: 290 })).toMatchObject({
+    x: 40,
+    y: 300,
+  });
+  expect(performance.now() - t0).toBeLessThan(1500);
+  t0 = performance.now();
+  expect(locate(frame, t, m)).toMatchObject({ x: 40, y: 300 });
+  expect(performance.now() - t0).toBeLessThan(3000);
+});

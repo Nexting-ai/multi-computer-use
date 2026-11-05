@@ -760,7 +760,12 @@ export class StackScreen {
       30000,
       "capture_timeout",
     );
-    const match = register(await gray(frame.png), c.tpl, hint);
+    // Without an earlier match, search first where the exemplar had it.
+    const match = register(
+      await gray(frame.png),
+      c.tpl,
+      hint ?? { x: c.policy.template.x, y: c.policy.template.y },
+    );
     const nodes = await bounded(
       this.port.readText!(frame),
       45000,
