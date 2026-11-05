@@ -35,6 +35,9 @@ export type EnvFile = {
   hosts: SshHost[];
   companies: (Company & { host: number; port: number })[];
   images: Record<string, string>;
+  /** First local forward port (one per company); distinct per environment so
+   * several can be attached at once. */
+  local_port?: number;
 };
 
 const LOCAL_ODOO = 21000; // + company index
@@ -74,7 +77,8 @@ export class OdooEnv {
   /** Forwards for every Odoo server and every host's Chrome. */
   static async attach(path: string) {
     const file = JSON.parse(await readFile(path, "utf8")) as EnvFile;
-    for (const [i] of file.companies.entries()) await free(LOCAL_ODOO + i);
+    const base = file.local_port ?? LOCAL_ODOO;
+    for (const [i] of file.companies.entries()) await free(base + i);
     const tunnels = file.hosts.map(
       (h, hi) =>
         new Tunnel([
@@ -85,9 +89,7 @@ export class OdooEnv {
           "-o",
           "ControlPath=none",
           ...file.companies.flatMap((c, i) =>
-            c.host === hi
-              ? ["-L", `${LOCAL_ODOO + i}:127.0.0.1:${c.port}`]
-              : [],
+            c.host === hi ? ["-L", `${base + i}:127.0.0.1:${c.port}`] : [],
           ),
           h.destination,
         ]),
@@ -144,7 +146,14 @@ export class OdooEnv {
         )
       ).trim();
     }
-    const file: EnvFile = { level, seed, hosts, companies: list, images };
+    const file: EnvFile = {
+      level,
+      seed,
+      hosts,
+      companies: list,
+      images,
+      local_port: Number(process.env.E5_LOCAL_PORT ?? LOCAL_ODOO),
+    };
     await writeFile(path, JSON.stringify(file, null, 2));
     const e = await OdooEnv.attach(path);
     try {
@@ -159,7 +168,7 @@ export class OdooEnv {
   }
 
   private url(i: number) {
-    return `http://127.0.0.1:${LOCAL_ODOO + i}`;
+    return `http://127.0.0.1:${(this.file.local_port ?? LOCAL_ODOO) + i}`;
   }
 
   /** Waits until every Odoo answers through its forward. */
@@ -277,11 +286,20 @@ export class OdooEnv {
     await this.ready();
   }
 
-  /** A dedicated local headless Chrome (never a user's profile), one
-   * logged-in browser context per company, reaching its Odoo through the
-   * company's forward. The browser stays local so a dropped path to a host
-   * interrupts only that company's requests, never the control connection. */
+  /** Agent surfaces over the pages from `pages`. */
   async surfaces(directory: string, width = 1280, height = 800) {
+    return CdpSurfacePort.connect(
+      await this.pages(directory, width, height),
+      join(directory, "input-journal.jsonl"),
+    );
+  }
+
+  /** One settled, logged-in Sales page per company: a dedicated local
+   * headless Chrome (never a user's profile), one browser context per company,
+   * reaching its Odoo through the company's forward. The browser stays local so
+   * a dropped path to a host interrupts only that company's requests, never the
+   * control connection. */
+  async pages(directory: string, width = 1280, height = 800) {
     const profile = join(directory, "chrome-profile");
     this.chrome = spawn(
       process.env.CU_CHROME ??
@@ -412,10 +430,7 @@ export class OdooEnv {
       }),
     );
     browser.close();
-    return CdpSurfacePort.connect(
-      routes,
-      join(directory, "input-journal.jsonl"),
-    );
+    return routes;
   }
 
   /** Reads each company's orders for its Customer Reference. */
@@ -447,6 +462,14 @@ export class OdooEnv {
             )
           : [];
         const one = orders.length === 1 ? orders[0] : null;
+        // The customer: one partner of that name, a company (the task asks
+        // to create a missing customer as a company, and only once).
+        const partners = await o.run<any[]>(
+          "res.partner",
+          "search_read",
+          [[["name", "=", c.order.customer]]],
+          { fields: ["is_company"], context: { active_test: false } },
+        );
         const got = lines
           .filter((l) => one && l.order_id[0] === one.id && !l.display_type)
           .map((l) => `${l.product_id[1]}×${l.product_uom_qty}`)
@@ -456,6 +479,8 @@ export class OdooEnv {
           !!one &&
           ["sale", "done"].includes(one.state) &&
           one.partner_id?.[1] === c.order.customer &&
+          partners.length === 1 &&
+          partners[0].is_company === true &&
           JSON.stringify(got) === JSON.stringify(want);
         return {
           surface_id: c.id,
@@ -465,7 +490,13 @@ export class OdooEnv {
             orders.length > 1 || all > 1 || (orders.length === 1 && !correct),
           commits: orders.length,
           correct_items: correct && all === 1 ? 1 : 0,
-          detail: { expected: c.order, orders, lines: got, all_orders: all },
+          detail: {
+            expected: c.order,
+            orders,
+            lines: got,
+            all_orders: all,
+            partners,
+          },
         };
       }),
     );
