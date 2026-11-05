@@ -25,6 +25,16 @@ const CONTROL_ROLES = [
 
 /** Transport for an operator-owned, isolated browser. No page JS; the only read
  * channel besides pixels is the accessibility text layer (see readText). */
+/** How long a call may take. Heavy pages (large accessibility trees, busy
+ * renderers handling input) legitimately need more than simple calls. */
+function timeoutFor(method: string) {
+  if (method.startsWith("Accessibility.") || method.startsWith("Input."))
+    return 30_000;
+  if (method === "Page.captureScreenshot" || method === "Runtime.evaluate")
+    return 20_000;
+  return 5_000;
+}
+
 export class Cdp {
   private seq = 0;
   private pending = new Map<
@@ -110,8 +120,8 @@ export class Cdp {
       const id = ++this.seq,
         timer = setTimeout(() => {
           this.pending.delete(id);
-          reject(Error("cdp_timeout"));
-        }, 5000);
+          reject(Error(`cdp_timeout:${method}`));
+        }, timeoutFor(method));
       this.pending.set(id, { resolve, reject, timer });
       try {
         this.socket.send(JSON.stringify({ id, method, params }));
