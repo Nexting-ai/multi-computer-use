@@ -139,7 +139,7 @@ const schema = z.strictObject({
   /** Arm R: tool calls per round (iteration happens across rounds). */
   round_max_calls: z.number().int().min(4).default(16),
   /** Per-surface sessions running at once (1 = sequential, as in E1). */
-  workset_parallel: z.number().int().min(1).max(32).default(1),
+  workset_parallel: z.number().int().min(1).max(64).default(1),
   stack_concurrency: z.number().int().min(1).max(100).default(64),
   slots: z
     .array(z.strictObject({ block: z.number().int(), arm: z.enum(ARMS) }))

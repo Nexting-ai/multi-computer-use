@@ -11,6 +11,7 @@ export type SshHost = { destination: string; options: string[] };
 /** Retry when SSH never opened a session (nothing ran twice), or, for
  * idempotent transfers, whenever the connection dropped. */
 async function retry<T>(f: () => Promise<T>, idempotent = false): Promise<T> {
+  const until = Date.now() + 20 * 60_000;
   for (let attempt = 1; ; attempt++)
     try {
       return await f();
@@ -20,8 +21,8 @@ async function retry<T>(f: () => Promise<T>, idempotent = false): Promise<T> {
           String(e?.stderr ?? e),
         );
       const dropped = idempotent && /ssh 255/.test(String(e?.message));
-      // Up to about five minutes: these paths drop for a minute or more.
-      if (!(unreached || dropped) || attempt >= 10) throw e;
+      // Up to twenty minutes: cross-border paths drop for several minutes.
+      if (!(unreached || dropped) || Date.now() > until) throw e;
       await new Promise((r) => setTimeout(r, Math.min(60_000, 5000 * attempt)));
     }
 }
