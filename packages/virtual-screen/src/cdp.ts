@@ -133,6 +133,26 @@ type Route = {
   lock: Gate;
   ax?: boolean;
 };
+/** Share of pixels that may differ while the screen counts as unchanged: a
+ * blinking text caret, never a changed control or value (same tolerance as
+ * the desktop agent). */
+const SAME_SCREEN = 0.0001;
+export async function sameScreen(a: Frame, b: Frame) {
+  if (a.revision === b.revision) return true;
+  if (a.width !== b.width || a.height !== b.height) return false;
+  const [x, y] = await Promise.all(
+    [a, b].map((f) => sharp(f.png).removeAlpha().raw().toBuffer()),
+  );
+  let n = 0;
+  for (let i = 0; i < x!.length; i += 3)
+    if (
+      Math.abs(x![i]! - y![i]!) > 24 ||
+      Math.abs(x![i + 1]! - y![i + 1]!) > 24 ||
+      Math.abs(x![i + 2]! - y![i + 2]!) > 24
+    )
+      n++;
+  return n / (x!.length / 3) <= SAME_SCREEN;
+}
 export class CdpSurfacePort implements SurfacePort {
   private routes = new Map<string, Route>();
   private journalQueue = Promise.resolve();
@@ -316,16 +336,14 @@ export class CdpSurfacePort implements SurfacePort {
   async readText(frame: Frame): Promise<TextNode[]> {
     const r = this.route(frame.surface_id);
     return r.lock.run(async () => {
-      const same = (f: Frame) =>
+      const same = async (f: Frame) =>
         f.route_id === frame.route_id &&
         f.epoch === frame.epoch &&
-        f.width === frame.width &&
-        f.height === frame.height &&
-        f.revision === frame.revision;
-      if (!same(await this.captureRoute(r)))
+        (await sameScreen(f, frame));
+      if (!(await same(await this.captureRoute(r))))
         throw Error("source_changed_before_read");
       const out = await this.axNodes(r);
-      if (!same(await this.captureRoute(r)))
+      if (!(await same(await this.captureRoute(r))))
         throw Error("source_changed_during_read");
       await this.log({
         kind: "read_text",
@@ -354,9 +372,7 @@ export class CdpSurfacePort implements SurfacePort {
       if (
         fresh.route_id !== frame.route_id ||
         fresh.epoch !== frame.epoch ||
-        fresh.width !== frame.width ||
-        fresh.height !== frame.height ||
-        fresh.revision !== frame.revision
+        !(await sameScreen(fresh, frame))
       )
         return { status: "blocked", reason: "source_changed_before_input" };
       await this.log({
