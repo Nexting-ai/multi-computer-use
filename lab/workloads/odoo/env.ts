@@ -361,6 +361,10 @@ export class OdooEnv {
           deviceScaleFactor: 1,
           mobile: false,
         });
+        // A steady (non-blinking) text caret, like the system setting.
+        await page.call("Page.addScriptToEvaluateOnNewDocument", {
+          source: STEADY_CARET,
+        });
         if (c.notice !== null)
           await page.call("Page.addScriptToEvaluateOnNewDocument", {
             source: noticeScript(c),
@@ -494,6 +498,16 @@ async function waitFor(page: Cdp, condition: string, timeoutMs = 60_000) {
   ).catch(() => "?");
   throw Error(`page_not_ready:${condition}:${at}`);
 }
+
+const STEADY_CARET = `(() => {
+  const add = () => {
+    const s = document.createElement("style");
+    s.textContent = "*, *::before, *::after { caret-animation: manual !important; }";
+    (document.head || document.documentElement).append(s);
+  };
+  if (document.documentElement) add();
+  else document.addEventListener("DOMContentLoaded", add);
+})();`;
 
 const NOTICE: Record<Company["lang"], [string, string]> = {
   en_US: [

@@ -763,7 +763,7 @@ export class StackScreen {
     const match = register(await gray(frame.png), c.tpl, hint);
     const nodes = await bounded(
       this.port.readText!(frame),
-      15000,
+      45000,
       "read_timeout",
     );
     return { frame, match, nodes };

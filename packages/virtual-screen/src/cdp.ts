@@ -30,7 +30,7 @@ const CONTROL_ROLES = [
 function timeoutFor(method: string) {
   if (method.startsWith("Accessibility.") || method.startsWith("Input."))
     return 30_000;
-  if (method === "Page.captureScreenshot" || method === "Runtime.evaluate")
+  if (method.startsWith("Page.") || method === "Runtime.evaluate")
     return 20_000;
   return 5_000;
 }
