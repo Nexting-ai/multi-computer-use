@@ -194,7 +194,14 @@ if (process.argv[1]?.endsWith("rpa.ts")) {
     const routes = await env.pages(out);
     const runs = await Promise.all(
       env.file.companies.map(async (c, i) => {
-        const page = await Cdp.connect(routes[i]!.websocket_url);
+        // The browser can refuse a connection while 48 open at once: retry
+        // (this is the harness's connection, not a step of the script).
+        let page: Cdp | null = null;
+        for (let attempt = 0; !page; attempt++)
+          page = await Cdp.connect(routes[i]!.websocket_url).catch((e) => {
+            if (attempt >= 5) throw e;
+            return sleep(1000 + 500 * attempt).then(() => null);
+          });
         const r = new Robot(page);
         const t0 = Date.now();
         let error: string | null = null;
