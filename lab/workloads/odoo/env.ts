@@ -14,7 +14,10 @@ import { join } from "node:path";
 import {
   Cdp,
   CdpSurfacePort,
+  sameScreen,
 } from "../../../packages/virtual-screen/src/cdp.js";
+import type { Frame } from "../../../packages/virtual-screen/src/index.js";
+import { createHash } from "node:crypto";
 import { Tunnel, free } from "../../../packages/desktop/src/fleet.js";
 import { host, type SshHost } from "../host.js";
 import { Odoo } from "./rpc.js";
@@ -360,6 +363,24 @@ export class OdooEnv {
           const s = await page.call("Page.captureScreenshot", {
             format: "png",
           });
+          // Hand the page over once it has settled (late images, fade-ins):
+          // two captures a second apart show the same screen.
+          let last: Frame | null = null;
+          for (let i = 0; i < 30; i++) {
+            const shot = await page.call("Page.captureScreenshot", {
+              format: "png",
+            });
+            const png = Buffer.from(shot.data, "base64");
+            const now = {
+              revision: createHash("sha256").update(png).digest("hex"),
+              width,
+              height,
+              png,
+            } as Frame;
+            if (last && (await sameScreen(last, now))) break;
+            last = now;
+            await new Promise((r) => setTimeout(r, 1000));
+          }
           await writeFile(
             join(directory, `not-ready-${c.id}.png`),
             Buffer.from(s.data, "base64"),
