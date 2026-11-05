@@ -975,14 +975,21 @@ for (const blk of blocks)
         // The director: fleet policies for shared work, per-surface tools for
         // what differs, and one-image reviews of the whole fleet.
         const { runtime, handle } = fleet(free ? "free" : "item");
-        await session(
+        await resumable(
           "sessions/director",
-          directorTools,
-          (arm === "M"
-            ? masterPrompt(lab.task, lab.surfaces)
-            : directorPrompt(lab.task, lab.surfaces)) +
-            JSON.stringify(ledger.summary()),
-          handle,
+          (path, resumed) =>
+            session(
+              path,
+              directorTools,
+              (arm === "M"
+                ? masterPrompt(lab.task, lab.surfaces)
+                : directorPrompt(lab.task, lab.surfaces)) +
+                resumed +
+                JSON.stringify(ledger.summary()),
+              handle,
+            ),
+          // Done when no surface is left to work on.
+          () => lab.surfaces.every((id) => ledger.get(id).state !== "ready"),
         );
         await context.run(-1, () => runtime.drain());
       } else if (arm === "H") {

@@ -88,10 +88,9 @@ export const policySchema = z.strictObject({
   request_id: z.string().min(1).max(128),
   view_id: z.string().min(1).max(128),
   template: rect,
-  fields: z
-    .array(z.strictObject({ name: field, rect }))
-    .min(1)
-    .max(8),
+  /** Values read per surface; may be empty only in a free task without a
+   * post-condition (nothing is read, the steps are checked by looking). */
+  fields: z.array(z.strictObject({ name: field, rect })).max(8),
   ignore: z.array(rect).max(8).optional(),
   /** Columns of the host's task table used by this policy (e.g. a spec sheet
    * row per surface). Steps use them like fields; they are never read from
@@ -566,6 +565,10 @@ export class StackScreen {
     if (!p.steps.some((s) => s.kind !== "key_chord"))
       throw Error(
         "no_effective_step (keys alone have no checked target: add a click on the element that should receive them)",
+      );
+    if (!p.fields.length && (p.verify || this.options.contract !== "free"))
+      throw Error(
+        "fields_required (only a free task without verify may omit them)",
       );
     if (!p.verify) {
       if (this.options.contract !== "free")
