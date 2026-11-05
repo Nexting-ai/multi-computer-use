@@ -38,6 +38,14 @@ export type EnvFile = {
 };
 
 const LOCAL_ODOO = 21000; // + company index
+/** Onboarding tours a fresh Odoo 16/17 database starts for the admin. */
+const TOURS = [
+  "sale_tour",
+  "sale_quote_tour",
+  "main_flow_tour",
+  "account_tour",
+  "sale_product_configurator_tour",
+];
 const odooArgs = (c: { db: string }) =>
   `-- -d ${c.db} --db-filter=^${c.db}\\$ --without-demo=all`;
 const env = "-e HOST=pg -e USER=odoo -e PASSWORD=odoo";
@@ -178,6 +186,13 @@ export class OdooEnv {
   private async seed(c: Company, i: number) {
     const o = await Odoo.login(this.url(i), c.db);
     await o.run("res.users", "write", [[o.user], { lang: c.lang }]);
+    // Onboarding tours off, as for a user past their first day (their
+    // pulsing tips would also keep every screen changing).
+    if (c.version === "18")
+      await o.run("res.users", "write", [[o.user], { tour_enabled: false }]);
+    else
+      for (const name of TOURS)
+        await o.run("web_tour.tour", "create", [{ name, user_id: o.user }]);
     const products: Record<string, number> = {};
     for (const [k, name] of PRODUCTS.entries())
       products[name] = await o.run("product.product", "create", [
@@ -280,6 +295,7 @@ export class OdooEnv {
         "--disable-background-networking",
         "--disable-renderer-backgrounding",
         "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
         `--window-size=${width},${height}`,
         "about:blank",
       ],
