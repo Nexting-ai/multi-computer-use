@@ -84,6 +84,25 @@ export const LAYOUT = {
   cell: { w: 165, h: 150 },
   box: { w: 130, h: 56 },
 };
+/** A point just outside box `p`'s edge, on the line toward box `q` (both
+ * top-left positions), so arrows run edge to edge and never cross a label. */
+function edgePoint(
+  p: { x: number; y: number },
+  q: { x: number; y: number },
+  box: { w: number; h: number },
+  gap: number,
+) {
+  const cx = p.x + box.w / 2,
+    cy = p.y + box.h / 2;
+  const dx = q.x - p.x,
+    dy = q.y - p.y;
+  const k = Math.min(
+    dx ? (box.w / 2 + gap) / Math.abs(dx) : Infinity,
+    dy ? (box.h / 2 + gap) / Math.abs(dy) : Infinity,
+  );
+  return { x: cx + dx * k, y: cy + dy * k };
+}
+
 export function skeleton(d: Diagram, { origin, cell, box } = LAYOUT) {
   const pos = (b: Box) => ({
     x: origin.x + b.col * cell.w,
@@ -96,25 +115,28 @@ export function skeleton(d: Diagram, { origin, cell, box } = LAYOUT) {
     width: box.w,
     height: box.h,
     roughness: 0,
-    label: { text: b.label, fontSize: 16 },
+    strokeWidth: 2,
+    label: { text: b.label, fontSize: 16, fontFamily: 2 },
   }));
   const byLabel = new Map(d.boxes.map((b) => [b.label, b]));
   for (const [a, z] of d.edges) {
     const A = byLabel.get(a)!,
       Z = byLabel.get(z)!;
-    const pa = pos(A),
-      pz = pos(Z);
-    const sx = pa.x + box.w / 2,
-      sy = pa.y + box.h / 2,
-      ex = pz.x + box.w / 2,
-      ey = pz.y + box.h / 2;
+    const s = edgePoint(pos(A), pos(Z), box, 6),
+      e = edgePoint(pos(Z), pos(A), box, 6);
     out.push({
       type: "arrow",
-      x: sx,
-      y: sy,
-      width: ex - sx,
-      height: ey - sy,
+      x: s.x,
+      y: s.y,
+      width: e.x - s.x,
+      height: e.y - s.y,
+      points: [
+        [0, 0],
+        [e.x - s.x, e.y - s.y],
+      ],
       roughness: 0,
+      strokeWidth: 2,
+      endArrowhead: "triangle",
       start: { id: A.id },
       end: { id: Z.id },
     });
