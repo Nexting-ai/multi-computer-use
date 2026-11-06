@@ -72,6 +72,8 @@ const ARMS = [
   "M",
   "R",
   "X",
+  "D",
+  "DA",
 ] as const;
 type Arm = (typeof ARMS)[number];
 const schema = z.strictObject({
@@ -141,6 +143,10 @@ const schema = z.strictObject({
   refine_max_tokens: z.number().int().positive().default(400000),
   refine_max_calls: z.number().int().positive().default(24),
   refine_deadline_ms: z.number().int().min(60000).default(1200000),
+  /** D/DA: most helper agents running at once. */
+  delegate_max: z.number().int().min(1).max(64).default(8),
+  /** DA: hand a window off after this many broadcast exceptions. */
+  delegate_after: z.number().int().min(1).max(10).default(2),
   refine_rounds: z.number().int().min(1).max(3).default(2),
   /** Arm R: rounds, each a fresh director session (build, then refine). */
   rounds: z.number().int().min(1).max(8).default(5),
@@ -368,6 +374,39 @@ const refineDirectorPrompt = (
       } ${forward} Progress: `;
 const refinerPrompt = (id: string, row: Record<string, string>, note: string) =>
   `You refine one building on desktop ${id}: Blender, collection Module on a 20 x 20 m plot centred at the origin. Brief: a ${row.style ?? "building"}, about ${row.height ?? "?"} m tall: ${row.brief ?? ""}. A base version already exists (built by a shared script whose helper functions are in the text editor's module.py; reuse them). Director's notes: ${note}\nImprove the building to meet the brief and the notes, with the interface or Blender's Python (text editor + Alt+P, or the console): render a preview (F12), look, fix what is wrong, save (Ctrl+S). Stay inside the plot and near the target height. A long script can keep Blender busy for minutes: use desktop_wait, then observe again. Your budget is small; stop once it meets the brief. End with one sentence on what you changed. Use only Blender; never repeat delivered or unknown input. ${forward}`;
+const delegateSchema = z.strictObject({
+  surfaces: z.array(z.string()).min(1).max(64),
+  note: z.string().min(1).max(1500),
+});
+const delegationsSchema = z.strictObject({
+  wait_seconds: z.number().int().min(0).max(600).optional(),
+});
+const dispatchTools: Tool[] = [
+  ...directorTools,
+  t(
+    "delegate",
+    "Hand windows off to helper agents: each listed window gets its own helper, which finishes that window's whole task on its own (it sees the task, the window's task-table row and your note) and declares it done. Use it for windows that differ from the rest (an exception in a broadcast, a notice at its own time, a fact that needs its own decision, extra pages), then keep broadcasting to the others. Delegated windows are skipped by your broadcasts and closed to your per-window tools. Returns at once.",
+    delegateSchema,
+  ),
+  t(
+    "delegations",
+    "Status of every helper (running, done, or stopped with its report). wait_seconds waits until a helper finishes or the time passes.",
+    delegationsSchema,
+  ),
+];
+const dispatchPrompt = (task: string, ids: string[], auto: boolean) =>
+  `${task}\nYou direct ${ids.length} windows (${ids[0]}…${ids.at(-1)}). Keep the windows that look and behave alike moving together: one fleet_run decision applies a step to all of them (canary first), with task-table inputs filled per window. When a window stops matching the rest, do not chase it yourself: hand it to a helper with delegate (a short note on what is different) and carry on with the others; helpers run in parallel with you.${
+    auto
+      ? " Windows that fail your broadcasts repeatedly are also handed to helpers automatically; you will see them in delegations."
+      : ""
+  } Review the fleet with fleet_overview. Declare each of your windows done with desktop_done once its request is submitted. Before you end, check delegations until every helper has finished. In this task fleet_run policies are steps: each applies once per window per run, is verified by its post-condition if given, and never completes an item. ${forward} Starting progress: `;
+const helperPrompt = (
+  task: string,
+  id: string,
+  row: Record<string, string>,
+  note: string,
+) =>
+  `${task}\nYou are a helper. Finish window ${id} alone, from its current state to a submitted request, then declare it with desktop_done. Its task-table row: ${JSON.stringify(row)}. The director's note: ${note}\nOther windows are not yours. ${forward}`;
 const notesSchema = z.strictObject({
   notes: z.record(z.string(), z.string().min(1).max(1500)),
 });
@@ -1073,6 +1112,187 @@ for (const blk of blocks)
           );
         }
         await context.run(-1, () => directorDesk.drain());
+      } else if (arm === "D" || arm === "DA") {
+        // Director + automatic dispatch: broadcasts for the windows that stay
+        // alike; a window that stops matching is handed to its own helper
+        // agent, which finishes it in parallel while the director goes on.
+        const auto = arm === "DA";
+        const { runtime, handle } = fleet("free");
+        type Helper = {
+          id: string;
+          note: string;
+          state: "queued" | "running" | "done" | "stopped";
+          report?: string;
+          run?: Promise<void>;
+        };
+        const helpers = new Map<string, Helper>();
+        const strikes = new Map<string, number>();
+        const returned: { surface_id: string; report: string }[] = [];
+        let running = 0;
+        const waiters: (() => void)[] = [];
+        const settle = () => waiters.splice(0).forEach((w) => w());
+        const start = (h: Helper) => {
+          running++;
+          h.state = "running";
+          h.run = (async () => {
+            const rt = new ManagedScreen(
+              lab.port,
+              ledger,
+              lab.surfaces,
+              [h.id],
+              false,
+              {
+                source: (f) => saveSource(f, `delegate-${h.id}`),
+                delivery: (request, receipt) =>
+                  delivery("deliveries.jsonl")({
+                    delegate: h.id,
+                    request,
+                    receipt,
+                    at: new Date().toISOString(),
+                  }),
+                contract: "free",
+              },
+            );
+            try {
+              const agent = await session(
+                `sessions/delegate-${h.id}`,
+                perSurfaceTools(false),
+                helperPrompt(lab.task, h.id, lab.inputs?.[h.id] ?? {}, h.note) +
+                  JSON.stringify(ledger.get(h.id)),
+                (name, args) => {
+                  const handled = desk(rt, [h.id], false, name, args);
+                  if (!handled) throw Error("unknown_tool");
+                  return handled;
+                },
+              );
+              await rt.drain();
+              h.report = finalMessage(agent).slice(0, 400);
+            } catch (e) {
+              h.report = String(e).slice(0, 400);
+            }
+            h.state = ledger.get(h.id).state === "ready" ? "stopped" : "done";
+            // A helper that stopped short gives its window back.
+            if (h.state === "stopped") {
+              returned.push({ surface_id: h.id, report: h.report ?? "" });
+              helpers.delete(h.id);
+            }
+            running--;
+            const next = [...helpers.values()].find(
+              (x) => x.state === "queued",
+            );
+            if (next) start(next);
+            settle();
+          })();
+        };
+        const delegate = (ids: string[], note: string) => {
+          const accepted: string[] = [];
+          for (const id of ids) {
+            if (!lab.surfaces.includes(id) || helpers.has(id)) continue;
+            if (ledger.get(id).state !== "ready") continue;
+            const h: Helper = { id, note, state: "queued" };
+            helpers.set(id, h);
+            accepted.push(id);
+            if (running < o.delegate_max) start(h);
+          }
+          return accepted;
+        };
+        const status = () => [
+          ...[...helpers.values()].map(({ id, state, report }) => ({
+            surface_id: id,
+            state,
+            ...(report ? { report } : {}),
+          })),
+          ...returned.map((r) => ({ ...r, state: "returned to you" })),
+        ];
+        const mine = (id: string) => !helpers.has(id);
+        const director = async (name: string, args: any) => {
+          if (name === "delegate") {
+            const q = delegateSchema.parse(args);
+            return {
+              views: [],
+              rest: {
+                delegated: delegate(q.surfaces, q.note),
+                helpers: status(),
+              },
+            };
+          }
+          if (name === "delegations") {
+            const q = delegationsSchema.parse(args);
+            if (
+              q.wait_seconds &&
+              [...helpers.values()].some(
+                (h) => h.state === "running" || h.state === "queued",
+              )
+            )
+              await Promise.race([
+                new Promise<void>((r) => waiters.push(r)),
+                new Promise((r) => setTimeout(r, q.wait_seconds! * 1000)),
+              ]);
+            return {
+              views: [],
+              rest: { helpers: status(), fleet: ledger.summary() },
+            };
+          }
+          if (name === "fleet_run") {
+            const own = (
+              (args?.surfaces as string[] | undefined) ?? lab.surfaces
+            ).filter(mine);
+            if (!own.length) throw Error("every_listed_window_is_delegated");
+            const out = await handle(name, { ...args, surfaces: own });
+            if (auto)
+              for (const x of ((out.rest as any)?.exceptions ?? []) as {
+                surface_id: string;
+                reason: string;
+              }[]) {
+                const n = (strikes.get(x.surface_id) ?? 0) + 1;
+                strikes.set(x.surface_id, n);
+                if (n >= o.delegate_after)
+                  delegate(
+                    [x.surface_id],
+                    `This window failed ${n} broadcasts (${x.reason}); it differs from the others.`,
+                  );
+              }
+            return {
+              ...out,
+              rest: { ...(out.rest as object), helpers: status() },
+            };
+          }
+          if (name === "desktop_observe" || name === "desktop_done") {
+            const ids: string[] =
+              name === "desktop_observe"
+                ? (args?.surfaces ?? []).map((x: any) => x.surface_id)
+                : (args?.surfaces ?? []);
+            const taken = ids.filter((id) => !mine(id));
+            if (taken.length)
+              throw Error(`delegated_to_helper:${taken.join(",")}`);
+          }
+          return handle(name, args);
+        };
+        await resumable(
+          "sessions/director",
+          async (path, resumed) => {
+            const agent = await session(
+              path,
+              dispatchTools,
+              dispatchPrompt(lab.task, lab.surfaces, auto) +
+                resumed +
+                JSON.stringify(ledger.summary()),
+              director,
+            );
+            // The director's work includes its helpers: wait for them.
+            await Promise.all([...helpers.values()].map((h) => h.run));
+            while (
+              [...helpers.values()].some(
+                (h) => h.state === "queued" || h.state === "running",
+              )
+            )
+              await Promise.all([...helpers.values()].map((h) => h.run));
+            return agent;
+          },
+          () => lab.surfaces.every((id) => ledger.get(id).state !== "ready"),
+        );
+        await context.run(-1, () => runtime.drain());
+        phases.helpers = status();
       } else if (arm === "R") {
         // One director, rounds of fresh sessions: each round reviews every
         // piece in one image and sends each desktop its own edit in one
