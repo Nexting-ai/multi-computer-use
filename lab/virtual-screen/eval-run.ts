@@ -395,7 +395,7 @@ const dispatchTools: Tool[] = [
   ),
 ];
 const dispatchPrompt = (task: string, ids: string[], auto: boolean) =>
-  `${task}\nYou direct ${ids.length} windows (${ids[0]}…${ids.at(-1)}). Keep the windows that look and behave alike moving together: one fleet_run decision applies a step to all of them (canary first), with task-table inputs filled per window. When a window stops matching the rest, do not chase it yourself: hand it to a helper with delegate (a short note on what is different) and carry on with the others; helpers run in parallel with you.${
+  `${task}\nYou direct ${ids.length} windows (${ids[0]}…${ids.at(-1)}). Keep the windows that look and behave alike moving together: one fleet_run decision applies a step to all of them (canary first), with task-table inputs filled per window. Most differences do not need a helper: a window that only looks different still takes the same decision (a broadcast with a looser template, or one per-window action), and a notice is cleared with one prepare policy. Hand a window to a helper with delegate (a short note on what is different) only when it needs its own sequence of decisions, such as a fact that changes the answer or extra pages, and carry on with the others; helpers run in parallel with you. A window handed off costs a whole agent, so keep helpers for the windows that really diverge.${
     auto
       ? " Windows that fail your broadcasts repeatedly are also handed to helpers automatically; you will see them in delegations."
       : ""
