@@ -41,7 +41,9 @@ const TITLES: Record<string, [string, string]> = {
 };
 
 await mkdir(out, { recursive: true });
+const LATENCY = Number(process.env.CANVAS_LATENCY_MS ?? 0);
 const canvas = await startCanvas({
+  latency_ms: LATENCY,
   log: join(out, "log.jsonl"),
   cursors: N,
   title: TITLES[arm]![0],
@@ -166,6 +168,15 @@ async function run(cursor: number, actions: z.infer<typeof action>[]) {
       button: "left",
       clickCount: 1,
     });
+    // Like any Computer Use step, wait for the application to respond.
+    for (let k = 0; k < 200; k++) {
+      const r = await page.call("Runtime.evaluate", {
+        expression: "window.__busy",
+        returnByValue: true,
+      });
+      if (!r.result?.value) break;
+      await new Promise((x) => setTimeout(x, 40));
+    }
     await new Promise((r) => setTimeout(r, LIMITS.pace_ms));
   }
 }
@@ -237,7 +248,7 @@ const howTo =
   `Page coordinates (pixels): tool Pixel at (${G.tool.pixel!.join(", ")}), tool Rectangle at (${G.tool.rect!.join(", ")}); colour swatch k at (${G.swatch(0)[0]} + 40k, 72) for k = 0..11: ` +
   PALETTE.map(([name, , l], k) => `${k} ${name} (${l})`).join(", ") +
   `. The centre of cell (col, row) is (26 + 12*col, 110 + 12*row), col 0..${COLS - 1}, row 0..${ROWS - 1}. ` +
-  `Each cursor has its own tool and colour: click a tool, click a swatch, then click cells. With Rectangle, click one corner cell then the opposite corner cell to fill the rectangle (fast for large areas; paint over with details afterwards). Later paint covers earlier paint. ` +
+  `Each cursor has its own tool and colour: click a tool, click a swatch, then click cells. With Rectangle, click one corner cell then the opposite corner cell to fill the rectangle (fast for large areas; paint over with details afterwards). Later paint covers earlier paint. Start painting early and work in rounds (big areas first, then details), instead of planning the whole picture before the first click. ` +
   `Target (rows 00..39, one letter per cell, letters as above, '.' white):\n${gridText(goal)}\n`;
 const regionOf = (n: number) => {
   // N regions: 4 columns x ceil(N/4) rows of the picture.

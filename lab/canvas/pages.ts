@@ -68,7 +68,8 @@ es.onmessage=m=>{const e=JSON.parse(m.data);
   else if(e.type==='color'){cur[e.cursor].color=e.color}
   else if(e.type==='corner'){cur[e.cursor].corner=[e.col,e.row]}
   marks();sel();};
-const post=v=>fetch('/op',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({cursor:N,...v})});
+// window.__busy counts changes the application is still applying.
+window.__busy=0;const post=async v=>{window.__busy++;try{await fetch('/op',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({cursor:N,...v})})}finally{window.__busy--}};
 document.addEventListener('pointerdown',async ev=>{const x=ev.clientX,y=ev.clientY;await post({type:'move',x,y});
   const t=ev.target;
   if(t.id==='t-pixel')return post({type:'tool',tool:'pixel'});
@@ -159,7 +160,7 @@ if(!REPLAY){
     const sk=document.getElementById('sk');sk.oninput=()=>seek(total*sk.value/1000);
     function seek(to){t=to;for(const r of runs){const st=r.ev[0];const np=new Panel(st,scale);r.p.el.replaceWith(np.el);panels[panels.indexOf(r.p)]=np;r.p=np;r.i=1;step(r)}}
     function step(r){while(r.i<r.ev.length&&r.ev[r.i].t<=t){r.p.apply(r.ev[r.i]);r.i++}}
-    window.__replay={total,seek:x=>seek(x),setSpeed:s=>speed=s,pause:()=>playing=false,get t(){return t}};
+    window.__replay={total,seek:x=>seek(x),setSpeed:s=>speed=s,pause:()=>playing=false,get t(){return t},advance:x=>{playing=false;t=x;for(const r of runs)step(r);loop(t);document.getElementById('clock').textContent=fmt(t)}};
     (function tick(now){const dt=now-last;last=now;if(playing){t=Math.min(total,t+dt*speed);sk.value=Math.round(1000*t/total)}for(const r of runs)step(r);loop(t);document.getElementById('clock').textContent=fmt(t);requestAnimationFrame(tick)})(performance.now());
   });
 }

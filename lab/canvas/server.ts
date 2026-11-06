@@ -47,6 +47,8 @@ export async function startCanvas(o: {
   title: string;
   /** Fixed port (default: any free port). */
   port?: number;
+  /** How long the "application" takes to apply a drawing click. */
+  latency_ms?: number;
 }) {
   const grid: Grid = Array(ROWS * COLS).fill(0);
   const goal = target();
@@ -162,6 +164,8 @@ export async function startCanvas(o: {
             c.color = v.color;
             emit({ type: "color", cursor: c.n, color: c.color });
           } else if (v.type === "cell") {
+            if (o.latency_ms)
+              await new Promise((r) => setTimeout(r, o.latency_ms));
             const col = Number(v.col),
               row = Number(v.row);
             if (c.tool === "pixel") {
