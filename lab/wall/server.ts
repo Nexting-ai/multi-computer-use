@@ -632,7 +632,8 @@ async function discover() {
     () => [],
   );
   for (const e of entries) {
-    if (!e.isDirectory() || panels.has(e.name)) continue;
+    if (!(e.isDirectory() || e.isSymbolicLink()) || panels.has(e.name))
+      continue;
     const dir = join(outDir, e.name);
     const path = join(dir, "environment", "wall.json");
     let wall: Wall;
@@ -661,7 +662,8 @@ async function replayData(dir: string) {
   const arms: { panel: string; events: unknown[] }[] = [];
   const entries = await readdir(root, { withFileTypes: true }).catch(() => []);
   for (const e of entries) {
-    if (!e.isDirectory() || !NAME.test(e.name)) continue;
+    if (!(e.isDirectory() || e.isSymbolicLink()) || !NAME.test(e.name))
+      continue;
     const text = await readFile(
       join(root, e.name, "wall-recording", "events.jsonl"),
       "utf8",
