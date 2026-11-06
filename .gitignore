@@ -3,3 +3,5 @@ node_modules/
 *.log
 .DS_Store
 showcase-videos/
+lab/board/app/node_modules/
+lab/board/app/dist/
