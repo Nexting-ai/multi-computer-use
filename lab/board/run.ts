@@ -21,12 +21,14 @@ import { LAYOUT, diagram, grade, skeleton } from "./diagram.js";
 
 const [outArg, arm = "multi", seedArg = "1", cursorsArg = "12"] =
   process.argv.slice(2);
-const ARMS = ["one", "one-wide", "multi", "swarm"];
+const ARMS = ["one", "one-wide", "multi", "swarm", "skills", "skills-multi"];
 if (!outArg || !ARMS.includes(arm))
   throw Error(`usage: run.ts <out> <${ARMS.join("|")}> <seed> [cursors]`);
 const out = resolve(outArg);
 const seed = Number(seedArg);
-const N = arm === "one" || arm === "one-wide" ? 1 : Number(cursorsArg);
+const N = ["one", "one-wide", "skills"].includes(arm) ? 1 : Number(cursorsArg);
+/** Skills arms: the agent may define parameterised action sequences. */
+const SKILLS = arm.startsWith("skills");
 const K = 8;
 const PER_DECISION = arm === "one-wide" ? K * Number(cursorsArg) : K;
 const VIEW = { width: 1280, height: 800 };
@@ -41,6 +43,8 @@ const TITLES: Record<string, string> = {
   "one-wide": `1 个 Agent · 1 个光标（每步 ${PER_DECISION} 个动作）`,
   multi: `1 个 Agent · ${N} 个光标`,
   swarm: `${N} 个 Agent · 各 1 个光标`,
+  skills: "1 个 Agent · 1 个光标 · 技能",
+  "skills-multi": `1 个 Agent · ${N} 个光标 · 技能`,
 };
 await mkdir(out, { recursive: true });
 const D = diagram(seed);
@@ -185,12 +189,75 @@ const action = z.discriminatedUnion("kind", [
   }),
 ]);
 type Action = z.infer<typeof action>;
+// Skills: a named, parameterised sequence of the same UI actions. Numbers
+// may be arithmetic on parameters ("{x}+130"); text may hold "{label}".
+const num = z.union([z.number(), z.string().max(80)]);
+const templateAction = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("click"), x: num, y: num }),
+  z.strictObject({ kind: z.literal("double_click"), x: num, y: num }),
+  z.strictObject({
+    kind: z.literal("drag"),
+    x: num,
+    y: num,
+    to_x: num,
+    to_y: num,
+  }),
+  z.strictObject({ kind: z.literal("type"), text: z.string().min(1).max(200) }),
+  z.strictObject({ kind: z.literal("key"), key: z.string().max(12) }),
+]);
+const skillSchema = z.strictObject({
+  name: z.string().regex(/^[a-z_][a-z0-9_]{0,31}$/),
+  params: z.array(z.string().regex(/^[a-z_][a-z0-9_]{0,15}$/)).max(12),
+  actions: z.array(templateAction).min(1).max(20),
+});
+const skillCall = z.strictObject({
+  kind: z.literal("skill"),
+  name: z.string(),
+  args: z.record(z.string(), z.union([z.number(), z.string().max(200)])),
+});
+const skills = new Map<string, z.infer<typeof skillSchema>>();
+function expand(a: Action | z.infer<typeof skillCall>): Action[] {
+  if (a.kind !== "skill") return [a];
+  const sk = skills.get(a.name);
+  if (!sk) throw Error(`unknown_skill:${a.name}`);
+  const missing = sk.params.filter((p) => !(p in a.args));
+  if (missing.length)
+    throw Error(`skill_args_missing:${a.name}:${missing.join(",")}`);
+  const sub = (t: string) =>
+    t.replace(/\{([a-z_][a-z0-9_]*)\}/g, (_, k) => String(a.args[k] ?? ""));
+  const n = (v: number | string) => {
+    if (typeof v === "number") return v;
+    const e = sub(v);
+    if (!/^[-+*/().\d\s]+$/.test(e)) throw Error(`bad_expression:${v}`);
+    const r = Function(`return (${e})`)() as number;
+    if (!Number.isFinite(r)) throw Error(`bad_expression:${v}`);
+    return r;
+  };
+  return sk.actions.map((t) => {
+    const out =
+      t.kind === "type"
+        ? { kind: "type", text: sub(t.text) }
+        : t.kind === "key"
+          ? { kind: "key", key: sub(t.key) }
+          : t.kind === "drag"
+            ? {
+                kind: "drag",
+                x: n(t.x),
+                y: n(t.y),
+                to_x: n(t.to_x),
+                to_y: n(t.to_y),
+              }
+            : { kind: t.kind, x: n(t.x), y: n(t.y) };
+    return action.parse(out);
+  });
+}
+const anyAction = SKILLS ? z.union([action, skillCall]) : action;
 const actSchema = z.strictObject({
   cursors: z
     .array(
       z.strictObject({
         cursor: z.number().int().min(1).max(N),
-        actions: z.array(action).min(1).max(PER_DECISION),
+        actions: z.array(anyAction).min(1).max(PER_DECISION),
       }),
     )
     .min(1)
@@ -298,9 +365,33 @@ function toolsFor(own: number[] | null) {
         : `Run up to ${PER_DECISION} actions with your cursor in order, then get a screenshot.`,
       inputSchema: z.toJSONSchema(actSchema, { io: "input" }),
     },
+    ...(SKILLS
+      ? [
+          {
+            type: "function" as const,
+            name: "skill",
+            description:
+              'Define (or redefine) a skill: a named sequence of the same UI actions with parameters. In actions, numbers may be arithmetic on parameters as strings ("{x}+130") and text may contain "{label}". Afterwards an act action {kind:"skill", name, args} runs the whole sequence and counts as one action. Define skills for what you repeat, check one use on the board, then reuse them.',
+            inputSchema: z.toJSONSchema(skillSchema, { io: "input" }),
+          },
+        ]
+      : []),
   ];
   const handle = async (name: string, args: unknown): Promise<ToolResult> => {
     try {
+      if (name === "skill") {
+        const q = skillSchema.parse(args);
+        skills.set(q.name, q);
+        return {
+          success: true,
+          contentItems: [
+            {
+              type: "inputText",
+              text: `skill ${q.name}(${q.params.join(", ")}) defined; skills: ${[...skills.keys()].join(", ")}`,
+            },
+          ],
+        };
+      }
       if (name === "reference")
         return {
           success: true,
@@ -332,8 +423,13 @@ function toolsFor(own: number[] | null) {
         if (bad) throw Error(`not_your_cursor:${bad.cursor}`);
         decisions++;
         board.meta({ decisions });
+        // Expand skills first, so a bad call fails before any input.
+        const plans = q.cursors.map((c) => ({
+          cursor: c.cursor,
+          actions: c.actions.flatMap(expand),
+        }));
         await Promise.all(
-          q.cursors.map(async (c) => {
+          plans.map(async (c) => {
             for (const a of c.actions) await perform(c.cursor, a);
           }),
         );
@@ -455,6 +551,63 @@ async function dry() {
       { kind: "drag", x: s0.x, y: s0.y, to_x: e0.x, to_y: e0.y },
     ];
   });
+  if (SKILLS) {
+    // The same plan as two skills, called once per box and arrow.
+    await handle("skill", {
+      name: "box",
+      params: ["x", "y", "label"],
+      actions: [
+        { kind: "key", key: "2" },
+        {
+          kind: "drag",
+          x: "{x}",
+          y: "{y}",
+          to_x: `{x}+${box.w}`,
+          to_y: `{y}+${box.h}`,
+        },
+        { kind: "double_click", x: `{x}+${box.w / 2}`, y: `{y}+${box.h / 2}` },
+        { kind: "type", text: "{label}" },
+        { kind: "key", key: "Escape" },
+      ],
+    });
+    await handle("skill", {
+      name: "arrow",
+      params: ["x", "y", "tx", "ty"],
+      actions: [
+        { kind: "key", key: "Escape" },
+        { kind: "key", key: "5" },
+        { kind: "drag", x: "{x}", y: "{y}", to_x: "{tx}", to_y: "{ty}" },
+      ],
+    });
+    jobs.splice(
+      0,
+      jobs.length,
+      ...D.boxes.map((b) => {
+        const p = at(b.label);
+        return [
+          {
+            kind: "skill",
+            name: "box",
+            args: { x: p.x, y: p.y, label: b.label },
+          } as any,
+        ];
+      }),
+    );
+    arrows.splice(
+      0,
+      arrows.length,
+      ...arrows.map((a) => {
+        const d = a[2] as any;
+        return [
+          {
+            kind: "skill",
+            name: "arrow",
+            args: { x: d.x, y: d.y, tx: d.to_x, ty: d.to_y },
+          } as any,
+        ];
+      }),
+    );
+  }
   for (const phase of [jobs, arrows]) {
     const queues: Action[][] = [...pages.keys()].map(() => []);
     phase.forEach((j, k) => queues[k % queues.length]!.push(...j));
@@ -478,7 +631,10 @@ if (process.env.BOARD_DRY) {
     HOW +
       (N > 1
         ? ` You control ${N} cursors (C1..C${N}) on this one board. One act call drives all of them at once, each with its own actions, so plan every decision to keep all cursors busy on different boxes and arrows (e.g. each cursor takes its own boxes, then its own arrows). Work until the diagram is complete, then stop.`
-        : " You control one cursor (C1). Work until the diagram is complete, then stop."),
+        : " You control one cursor (C1). Work until the diagram is complete, then stop.") +
+      (SKILLS
+        ? " You can define skills (the skill tool): a repeated sequence then costs one action in act."
+        : ""),
     1,
   );
 } else {
