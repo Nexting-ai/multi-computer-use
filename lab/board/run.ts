@@ -11,17 +11,25 @@
  *   BOARD_DRY=1: a scripted plan (no model) through the same tools.
  */
 import { spawn } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { z } from "zod";
 import { Cdp } from "../../packages/virtual-screen/src/cdp.js";
 import { runAstra, type Tool, type ToolResult } from "../benchmark/astra.js";
 import { startBoard } from "./server.js";
-import { LAYOUT, diagram, grade, skeleton } from "./diagram.js";
+import { LAYOUT, LAYOUT48, diagram, grade, skeleton } from "./diagram.js";
 
 const [outArg, arm = "multi", seedArg = "1", cursorsArg = "12"] =
   process.argv.slice(2);
-const ARMS = ["one", "one-wide", "multi", "swarm", "skills", "skills-multi"];
+const ARMS = [
+  "one",
+  "one-wide",
+  "multi",
+  "swarm",
+  "skills",
+  "skills-multi",
+  "skills-shift",
+];
 if (!outArg || !ARMS.includes(arm))
   throw Error(`usage: run.ts <out> <${ARMS.join("|")}> <seed> [cursors]`);
 const out = resolve(outArg);
@@ -36,7 +44,8 @@ const LIMITS = {
   deadline_ms: Number(process.env.BOARD_DEADLINE_MS ?? 20 * 60_000),
   tokens: Number(process.env.BOARD_MAX_TOKENS ?? 30_000_000),
   calls: Number(process.env.BOARD_MAX_CALLS ?? 400),
-  pace_ms: 120,
+  /** Pause after each action; a slower application responds later. */
+  pace_ms: Number(process.env.BOARD_PACE_MS ?? 120),
 };
 const TITLES: Record<string, string> = {
   one: "1 个 Agent · 1 个光标",
@@ -45,9 +54,13 @@ const TITLES: Record<string, string> = {
   swarm: `${N} 个 Agent · 各 1 个光标`,
   skills: "1 个 Agent · 1 个光标 · 技能",
   "skills-multi": `1 个 Agent · ${N} 个光标 · 技能`,
+  "skills-shift": `1 个 Agent · ${N} 个光标 · 技能 · 换挡收尾`,
 };
 await mkdir(out, { recursive: true });
-const D = diagram(seed);
+/** BOARD_BOXES=48: the 8 x 6 diagram and layout. */
+const BIG = process.env.BOARD_BOXES === "48";
+const L = BIG ? LAYOUT48 : LAYOUT;
+const D = BIG ? diagram(seed, 8, 6) : diagram(seed);
 const FIT = "250,110,1270,720"; // the area the reference occupies
 
 // ---- browser -------------------------------------------------------------
@@ -114,7 +127,7 @@ const ref = await startBoard({
   log: join(out, "reference-log.jsonl"),
   cursors: 1,
   title: "reference",
-  seed: skeleton(D),
+  seed: skeleton(D, L),
 });
 const refChrome = await chrome(join(out, "chrome-reference"));
 const refPage = await refChrome.open(`${ref.url}/board/1?seed=/seed.json`);
@@ -332,6 +345,12 @@ async function perform(n: number, a: Action) {
   await wait(LIMITS.pace_ms);
 }
 let decisions = 0;
+/** skills-shift: the bulk phase ends when the agent says so; then a fresh
+ * single-cursor session finishes. */
+const SHIFT = arm === "skills-shift";
+let bulkClosed = false;
+let shiftNote = "";
+let shiftAt: number | null = null;
 const status = () => {
   const g = grade(D, [...board.elements.values()]);
   return `Board now: ${g.boxes.right}/${g.boxes.of} boxes labelled as in the reference, ${g.edges.right}/${g.edges.of} arrows attached as in the reference.`;
@@ -365,6 +384,20 @@ function toolsFor(own: number[] | null) {
         : `Run up to ${PER_DECISION} actions with your cursor in order, then get a screenshot.`,
       inputSchema: z.toJSONSchema(actSchema, { io: "input" }),
     },
+    ...(SHIFT && own === null
+      ? [
+          {
+            type: "function" as const,
+            name: "finish_phase",
+            description:
+              "End the bulk phase once the bulk of the work is done (all boxes and most arrows drawn). A fresh session with one cursor and your skills then checks and fixes the rest. note: what remains or looks doubtful.",
+            inputSchema: z.toJSONSchema(
+              z.strictObject({ note: z.string().max(2000) }),
+              { io: "input" },
+            ),
+          },
+        ]
+      : []),
     ...(SKILLS
       ? [
           {
@@ -379,6 +412,23 @@ function toolsFor(own: number[] | null) {
   ];
   const handle = async (name: string, args: unknown): Promise<ToolResult> => {
     try {
+      if (name === "finish_phase") {
+        bulkClosed = true;
+        shiftNote = z
+          .strictObject({ note: z.string().max(2000) })
+          .parse(args).note;
+        shiftAt = Date.now() - started;
+        board.meta({ phase: "finish" });
+        return {
+          success: true,
+          contentItems: [
+            {
+              type: "inputText",
+              text: "Bulk phase closed. End your turn now; a fresh one-cursor session finishes the diagram.",
+            },
+          ],
+        };
+      }
       if (name === "skill") {
         const q = skillSchema.parse(args);
         skills.set(q.name, q);
@@ -418,6 +468,8 @@ function toolsFor(own: number[] | null) {
         };
       }
       if (name === "act") {
+        if (bulkClosed && own === null)
+          throw Error("bulk_phase_closed:end_your_turn");
         const q = actSchema.parse(args);
         const bad = q.cursors.find((c) => own && !own.includes(c.cursor));
         if (bad) throw Error(`not_your_cursor:${bad.cursor}`);
@@ -513,7 +565,7 @@ async function agent(
 /** BOARD_DRY: the known-good plan, through the same act tool. */
 async function dry() {
   const { handle } = toolsFor(null);
-  const { cell, box, origin: o } = LAYOUT;
+  const { cell, box, origin: o } = L;
   const at = (label: string) => {
     const b = D.boxes.find((x) => x.label === label)!;
     return { x: o.x + b.col * cell.w, y: o.y + b.row * cell.h };
@@ -625,6 +677,9 @@ if (process.env.BOARD_DRY) {
   await dry();
 } else if (arm !== "swarm") {
   for (const n of pages.keys()) board.label(n, N > 1 ? `Agent·C${n}` : "Agent");
+  const shiftHint = SHIFT
+    ? " When the bulk is done (all boxes and most arrows), call finish_phase: a fresh one-cursor session with your skills will check and fix the rest, which is faster than steering all cursors for the last details."
+    : "";
   await agent(
     "agent",
     null,
@@ -634,9 +689,20 @@ if (process.env.BOARD_DRY) {
         : " You control one cursor (C1). Work until the diagram is complete, then stop.") +
       (SKILLS
         ? " You can define skills (the skill tool): a repeated sequence then costs one action in act."
-        : ""),
+        : "") +
+      shiftHint,
     1,
   );
+  if (SHIFT && bulkClosed) {
+    board.label(1, "收尾·C1");
+    await agent(
+      "agent-finish",
+      [1],
+      HOW +
+        ` Finishing phase: one agent with ${N} cursors has drawn the bulk of the diagram on this board. Its note: ${shiftNote || "(none)"}. You now control cursor C1 alone. Compare the board with the reference, then add what is missing and fix what is wrong (a wrong arrow: click it, press Delete, draw it again). These skills are defined and callable in act: ${[...skills.values()].map((k) => `${k.name}(${k.params.join(", ")})`).join("; ") || "none"}. Work until the diagram is complete, then stop.`,
+      1,
+    );
+  }
 } else {
   for (const n of pages.keys()) board.label(n, `A${n}`);
   await Promise.all(
@@ -679,6 +745,7 @@ for (const e of log) {
 }
 const tokens = agents.reduce((s, a) => s + (a.usage?.totalTokens ?? 0), 0);
 const result = {
+  shift_ms: shiftAt,
   arm,
   seed,
   cursors: N,
@@ -702,4 +769,7 @@ console.log(JSON.stringify({ ...result, curve: undefined }));
 for (const p of pages.values()) p.close();
 browser.close();
 await board.close();
+// Browser profiles are caches, not evidence: remove them (disk).
+await rm(join(out, "chrome"), { recursive: true, force: true });
+await rm(join(out, "chrome-reference"), { recursive: true, force: true });
 process.exit(0);

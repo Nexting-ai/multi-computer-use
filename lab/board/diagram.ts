@@ -46,6 +46,18 @@ const NAMES = [
   "Support",
   "Chat",
   "Scheduler",
+  "Maps",
+  "Media",
+  "Video",
+  "Files",
+  "Sync",
+  "Backup",
+  "Tickets",
+  "Forms",
+  "Docs",
+  "Wallet",
+  "Vault",
+  "Webhooks",
 ];
 
 export type Box = { id: string; label: string; col: number; row: number };
@@ -83,6 +95,14 @@ export const LAYOUT = {
   origin: { x: 270, y: 130 },
   cell: { w: 165, h: 150 },
   box: { w: 130, h: 56 },
+  font: 16,
+};
+/** The 48-box layout (8 x 6) on the same board area. */
+export const LAYOUT48 = {
+  origin: { x: 262, y: 118 },
+  cell: { w: 124, h: 108 },
+  box: { w: 100, h: 44 },
+  font: 13,
 };
 /** A point just outside box `p`'s edge, on the line toward box `q` (both
  * top-left positions), so arrows run edge to edge and never cross a label. */
@@ -103,7 +123,7 @@ function edgePoint(
   return { x: cx + dx * k, y: cy + dy * k };
 }
 
-export function skeleton(d: Diagram, { origin, cell, box } = LAYOUT) {
+export function skeleton(d: Diagram, { origin, cell, box, font } = LAYOUT) {
   const pos = (b: Box) => ({
     x: origin.x + b.col * cell.w,
     y: origin.y + b.row * cell.h,
@@ -116,7 +136,7 @@ export function skeleton(d: Diagram, { origin, cell, box } = LAYOUT) {
     height: box.h,
     roughness: 0,
     strokeWidth: 2,
-    label: { text: b.label, fontSize: 16, fontFamily: 2 },
+    label: { text: b.label, fontSize: font, fontFamily: 2 },
   }));
   const byLabel = new Map(d.boxes.map((b) => [b.label, b]));
   for (const [a, z] of d.edges) {
