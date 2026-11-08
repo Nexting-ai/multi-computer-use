@@ -18,6 +18,7 @@ import { Cdp } from "../../packages/virtual-screen/src/cdp.js";
 import { runAstra, type Tool, type ToolResult } from "../benchmark/astra.js";
 import { startBoard } from "./server.js";
 import { LAYOUT, LAYOUT48, diagram, grade, skeleton } from "./diagram.js";
+import { boardText, diagramText } from "./state.js";
 
 const [outArg, arm = "multi", seedArg = "1", cursorsArg = "12"] =
   process.argv.slice(2);
@@ -29,6 +30,7 @@ const ARMS = [
   "skills",
   "skills-multi",
   "skills-shift",
+  "skills-handoff",
 ];
 if (!outArg || !ARMS.includes(arm))
   throw Error(`usage: run.ts <out> <${ARMS.join("|")}> <seed> [cursors]`);
@@ -55,6 +57,7 @@ const TITLES: Record<string, string> = {
   skills: "1 个 Agent · 1 个光标 · 技能",
   "skills-multi": `1 个 Agent · ${N} 个光标 · 技能`,
   "skills-shift": `1 个 Agent · ${N} 个光标 · 技能 · 换挡收尾`,
+  "skills-handoff": `1 个 Agent · ${N} 个光标 · 技能 · 文字状态收尾`,
 };
 await mkdir(out, { recursive: true });
 /** BOARD_BOXES=48: the 8 x 6 diagram and layout. */
@@ -112,9 +115,15 @@ async function chrome(dir: string) {
       });
       return p;
     },
-    close() {
+    async close() {
       browser.close();
-      proc.kill("SIGTERM");
+      await new Promise<void>((resolve) => {
+        if (proc.exitCode !== null || proc.signalCode !== null)
+          return resolve();
+        proc.once("exit", () => resolve());
+        proc.kill("SIGTERM");
+        setTimeout(() => proc.kill("SIGKILL"), 3000).unref();
+      });
     },
   };
 }
@@ -140,7 +149,7 @@ const selfCheck = grade(D, [...ref.elements.values()]);
 if (!selfCheck.complete)
   throw Error(`reference_not_gradable:${JSON.stringify(selfCheck)}`);
 refPage.close();
-refChrome.close();
+await refChrome.close();
 await ref.close();
 
 // ---- the shared board ----------------------------------------------------
@@ -345,9 +354,10 @@ async function perform(n: number, a: Action) {
   await wait(LIMITS.pace_ms);
 }
 let decisions = 0;
-/** skills-shift: the bulk phase ends when the agent says so; then a fresh
+/** Shift arms: the bulk phase ends when the agent says so; then a fresh
  * single-cursor session finishes. */
-const SHIFT = arm === "skills-shift";
+const SHIFT = ["skills-shift", "skills-handoff"].includes(arm);
+const HANDOFF = arm === "skills-handoff";
 let bulkClosed = false;
 let shiftNote = "";
 let shiftAt: number | null = null;
@@ -695,11 +705,14 @@ if (process.env.BOARD_DRY) {
   );
   if (SHIFT && bulkClosed) {
     board.label(1, "收尾·C1");
+    const finishCheck = HANDOFF
+      ? `Use the textual reference and current board below to add what is missing and fix what is wrong (a wrong arrow: click it, press Delete, draw it again). You do not need to re-read pictures first; call reference or look only if the text is insufficient.\nReference diagram as text:\n${diagramText(D, L)}\nCurrent board as text:\n${boardText([...board.elements.values()])}`
+      : "Compare the board with the reference, then add what is missing and fix what is wrong (a wrong arrow: click it, press Delete, draw it again).";
     await agent(
       "agent-finish",
       [1],
       HOW +
-        ` Finishing phase: one agent with ${N} cursors has drawn the bulk of the diagram on this board. Its note: ${shiftNote || "(none)"}. You now control cursor C1 alone. Compare the board with the reference, then add what is missing and fix what is wrong (a wrong arrow: click it, press Delete, draw it again). These skills are defined and callable in act: ${[...skills.values()].map((k) => `${k.name}(${k.params.join(", ")})`).join("; ") || "none"}. Work until the diagram is complete, then stop.`,
+        ` Finishing phase: one agent with ${N} cursors has drawn the bulk of the diagram on this board. Its note: ${shiftNote || "(none)"}. You now control cursor C1 alone. ${finishCheck} These skills are defined and callable in act: ${[...skills.values()].map((k) => `${k.name}(${k.params.join(", ")})`).join("; ") || "none"}. Work until the diagram is complete, then stop.`,
       1,
     );
   }
@@ -767,7 +780,7 @@ board.end({ arm, final, elapsed_ms: elapsed, tokens, decisions });
 await writeFile(join(out, "result.json"), JSON.stringify(result, null, 2));
 console.log(JSON.stringify({ ...result, curve: undefined }));
 for (const p of pages.values()) p.close();
-browser.close();
+await browser.close();
 await board.close();
 // Browser profiles are caches, not evidence: remove them (disk).
 await rm(join(out, "chrome"), { recursive: true, force: true });
