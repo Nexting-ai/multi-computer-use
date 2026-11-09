@@ -29,6 +29,8 @@ Bring your own agent and model. Use local, isolated Chrome targets or Linux desk
 
 ## Results at a glance
 
+[![70.9% less time and 58.4% fewer tokens on real Odoo workflows; 98.9% fewer tokens on a separate 100-desktop back-office experiment](docs/assets/e13/results-at-a-glance.svg)](#real-results)
+
 | Measured workload                         |       Wall-time improvement |              Token improvement |                   Independently verified result |
 | ----------------------------------------- | --------------------------: | -----------------------------: | ----------------------------------------------: |
 | **Odoo order-to-cash, 4 desktops**        | **70.9% less time (3.44×)** |         **58.4% fewer tokens** | **4/4 companies on both arms, 0 wrong records** |
@@ -39,6 +41,20 @@ Bring your own agent and model. Use local, isolated Chrome targets or Linux desk
 **Press-ready summary:** In a matched Odoo order-to-cash comparison, one agent completed four companies in **5 minutes 32 seconds**, against **19 minutes 4 seconds** for sequential single-desktop Computer Use—**70.9% less wall time**, **58.4% fewer tokens**, and **60.3% fewer tool calls**, with **4/4 companies independently verified on both**. In a separate 100-desktop back-office task, the runtime used **0.17M tokens against 15.17M**—**about 90× fewer tokens, a 98.9% reduction**—while completing **900/900 items**, against 896/900 for 13 parallel per-machine agents. Against 32 independent Blender agents, one agent building 32 house variations used **93.6% fewer tokens** and finished **62.2% sooner**, with a higher blind quality score.
 
 These are measured results with baselines and limitations, not universal multipliers or dollar-cost estimates. The second Odoo pair is excluded from the speed percentage because its baseline stopped at the token budget with W04 incomplete. The 100-desktop result is a token result, not a 90× speed claim. **[Evidence and exact reports](#real-results)**
+
+### How does it save time and tokens?
+
+Conventional Computer Use repeats the screenshot, reasoning, and data-entry loop on every desktop. Here, the agent shares a procedure once; the runtime repeats it on each desktop without asking the model to re-derive or transcribe the same work.
+
+**One shared decision → a canary → independent execution on each desktop → one fleet review.**
+
+1. The agent observes one example and describes the repeated actions.
+2. A canary proves the procedure before it reaches the other desktops.
+3. Each desktop reads its own values through text, checks its targets, and executes independently.
+4. Desktops that do not match stay untouched and become a separate exception group.
+5. The agent reviews the fleet in one image and gives individual attention only where needed.
+
+**[How it works](#how-it-works)** · **[Mechanism and limits](docs/decisions/011-z-broadcast.md)** · **[Z-axis results and interactive charts](docs/showcase/z-broadcast.html)**
 
 ---
 
