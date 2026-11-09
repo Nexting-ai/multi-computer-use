@@ -1,5 +1,11 @@
 node_modules/
 .local/
+.env
+.env.*
+auth.json
 *.log
 .DS_Store
 showcase-videos/
+lab/scratch/
+lab/board/app/node_modules/
+lab/board/app/dist/

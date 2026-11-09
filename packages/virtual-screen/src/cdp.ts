@@ -25,6 +25,19 @@ const CONTROL_ROLES = [
 
 /** Transport for an operator-owned, isolated browser. No page JS; the only read
  * channel besides pixels is the accessibility text layer (see readText). */
+/** How long a call may take. Heavy pages (large accessibility trees, busy
+ * renderers handling input) legitimately need more than simple calls. */
+function timeoutFor(method: string) {
+  if (method.startsWith("Accessibility.") || method.startsWith("Input."))
+    return 30_000;
+  // Navigation waits for the server's first response; dozens of pages
+  // loading at once over long paths can take well over 20 s.
+  if (method === "Page.navigate") return 120_000;
+  if (method.startsWith("Page.") || method === "Runtime.evaluate")
+    return 20_000;
+  return 5_000;
+}
+
 export class Cdp {
   private seq = 0;
   private pending = new Map<
@@ -110,8 +123,8 @@ export class Cdp {
       const id = ++this.seq,
         timer = setTimeout(() => {
           this.pending.delete(id);
-          reject(Error("cdp_timeout"));
-        }, 5000);
+          reject(Error(`cdp_timeout:${method}`));
+        }, timeoutFor(method));
       this.pending.set(id, { resolve, reject, timer });
       try {
         this.socket.send(JSON.stringify({ id, method, params }));
@@ -133,6 +146,26 @@ type Route = {
   lock: Gate;
   ax?: boolean;
 };
+/** Share of pixels that may differ while the screen counts as unchanged: a
+ * blinking text caret, never a changed control or value (same tolerance as
+ * the desktop agent). */
+const SAME_SCREEN = 0.0001;
+export async function sameScreen(a: Frame, b: Frame) {
+  if (a.revision === b.revision) return true;
+  if (a.width !== b.width || a.height !== b.height) return false;
+  const [x, y] = await Promise.all(
+    [a, b].map((f) => sharp(f.png).removeAlpha().raw().toBuffer()),
+  );
+  let n = 0;
+  for (let i = 0; i < x!.length; i += 3)
+    if (
+      Math.abs(x![i]! - y![i]!) > 24 ||
+      Math.abs(x![i + 1]! - y![i + 1]!) > 24 ||
+      Math.abs(x![i + 2]! - y![i + 2]!) > 24
+    )
+      n++;
+  return n / (x!.length / 3) <= SAME_SCREEN;
+}
 export class CdpSurfacePort implements SurfacePort {
   private routes = new Map<string, Route>();
   private journalQueue = Promise.resolve();
@@ -171,6 +204,13 @@ export class CdpSurfacePort implements SurfacePort {
           lock: new Gate(1),
         });
         await client.call("Page.enable");
+        // Every surface behaves as a focused, active page: web apps that
+        // render on animation frames stall in background targets of a shared
+        // browser. (Its blinking caret is within the same-screen tolerance.)
+        await client.call("Emulation.setFocusEmulationEnabled", {
+          enabled: true,
+        });
+        await client.call("Page.setWebLifecycleState", { state: "active" });
       }
       return port;
     } catch (e) {
@@ -309,16 +349,14 @@ export class CdpSurfacePort implements SurfacePort {
   async readText(frame: Frame): Promise<TextNode[]> {
     const r = this.route(frame.surface_id);
     return r.lock.run(async () => {
-      const same = (f: Frame) =>
+      const same = async (f: Frame) =>
         f.route_id === frame.route_id &&
         f.epoch === frame.epoch &&
-        f.width === frame.width &&
-        f.height === frame.height &&
-        f.revision === frame.revision;
-      if (!same(await this.captureRoute(r)))
+        (await sameScreen(f, frame));
+      if (!(await same(await this.captureRoute(r))))
         throw Error("source_changed_before_read");
       const out = await this.axNodes(r);
-      if (!same(await this.captureRoute(r)))
+      if (!(await same(await this.captureRoute(r))))
         throw Error("source_changed_during_read");
       await this.log({
         kind: "read_text",
@@ -347,9 +385,7 @@ export class CdpSurfacePort implements SurfacePort {
       if (
         fresh.route_id !== frame.route_id ||
         fresh.epoch !== frame.epoch ||
-        fresh.width !== frame.width ||
-        fresh.height !== frame.height ||
-        fresh.revision !== frame.revision
+        !(await sameScreen(fresh, frame))
       )
         return { status: "blocked", reason: "source_changed_before_input" };
       await this.log({

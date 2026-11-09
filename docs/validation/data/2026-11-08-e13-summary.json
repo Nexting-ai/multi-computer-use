@@ -1,0 +1,285 @@
+{
+  "experiment": "E13 Odoo order-to-cash",
+  "date": "2026-11-08",
+  "model": "gpt-6-astra",
+  "effort": "medium",
+  "software": "Odoo 17, en_US, real GUI in isolated Chrome and Docker",
+  "limits": {
+    "max_tokens_per_arm": 6000000,
+    "max_calls_per_arm": 600,
+    "deadline_ms_per_arm": 3600000
+  },
+  "blocks": [
+    {
+      "block": 1,
+      "scenario_seed": 13013,
+      "order": ["P-V", "F"],
+      "arms": {
+        "P-V": {
+          "elapsed_ms": 1143744,
+          "successes": 4,
+          "wrong": 0,
+          "correct_items": 4,
+          "tokens": 6032516,
+          "input_tokens": 6013390,
+          "cached_input_tokens": 5696896,
+          "output_tokens": 19126,
+          "tool_calls": 189,
+          "sessions": 5,
+          "stop_reason": null,
+          "recording_frames_per_surface": 2293,
+          "independent_grade": {
+            "W01": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W02": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W03": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W04": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            }
+          }
+        },
+        "F": {
+          "elapsed_ms": 332393,
+          "successes": 4,
+          "wrong": 0,
+          "correct_items": 4,
+          "tokens": 2511869,
+          "input_tokens": 2505189,
+          "cached_input_tokens": 2427136,
+          "output_tokens": 6680,
+          "tool_calls": 75,
+          "sessions": 1,
+          "stop_reason": null,
+          "recording_frames_per_surface": 673,
+          "independent_grade": {
+            "W01": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W02": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W03": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W04": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            }
+          }
+        }
+      },
+      "speed_ratio": 3.440938888604754,
+      "token_ratio": 2.401604542275095,
+      "same_completion_comparison": true
+    },
+    {
+      "block": 2,
+      "scenario_seed": 23023,
+      "order": ["F", "P-V"],
+      "arms": {
+        "P-V": {
+          "elapsed_ms": 906197,
+          "successes": 3,
+          "wrong": 0,
+          "correct_items": 3,
+          "tokens": 6028692,
+          "input_tokens": 6012236,
+          "cached_input_tokens": 5761408,
+          "output_tokens": 16456,
+          "tool_calls": 168,
+          "sessions": 4,
+          "stop_reason": "run_budget",
+          "recording_frames_per_surface": 1816,
+          "independent_grade": {
+            "W01": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W02": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W03": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W04": {
+              "success": false,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": false,
+                "payment": false
+              },
+              "invoice_state": "draft",
+              "payment_state": "not_paid"
+            }
+          }
+        },
+        "F": {
+          "elapsed_ms": 491039,
+          "successes": 4,
+          "wrong": 0,
+          "correct_items": 4,
+          "tokens": 3449611,
+          "input_tokens": 3438971,
+          "cached_input_tokens": 3317248,
+          "output_tokens": 10640,
+          "tool_calls": 123,
+          "sessions": 2,
+          "stop_reason": null,
+          "recording_frames_per_surface": 988,
+          "independent_grade": {
+            "W01": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W02": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W03": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            },
+            "W04": {
+              "success": true,
+              "wrong": false,
+              "checks": {
+                "order": true,
+                "delivery": true,
+                "invoice": true,
+                "payment": true
+              }
+            }
+          }
+        }
+      },
+      "observed_time_ratio": 1.845468486209853,
+      "token_ratio": 1.747644009715878,
+      "same_completion_comparison": false,
+      "censoring": "P-V stopped at the token budget with W04 incomplete; observed time is not a same-completion measurement"
+    }
+  ],
+  "aggregate": {
+    "baseline_successes": 7,
+    "fleet_successes": 8,
+    "total_companies_per_arm": 8,
+    "wrong_records_per_arm": 0,
+    "baseline_median_elapsed_ms": 1024970.5,
+    "fleet_median_elapsed_ms": 411716,
+    "observed_median_time_ratio": 2.4895085447250045,
+    "median_time_ratio_caveat": "Block 2 baseline is budget-censored; this is not a same-completion speed estimate",
+    "baseline_median_tokens": 6030604,
+    "fleet_median_tokens": 2980740,
+    "median_token_ratio": 2.0231902145104907,
+    "median_token_reduction": 0.5057311008980195
+  },
+  "film": {
+    "path": "docs/assets/e13/odoo-single-vs-four.mp4",
+    "poster": "docs/assets/e13/odoo-single-vs-four-poster.jpg",
+    "duration_seconds": 60.2,
+    "width": 1920,
+    "height": 1080,
+    "sha256": "6ee108592bdf94f0488834035451994a6f101cd1f3b83486747bc0a373253fbe",
+    "block_selected_before_results": 1,
+    "privacy_scan": { "frames": 120, "hits": 0, "clean": true }
+  }
+}

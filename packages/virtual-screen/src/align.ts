@@ -152,6 +152,9 @@ function down(g: Gray, m: Uint8Array | null, f: number) {
   return { g: { width: w, height: h, data }, m: mask };
 }
 
+/** Half-size of the exact search window around a hint, in pixels. */
+const NEAR = 24;
+
 function score(
   frame: Gray,
   t: Gray,
@@ -205,10 +208,37 @@ export function locate(
   if (hint) {
     const h = full(hint.x, hint.y);
     if (h && h.mad < 0.5 && h.outliers === 0) return h;
+    // Most templates barely move: an exact search near the hint first.
+    let best: { x: number; y: number; s: number } | null = null;
+    for (let dy = -NEAR; dy <= NEAR; dy++)
+      for (let dx = -NEAR; dx <= NEAR; dx++) {
+        const x = hint.x + dx,
+          y = hint.y + dy;
+        if (
+          x < 0 ||
+          y < 0 ||
+          x + template.width > frame.width ||
+          y + template.height > frame.height
+        )
+          continue;
+        const s: number = score(
+          frame,
+          template,
+          mask,
+          x,
+          y,
+          best?.s ?? Infinity,
+        ).sum;
+        if (!best || s < best.s) best = { x, y, s };
+      }
+    const near = best && full(best.x, best.y);
+    if (near && acceptable(near)) return near;
   }
-  // Power-of-two pyramid so every level maps exactly onto the next.
+  // Power-of-two pyramid so every level maps exactly onto the next. Thin
+  // templates (a toolbar strip) still get coarse levels: an exhaustive
+  // full-resolution search over a whole screen is far too slow.
   let top = 1;
-  while (top < 8 && top * 2 * 24 <= Math.min(template.width, template.height))
+  while (top < 8 && top * 2 * 6 <= Math.min(template.width, template.height))
     top *= 2;
   // Coarse-to-fine: exhaustive search at the top level, then ±2 refinement
   // of the best candidates at each finer level of the pyramid.

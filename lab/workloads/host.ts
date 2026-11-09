@@ -1,16 +1,18 @@
 import { execFile, spawn } from "node:child_process";
 import { createReadStream, createWriteStream } from "node:fs";
+import { copyFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { createGzip } from "node:zlib";
 
 const run = promisify(execFile);
 
-/** An SSH host from a workload's `hosts` entry ({destination, options}). */
+/** A workload host: local shell/Docker or SSH ({destination, options}). */
 export type SshHost = { destination: string; options: string[] };
 
 /** Retry when SSH never opened a session (nothing ran twice), or, for
  * idempotent transfers, whenever the connection dropped. */
 async function retry<T>(f: () => Promise<T>, idempotent = false): Promise<T> {
+  const until = Date.now() + 20 * 60_000;
   for (let attempt = 1; ; attempt++)
     try {
       return await f();
@@ -20,13 +22,13 @@ async function retry<T>(f: () => Promise<T>, idempotent = false): Promise<T> {
           String(e?.stderr ?? e),
         );
       const dropped = idempotent && /ssh 255/.test(String(e?.message));
-      // Up to about five minutes: these paths drop for a minute or more.
-      if (!(unreached || dropped) || attempt >= 10) throw e;
+      // Up to twenty minutes: cross-border paths drop for several minutes.
+      if (!(unreached || dropped) || Date.now() > until) throw e;
       await new Promise((r) => setTimeout(r, Math.min(60_000, 5000 * attempt)));
     }
 }
 
-/** Shell, upload and download on one host (files stream over SSH). */
+/** Shell, upload and download on one host (SSH files stream over gzip). */
 export function host(h: SshHost) {
   const pipe = (cmd: string, from?: string, to?: string) =>
     retry(
@@ -54,12 +56,20 @@ export function host(h: SshHost) {
     );
   return {
     sh: (cmd: string) =>
-      retry(() =>
-        run("ssh", [...h.options, h.destination, cmd], { maxBuffer: 1 << 28 }),
-      ).then((r) => r.stdout),
+      h.destination === "local"
+        ? run("bash", ["-c", cmd], { maxBuffer: 1 << 28 }).then((r) => r.stdout)
+        : retry(() =>
+            run("ssh", [...h.options, h.destination, cmd], {
+              maxBuffer: 1 << 28,
+            }),
+          ).then((r) => r.stdout),
     put: (local: string, remote: string) =>
-      pipe(`gzip -dc > '${remote}'`, local),
+      h.destination === "local"
+        ? copyFile(local, remote)
+        : pipe(`gzip -dc > '${remote}'`, local),
     get: (remote: string, local: string) =>
-      pipe(`cat '${remote}'`, undefined, local),
+      h.destination === "local"
+        ? copyFile(remote, local)
+        : pipe(`cat '${remote}'`, undefined, local),
   };
 }

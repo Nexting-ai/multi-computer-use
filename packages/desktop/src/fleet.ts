@@ -254,7 +254,7 @@ function hookExit() {
     process.once(signal, () => process.exit(code));
 }
 
-class Tunnel {
+export class Tunnel {
   private proc: ChildProcess | null = null;
   private closed = false;
   constructor(private readonly args: string[]) {
@@ -278,7 +278,7 @@ class Tunnel {
 }
 
 /** Fails when a local port is taken (e.g. by another run's forward). */
-function free(port: number): Promise<void> {
+export function free(port: number): Promise<void> {
   return new Promise((resolve, reject) => {
     const s = createServer();
     s.once("error", () => reject(Error(`local_port_in_use:${port}`)));

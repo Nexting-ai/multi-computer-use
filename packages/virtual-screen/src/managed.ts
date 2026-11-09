@@ -264,7 +264,9 @@ export class ManagedScreen {
           !view ||
           ("role" in view && !["full", "controls"].includes(String(view.role)))
         )
-          throw Error("action_view_mismatch");
+          throw Error(
+            "action_view_mismatch (act on a view_id returned by desktop_observe for that surface; fleet_observe views are for fleet_run)",
+          );
         for (const a of t.actions)
           if (
             a.kind === "click" &&
