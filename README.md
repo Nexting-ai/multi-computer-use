@@ -13,6 +13,20 @@ By [Nexting AI](https://nexting.ai) · [Apache-2.0](LICENSE) · [Real GUI, measu
 
 </div>
 
+## What is it?
+
+Multi-Computer Use gives one AI agent many desktops to work on, so it can complete repetitive tasks in parallel and verify the result on each one.
+
+It is **not another agent model or a generic harness**. It is the multi-device execution and verification layer that sits below your existing agent:
+
+- **Share decisions:** describe a repeated GUI procedure once instead of re-deriving it per desktop.
+- **Keep device-specific values:** customer names, order references, quantities, and other inputs come from each device's task row, not from the model's transcription.
+- **Contain variation:** a canary runs first; devices that do not match are left untouched and grouped for a different policy or individual attention.
+- **Verify delivery:** check post-conditions on every device, review the fleet in one image, and independently grade the resulting business records.
+- **Protect against duplicates:** every input is journaled before delivery; an input with an unknown outcome is never blindly replayed.
+
+Bring your own agent and model. Use local, isolated Chrome targets or Linux desktops reachable through Docker over SSH. The current project is an open-source research harness, not a hosted service or a consumer remote-control app.
+
 ## Results at a glance
 
 | Measured workload                         |       Wall-time improvement |              Token improvement |                   Independently verified result |
@@ -27,20 +41,6 @@ By [Nexting AI](https://nexting.ai) · [Apache-2.0](LICENSE) · [Real GUI, measu
 These are measured results with baselines and limitations, not universal multipliers or dollar-cost estimates. The second Odoo pair is excluded from the speed percentage because its baseline stopped at the token budget with W04 incomplete. The 100-desktop result is a token result, not a 90× speed claim. **[Evidence and exact reports](#real-results)**
 
 ---
-
-## What is it?
-
-Multi-Computer Use lets one agent operate a fleet of real desktops without paying for the same screenshot → think → click loop on every machine.
-
-It is **not another agent model or a generic harness**. It is the multi-device execution and verification layer that sits below your existing agent:
-
-- **Share decisions:** describe a repeated GUI procedure once instead of re-deriving it per desktop.
-- **Keep device-specific values:** customer names, order references, quantities, and other inputs come from each device's task row, not from the model's transcription.
-- **Contain variation:** a canary runs first; devices that do not match are left untouched and grouped for a different policy or individual attention.
-- **Verify delivery:** check post-conditions on every device, review the fleet in one image, and independently grade the resulting business records.
-- **Protect against duplicates:** every input is journaled before delivery; an input with an unknown outcome is never blindly replayed.
-
-Bring your own agent and model. Use local, isolated Chrome targets or Linux desktops reachable through Docker over SSH. The current project is an open-source research harness, not a hosted service or a consumer remote-control app.
 
 ## See it working: real order-to-cash on four Odoo desktops
 
