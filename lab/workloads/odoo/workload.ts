@@ -1,12 +1,19 @@
+import { readFileSync } from "node:fs";
 import type { Workload } from "../types.js";
-import { OdooEnv } from "./env.js";
-import { row, TASK } from "./scenario.js";
+import { OdooEnv, type EnvFile } from "./env.js";
+import { CASH_TASK, row, TASK as BASE_TASK } from "./scenario.js";
 
 /**
- * E5 on a provisioned environment (see cli.ts provision): every run resets the
- * companies' databases and opens fresh, logged-in browser contexts.
+ * Odoo on a provisioned environment (see cli.ts provision): every run resets
+ * the companies' databases and opens fresh, logged-in browser contexts. The
+ * environment selects the original sales-order or order-to-cash task.
  */
 export function odoo(envPath: string): Workload {
+  const TASK =
+    (JSON.parse(readFileSync(envPath, "utf8")) as EnvFile).workflow ===
+    "order-to-cash"
+      ? CASH_TASK
+      : BASE_TASK;
   return {
     items: 1,
     declared: true,

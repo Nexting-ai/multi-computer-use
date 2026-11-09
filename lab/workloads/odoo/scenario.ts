@@ -8,8 +8,25 @@
  *       and a maintenance notice that pops up over the screen
  *   L3  + data that needs judgement: a customer that does not exist yet
  *       (create it) or an order that was already entered (do not repeat it)
+ *
+ * The order-to-cash probe continues the same UI workflow through delivery,
+ * a posted invoice and a reconciled full payment.
  */
 import { rng } from "../../benchmark/metrics.js";
+import { scoreCash, type CashEvidence } from "./cash-grade.js";
+
+export type { CashEvidence } from "./cash-grade.js";
+
+export function cashScore(c: Company, evidence: CashEvidence) {
+  return scoreCash(
+    c,
+    evidence,
+    c.order.lines.map((l) => ({
+      ...l,
+      price: 40 + 35 * PRODUCTS.indexOf(l.product),
+    })),
+  );
+}
 
 export type Level = 0 | 1 | 2 | 3;
 export type Line = { product: string; qty: number };
@@ -111,3 +128,60 @@ export function row(c: Company): Record<string, string> {
 
 export const TASK =
   "Each surface is a different company's Odoo, open in the Sales app; companies may use other Odoo versions, languages or form layouts. For each surface, enter that company's order from its row of the task table: a quotation for the customer, with the Customer Reference set to the row's po, the two products with their quantities, then confirm it so it becomes a sales order. If the customer does not exist yet, create it (as a company) from the customer field. If a sales order with that Customer Reference already exists, do not create another one. Dismiss notices that pop up. Use only the Odoo interface. Declare each surface done when its order is confirmed (or found to exist already). Unknown or delivered inputs must not be repeated.";
+
+export function cashCompanies(seed: number, count: number): Company[] {
+  const cases = [
+    {
+      customer: CUSTOMERS[0]!,
+      missingCustomer: false,
+      duplicate: false,
+      layout: "default",
+      notice: null,
+    },
+    {
+      customer: "Quillfeather Books",
+      missingCustomer: true,
+      duplicate: false,
+      layout: "default",
+      notice: null,
+    },
+    {
+      customer: CUSTOMERS[2]!,
+      missingCustomer: false,
+      duplicate: true,
+      layout: "default",
+      notice: null,
+    },
+    {
+      customer: CUSTOMERS[3]!,
+      missingCustomer: false,
+      duplicate: false,
+      layout: "after_date",
+      notice: 8000,
+    },
+  ] as const;
+  return companies(seed, count, 3).map((c, i) => {
+    const k = cases[i % cases.length]!;
+    return {
+      ...c,
+      version: "17",
+      lang: "en_US",
+      layout: k.layout,
+      notice: k.notice,
+      missingCustomer: k.missingCustomer,
+      duplicate: k.duplicate,
+      order: { ...c.order, customer: k.customer },
+    };
+  });
+}
+
+export type Workflow = "order-to-cash";
+
+export function workflowModules(workflow?: Workflow) {
+  return workflow === "order-to-cash"
+    ? "sale_management,stock,account,l10n_generic_coa"
+    : "sale_management";
+}
+
+export const CASH_TASK =
+  "Each surface is a different company's Odoo, starting in Sales. Use only the Odoo interface. For each surface, complete the whole order-to-cash workflow from its task-table row. If the customer does not exist, create it as a company. If a sales order with that Customer Reference already exists, use that order and do not create another; otherwise create and confirm the quotation with the exact customer, reference, products, quantities and prices. Validate the delivery so every ordered unit is done. Create the invoice for that order, post it, and register full payment so it is paid and reconciled. Dismiss notices. Do not alter ordered quantities or prices and do not create duplicate orders, deliveries, invoices or payments. Declare a surface done only after its confirmed order, completed delivery, posted invoice and reconciled full payment are all visible. Unknown or delivered inputs must not be repeated.";

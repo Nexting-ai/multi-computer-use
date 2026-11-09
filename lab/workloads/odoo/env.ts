@@ -1,12 +1,12 @@
 /**
- * The E5 environment: real Odoo companies on Docker hosts, one database and
- * one Odoo server per company and a shared PostgreSQL per host. A local
- * headless Chrome reaches each company through an SSH forward.
+ * Odoo environments: one database and one Odoo server per company, with a
+ * shared PostgreSQL per local or SSH Docker host. A local headless Chrome
+ * reaches each company directly or through an SSH forward.
  *
  *   provision  create every company's database, seed it, keep a template
  *   reset      restore every database from its template (before each arm)
  *   surfaces   log a fresh browser context into each company (CDP surfaces)
- *   grade      read the orders back from each database
+ *   grade      read the business records back from each database
  */
 import { readFile, writeFile } from "node:fs/promises";
 import { spawn, type ChildProcess } from "node:child_process";
@@ -23,14 +23,19 @@ import { host, type SshHost } from "../host.js";
 import { Odoo } from "./rpc.js";
 import {
   companies,
+  cashCompanies,
+  cashScore,
   CUSTOMERS,
   PRODUCTS,
+  workflowModules,
   type Company,
   type Level,
+  type Workflow,
 } from "./scenario.js";
 
 export type EnvFile = {
   level: Level;
+  workflow?: Workflow;
   seed: number;
   hosts: SshHost[];
   companies: (Company & { host: number; port: number })[];
@@ -78,21 +83,25 @@ export class OdooEnv {
   static async attach(path: string) {
     const file = JSON.parse(await readFile(path, "utf8")) as EnvFile;
     const base = file.local_port ?? LOCAL_ODOO;
-    for (const [i] of file.companies.entries()) await free(base + i);
-    const tunnels = file.hosts.map(
-      (h, hi) =>
-        new Tunnel([
-          ...h.options,
-          "-N",
-          "-o",
-          "ExitOnForwardFailure=yes",
-          "-o",
-          "ControlPath=none",
-          ...file.companies.flatMap((c, i) =>
-            c.host === hi ? ["-L", `${base + i}:127.0.0.1:${c.port}`] : [],
-          ),
-          h.destination,
-        ]),
+    for (const [i, c] of file.companies.entries())
+      if (file.hosts[c.host]?.destination !== "local") await free(base + i);
+    const tunnels = file.hosts.flatMap((h, hi) =>
+      h.destination === "local"
+        ? []
+        : [
+            new Tunnel([
+              ...h.options,
+              "-N",
+              "-o",
+              "ExitOnForwardFailure=yes",
+              "-o",
+              "ControlPath=none",
+              ...file.companies.flatMap((c, i) =>
+                c.host === hi ? ["-L", `${base + i}:127.0.0.1:${c.port}`] : [],
+              ),
+              h.destination,
+            ]),
+          ],
     );
     const e = new OdooEnv(file, tunnels);
     await e.ready();
@@ -105,8 +114,13 @@ export class OdooEnv {
     level: Level,
     seed: number,
     count: number,
+    workflow?: Workflow,
   ) {
-    const list = companies(seed, count, level).map((c, i) => ({
+    const list = (
+      workflow === "order-to-cash"
+        ? cashCompanies(seed, count)
+        : companies(seed, count, level)
+    ).map((c, i) => ({
       ...c,
       host: i % hosts.length,
       port: 8100 + i,
@@ -125,7 +139,7 @@ export class OdooEnv {
           mine.map(
             (c) => () =>
               sh(
-                `docker run --rm --network e5 ${env} odoo:${c.version} -- -d ${c.db} -i sale_management --without-demo=all --stop-after-init` +
+                `docker run --rm --network e5 ${env} odoo:${c.version} -- -d ${c.db} -i ${workflowModules(workflow)} --without-demo=all --stop-after-init` +
                   (c.lang === "en_US" ? "" : ` --load-language=${c.lang}`) +
                   ` >/tmp/init-${c.db}.log 2>&1`,
               ),
@@ -138,8 +152,11 @@ export class OdooEnv {
       }),
     );
     const images: Record<string, string> = {};
-    for (const v of ["16", "17", "18", "pg"]) {
-      const name = v === "pg" ? "postgres:16" : `odoo:${v}`;
+    const imageNames =
+      workflow === "order-to-cash"
+        ? [...new Set(list.map((c) => `odoo:${c.version}`)), "postgres:16"]
+        : ["odoo:16", "odoo:17", "odoo:18", "postgres:16"];
+    for (const name of imageNames) {
       images[name] = (
         await host(hosts[0]!).sh(
           `docker image inspect --format '{{index .RepoDigests 0}}' ${name}`,
@@ -148,6 +165,7 @@ export class OdooEnv {
     }
     const file: EnvFile = {
       level,
+      ...(workflow ? { workflow } : {}),
       seed,
       hosts,
       companies: list,
@@ -168,7 +186,12 @@ export class OdooEnv {
   }
 
   private url(i: number) {
-    return `http://127.0.0.1:${(this.file.local_port ?? LOCAL_ODOO) + i}`;
+    const c = this.file.companies[i]!;
+    const port =
+      this.file.hosts[c.host]?.destination === "local"
+        ? c.port
+        : (this.file.local_port ?? LOCAL_ODOO) + i;
+    return `http://127.0.0.1:${port}`;
   }
 
   /** Waits until every Odoo answers through its forward. */
@@ -205,8 +228,31 @@ export class OdooEnv {
     const products: Record<string, number> = {};
     for (const [k, name] of PRODUCTS.entries())
       products[name] = await o.run("product.product", "create", [
-        { name, list_price: 40 + 35 * k, sale_ok: true },
+        {
+          name,
+          list_price: 40 + 35 * k,
+          sale_ok: true,
+          ...(this.file.workflow === "order-to-cash"
+            ? { type: "product" }
+            : {}),
+        },
       ]);
+    if (this.file.workflow === "order-to-cash") {
+      const [warehouse] = await o.run<any>(
+        "stock.warehouse",
+        "search_read",
+        [[]],
+        { fields: ["lot_stock_id"], limit: 1 },
+      );
+      for (const product of Object.values(products))
+        await o.run("stock.quant", "create", [
+          {
+            product_id: product,
+            location_id: warehouse.lot_stock_id[0],
+            quantity: 1000,
+          },
+        ]);
+    }
     const partners: Record<string, number> = {};
     for (const name of CUSTOMERS)
       partners[name] = await o.run("res.partner", "create", [
@@ -435,6 +481,119 @@ export class OdooEnv {
 
   /** Reads each company's orders for its Customer Reference. */
   async grade() {
+    if (this.file.workflow === "order-to-cash")
+      return limit(
+        8,
+        this.file.companies.map((c, i) => async () => {
+          const o = await Odoo.login(this.url(i), c.db);
+          const orders = await o.run<any[]>(
+            "sale.order",
+            "search_read",
+            [[["client_order_ref", "=", c.order.po]]],
+            {
+              fields: [
+                "name",
+                "partner_id",
+                "state",
+                "amount_total",
+                "order_line",
+                "picking_ids",
+                "invoice_ids",
+              ],
+            },
+          );
+          const [all_orders, all_pickings, all_invoices, all_payments] =
+            await Promise.all([
+              o.run<number>("sale.order", "search_count", [[]]),
+              o.run<number>("stock.picking", "search_count", [[]]),
+              o.run<number>("account.move", "search_count", [
+                [["move_type", "=", "out_invoice"]],
+              ]),
+              o.run<number>("account.payment", "search_count", [[]]),
+            ]);
+          const orderLineIds = orders.flatMap((x) => x.order_line);
+          const lines = orderLineIds.length
+            ? await o.run<any[]>("sale.order.line", "read", [orderLineIds], {
+                fields: [
+                  "order_id",
+                  "product_id",
+                  "product_uom_qty",
+                  "price_unit",
+                  "display_type",
+                ],
+              })
+            : [];
+          const partners = await o.run<any[]>(
+            "res.partner",
+            "search_read",
+            [[["name", "=", c.order.customer]]],
+            { fields: ["is_company"], context: { active_test: false } },
+          );
+          const pickingIds = orders.flatMap((x) => x.picking_ids);
+          const pickings = pickingIds.length
+            ? await o.run<any[]>("stock.picking", "read", [pickingIds], {
+                fields: ["state", "origin", "move_ids"],
+              })
+            : [];
+          const moveIds = pickings.flatMap((x) => x.move_ids);
+          const moves = moveIds.length
+            ? await o.run<any[]>("stock.move", "read", [moveIds], {
+                fields: ["product_id", "product_uom_qty", "quantity", "state"],
+              })
+            : [];
+          const invoiceIds = orders.flatMap((x) => x.invoice_ids);
+          const invoices = invoiceIds.length
+            ? await o.run<any[]>("account.move", "read", [invoiceIds], {
+                fields: [
+                  "state",
+                  "payment_state",
+                  "move_type",
+                  "invoice_origin",
+                  "amount_total",
+                  "invoice_line_ids",
+                ],
+              })
+            : [];
+          const invoiceLineIds = invoices.flatMap((x) => x.invoice_line_ids);
+          const invoice_lines = invoiceLineIds.length
+            ? await o.run<any[]>(
+                "account.move.line",
+                "read",
+                [invoiceLineIds],
+                {
+                  fields: [
+                    "product_id",
+                    "quantity",
+                    "price_unit",
+                    "display_type",
+                  ],
+                },
+              )
+            : [];
+          const payments = invoiceIds.length
+            ? await o.run<any[]>(
+                "account.payment",
+                "search_read",
+                [[["reconciled_invoice_ids", "in", invoiceIds]]],
+                { fields: ["state", "amount", "reconciled_invoice_ids"] },
+              )
+            : [];
+          return cashScore(c, {
+            all_orders,
+            all_pickings,
+            all_invoices,
+            all_payments,
+            orders,
+            lines,
+            partners,
+            pickings,
+            moves,
+            invoices,
+            invoice_lines,
+            payments,
+          });
+        }),
+      );
     return limit(
       8,
       this.file.companies.map((c, i) => async () => {

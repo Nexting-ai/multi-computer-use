@@ -1,143 +1,193 @@
-# multi-computer-use
+<div align="center">
 
-**One agent, many computers.** A harness that lets one Computer Use agent operate many desktops at once. The agent decides once, the runtime applies that decision to every machine, and the agent checks all of them in one look.
+# Multi-Computer Use
 
-By [Nexting AI](https://nexting.ai).
+**One agent. Many computers. Verified delivery on every desktop.**
 
-![A street of 32 houses, designed once in Blender and built on 32 desktops](docs/assets/s3/street.gif)
+An open-source execution and verification layer for Computer Use fleets.<br>
+Share repeated decisions, inject per-device values, contain exceptions, and check the result on each machine.
 
-## Cases
+By [Nexting AI](https://nexting.ai) · [Apache-2.0](LICENSE) · [Real GUI, measured results](docs/validation/)
 
-Every case was preregistered before it ran and is reported as measured, failures included. Unless noted, the model is `gpt-6-astra` (medium). Each case links its full report.
+**[Watch the 60-second demo](docs/assets/e13/odoo-single-vs-four.mp4)** · **[Read the evidence](#real-results)** · **[Quickstart](#quickstart)**
 
-### 1. A street of 32 houses in Blender
+</div>
 
-One house design, 32 variations: width, floors, colours, roof and balcony differ per plot. All three arms are agents working through the Blender screen (interface and Blender's Python), each house on its own plot.
+---
 
-| | One agent, one desktop | **The harness: 1 agent, 32 desktops** | 32 agents, 32 desktops |
-|---|---:|---:|---:|
-| Blind quality (1–10) | 6.99 | **7.66** | 7.09 |
-| Wall time | **4.7 min** | 13.5 min | 35.7 min |
-| Model tokens | **0.30M** | 0.85M | 13.31M |
-| Screenshots sent to the model | 6 | 13 | 252 |
-| Built, on plot, right height | 96/96 | 96/96 | 96/96 |
+## What is it?
+
+Multi-Computer Use lets one agent operate a fleet of real desktops without paying for the same screenshot → think → click loop on every machine.
+
+It is **not another agent model or a generic harness**. It is the multi-device execution and verification layer that sits below your existing agent:
+
+- **Share decisions:** describe a repeated GUI procedure once instead of re-deriving it per desktop.
+- **Keep device-specific values:** customer names, order references, quantities, and other inputs come from each device's task row, not from the model's transcription.
+- **Contain variation:** a canary runs first; devices that do not match are left untouched and grouped for a different policy or individual attention.
+- **Verify delivery:** check post-conditions on every device, review the fleet in one image, and independently grade the resulting business records.
+- **Protect against duplicates:** every input is journaled before delivery; an input with an unknown outcome is never blindly replayed.
+
+Bring your own agent and model. Use local, isolated Chrome targets or Linux desktops reachable through Docker over SSH. The current project is an open-source research harness, not a hosted service or a consumer remote-control app.
+
+## See it working: real order-to-cash on four Odoo desktops
+
+[![Traditional single-desktop versus one agent controlling four real Odoo desktops](docs/assets/e13/odoo-single-vs-four-poster.jpg)](docs/assets/e13/odoo-single-vs-four.mp4)
+
+**[Watch the 60-second comparison](docs/assets/e13/odoo-single-vs-four.mp4)** — real GUI recordings and timestamped click events, not a recreated interface. Playback is accelerated; the clocks show measured wall time.
+
+One agent completes four companies' **order → delivery → posted invoice → reconciled full payment** workflows. The baseline uses independent same-model, single-desktop sessions, strictly one at a time.
+
+| Block 1, seed 13013                  | Single-desktop baseline | One agent, four desktops |       Difference |
+| ------------------------------------ | ----------------------: | -----------------------: | ---------------: |
+| Wall time                            |                   19:04 |                 **5:32** | **3.44× faster** |
+| Model tokens, including cached input |                   6.03M |                **2.51M** |  **58.4% fewer** |
+| Tool calls                           |                     189 |                   **75** |  **60.3% fewer** |
+| Independently verified companies     |                     4/4 |                  **4/4** | Same correctness |
+| Wrong records                        |                       0 |                    **0** |             Same |
+
+**A second fresh-seed pair also completed 4/4 on the fleet, in 8:11 with 3.45M tokens.** The single-desktop baseline reached 3/4 in 15:06 and stopped at its 6M token budget; W04 had a draft invoice and no payment. Its observed time is therefore **not a same-completion speed measurement**.
+
+The fleet used one director in block 1 and one director plus one continuation in block 2, with no per-desktop helper agents. The baseline used five and four independent sessions respectively. Two pairs are evidence of a real effect on this workload, not a universal speed or dollar-cost multiplier.
+
+**[Full E13 report](docs/validation/2026-11-08-e13-odoo.md)** · **[Preregistration](docs/validation/2026-11-08-preregistration-e13.md)** · **[Summary data](docs/validation/data/2026-11-08-e13-summary.json)**
+
+## Choose your path
+
+- **Integrate your agent:** read [How it works](#how-it-works), then run the [local evaluation](#quickstart).
+- **Evaluate a workload:** run the 22 deterministic fault scenarios, or start from the [preregistered runner](lab/virtual-screen/eval-run.ts) and [existing workloads](lab/workloads/).
+- **Review the evidence:** compare real time, tokens, correctness, and the negative results below. Every linked report describes what actually ran, including limits and failed hypotheses.
+
+## Real results
+
+Unless noted otherwise, experiments used `gpt-6-astra` (medium). Token counts include cached input and are not a direct dollar-cost estimate. Time and tokens are reported separately; older serial-baseline speed claims are not reused.
+
+### 100 desktops: about 90× fewer tokens, not 90× faster
+
+Three items were filed on each of 100 independent back-office desktops, repeated in three blocks. The baseline was conventional per-machine Computer Use with **13 agents in parallel**. Grading read the server's business records.
+
+|                | Fleet runtime | Per-machine, 13 in parallel |
+| -------------- | ------------: | --------------------------: |
+| Model tokens   |     **0.17M** |                      15.17M |
+| Model sessions |         **1** |                          13 |
+| Correct items  |   **900/900** |                     896/900 |
+| Wall time      |         312 s |                       312 s |
+
+The shared procedure used about **90× fewer tokens** with slightly higher correctness. Wall time was effectively tied; the earlier **34× speed** number came from a serial baseline and has been retracted. The bottleneck after broadcasting is the GUI work itself, not another model call per machine.
+
+With 20 layouts, the fleet used 0.69M tokens against 5–7M for per-machine operation. With 100 all-different layouts, the token advantage disappeared, but correctness did not drop. Machine-read values matter: when the model transcribed 100 values from images instead, 8.4% were wrong.
+
+**[Fair parallel-baseline report](docs/validation/2026-10-31-e1p-parallel-baseline.md)** · **[Strict evaluation and ablations](docs/validation/2026-10-30-strict-evaluation.md)** · **[Results page](docs/showcase/z-broadcast.html)**
+
+### 32 desktops: one design, 32 house variations
+
+The agent polished one parametric Blender design on desktop 1, applied it to 32 desktops with per-plot parameters, and reviewed all 32 renders in one overview. The comparison is 32 independent agents, each re-deriving the design.
+
+|                                | One agent, one desktop | **Fleet: 1 agent, 32 desktops** | 32 agents, 32 desktops |
+| ------------------------------ | ---------------------: | ------------------------------: | ---------------------: |
+| Blind quality, 1–10            |                   6.99 |                        **7.66** |                   7.09 |
+| Wall time                      |            **4.7 min** |                        13.5 min |               35.7 min |
+| Model tokens                   |              **0.30M** |                           0.85M |                 13.31M |
+| Screenshots sent to the model  |                      6 |                              13 |                    252 |
+| Built, on plot, correct height |                  96/96 |                           96/96 |                  96/96 |
+
+Against 32 independent agents, the fleet used **15.7× fewer tokens** and finished **2.6× sooner**, with a higher blind quality score. A single agent looping one script was faster and cheaper still, but produced plainer houses. More desktops pay off when each item takes real GUI work or needs its own application state—not automatically.
 
 ![Four plots from each arm](docs/assets/s3/compare-a-m-b.jpg)
 
-How the harness ran it:
-1. The agent polished the design once on desktop 1.
-2. It applied the design to all 32 desktops as one policy, each desktop with its own parameters.
-3. It reviewed the 32 renders in [one overview image](docs/assets/s3/m-fleet-overview.jpg).
+**[S3 report](docs/validation/2026-11-04-s3-street.md)** · **Films:** [fleet](docs/assets/s3/M-harness.mp4), [32 agents](docs/assets/s3/B-32-agents.mp4), [one agent](docs/assets/s3/A-one-agent.mp4)
 
-Against 32 independent agents it used **6.4% of the tokens** and took 2.6× less time, and its houses scored higher. The independent agents each re-derived the design and drifted. A single agent looping one script was fastest, but built plainer houses.
+### Multi-cursor work: speed and token cost are different trade-offs
 
-[Report](docs/validation/2026-11-04-s3-street.md) · films: [harness](docs/assets/s3/M-harness.mp4), [32 agents](docs/assets/s3/B-32-agents.mp4), [one agent](docs/assets/s3/A-one-agent.mp4)
+In 36 repeated Excalidraw runs, one agent using 12 cursors plus a text-state handoff completed **9/9** diagrams and reached 100% in a median **87 seconds**, against **218 seconds** for one cursor—about **2.5× faster**. It also used **1.22× the tokens**, so this is a speed result, not a token-saving result.
 
-### 2. The same back office on 100 desktops
+The text handoff reduced median finisher time from **103 to 28 seconds** and finisher tokens by **72%**. Pure multi-cursor and the older picture handoff each completed only 7/9. The older picture handoff reached 100% sooner at 73 seconds, so the preregistered H1 did **not** pass; it then spent much longer checking.
 
-Three items to file in a business back office, on each of 100 desktops, run three times. The baseline is conventional per-machine Computer Use, 13 agents in parallel. Grading reads the server's records.
+**[E11 report](docs/validation/2026-11-08-e11.md)** · **[E10 report, 27 runs](docs/validation/2026-11-07-e10.md)**
 
-| | The harness | Per-machine, 13 in parallel |
-|---|---:|---:|
-| Model tokens | **0.17M** | 15.17M (~90× more) |
-| Model sessions | **1** | 13 |
-| Items correct | **900/900** | 896/900 |
-| Wall time | 312 s | 312 s |
+## Where it works—and where it does not
 
-- **Model calls stop growing with the number of machines.** 300 items took 12 inferences, against 580 for the per-machine baseline.
-- **Values are read, not transcribed.** Each machine's values come from a text channel. When the model transcribed 100 values from images instead, 8.4% were wrong.
-- **Different layouts cost about one decision each.** With 20 layouts the harness used 0.69M tokens, against 5–7M for per-machine operation. With 100 all-different layouts the advantage disappears, but correctness does not drop.
-- **Second model:** Claude Sonnet 5.5 showed the same ~100× saving at identical correctness.
+**A good fit:**
 
-[Report](docs/validation/2026-10-31-e1p-parallel-baseline.md) · [results page](docs/showcase/z-broadcast.html)
+- Repeated GUI workflows across companies, accounts, stores, or desktops
+- The same procedure with different values per device
+- Slow legacy software with no useful API
+- Work that needs both shared decisions and independent verification
+- Exceptions that can be isolated for a separate policy or individual repair
 
-### 3. Sixteen different buildings: where it does not save tokens
+**A poor fit:**
 
-A city block of 16 buildings that all differ: a pagoda, a glass tower, a lighthouse. When the director wrote one generic script for all sixteen, it was cheap but plain, scoring about 4.5 of 10. Sixteen agents, one per building, scored 8.0.
+- One-off creative work where every item needs different judgement
+- A task that a direct API or a short script on one desktop already handles better
+- Arbitrary, entirely different layouts where no stable decision can be shared
+- A generic agent that has not first demonstrated the single-desktop workflow
 
-A director with sixteen parallel refiners reached 7.4 in under half the time (24.7 vs 54.5 min), but used *more* tokens (6.98M vs 4.32M). When every item needs its own decisions, each one costs an agent's attention whichever way the work is organised. The harness pays off where items share a decision, as in cases 1 and 2.
+These boundaries are measured, not hypothetical:
 
-[S1 report](docs/validation/2026-11-03-s1-city-block.md) · [S2 report](docs/validation/2026-11-03-s2-refiners.md)
-
-### 4. A rainforest airport: more desktops per agent did not help
-
-Sixteen different pieces of one scene: an airliner, a waterfall, a toucan statue, a temple ruin. The test was whether giving each agent three desktops would improve the pieces: try three ideas in one decision, compare them in one image, keep the best.
-
-| | One agent | **One agent per piece** | One agent per piece, three desktops |
-|---|---:|---:|---:|
-| Blind quality per piece | 5.32 | **7.50** | 6.33 |
-| Whole scene | 7.25 | **7.50** | 5.75 |
-| Wall time | 27 min | **14 min** | 59 min |
-| Model tokens | 2.3M | 9.2M | 37.1M |
-
-The simplest arm won. One agent per piece on its own desktop was the fastest and the best.
-
-The three-desktop agents won some pieces clearly, for example the waterfall and the cable car. But they spent much of their time on the fleet interface: templates, exemplar views and render windows that drifted apart. Their servers also saturated when three renders ran at once, and two pieces were never finished.
-
-Fleet policies are built for screens that repeat. That is where cases 1 and 2 gain, and for one-off creative work they are overhead. A smoke test of a single director over all sixteen pieces was also cheaper but much worse (5.2 against 7.9), so it was not run.
-
-[Report](docs/validation/2026-11-04-s4-airport.md)
-
-### 5. Safe under faults
-
-The fault suite has 22 deterministic scenarios in real Chrome, each run with its safeguard on and off. With the safeguards on, there were zero misrouted inputs and zero duplicates:
-- a wrong policy is contained by the canary;
-- an input with a lost reply is closed only from evidence;
-- moved controls, reordered labels and occluded buttons are caught;
-- unbound clicks are refused before any input.
-
-### Not yet: arbitrary websites
-
-On unseen MiniWoB++ tasks, three preregistered rounds scored 581, 507 and 560 of 600, against 600 for per-machine operation. All four error mechanisms now have fixes under test. The held-out round [F3](docs/validation/2026-10-31-preregistration-f3.md) has not run yet.
+- **Sixteen different buildings:** independent per-building agents scored 8.13 against 4.88 for one director. A shared director used fewer tokens but produced plainer work. [S1 report](docs/validation/2026-11-03-s1-city-block.md)
+- **Parallel refiners:** faster than independent agents but used more tokens (6.98M vs 4.32M). [S2 report](docs/validation/2026-11-03-s2-refiners.md)
+- **Rainforest airport:** one agent per piece was fastest and best; three desktops per agent cost 4× the tokens and delivered only 14 of 16 pieces. [S4 report](docs/validation/2026-11-04-s4-airport.md)
+- **Unseen MiniWoB++:** three rounds scored 581, 507, and 560 of 600, against 600 for per-machine operation. This is not a claim of universal web competence. [Held-out evaluation](docs/validation/2026-10-30-strict-evaluation.md)
 
 ## How it works
 
-Ordinary Computer Use runs one screenshot→think→click loop per computer. This harness treats the set of computers as a third axis (Z), like a batch dimension:
+Ordinary Computer Use repeats the full perception and reasoning loop per computer. This runtime treats the fleet as another axis—**Z**, like a batch dimension.
 
-1. **The agent looks at one example screen and writes a policy:**
-   - the stable template;
-   - the fields that differ per machine;
-   - the steps, including typing per-machine text such as `{floors}`;
-   - the post-condition that proves success.
-2. **The runtime applies the policy to every machine independently.** On each one it:
-   - registers the template;
-   - reads that machine's values from a text channel (accessibility tree, or OCR on desktops);
-   - checks that each click lands on the intended element;
-   - executes, then verifies the post-condition on that machine.
-3. **A canary runs first.** Machines that do not match are left untouched and grouped by appearance.
-4. **The agent reviews the results** in one tiled overview and fixes what differs, by another policy or on a single desktop.
+1. **Observe an exemplar.** The agent selects a stable template, variable fields, actions, and a post-condition.
+2. **Run a canary.** The policy runs on one device before it can reach the others. A rejected canary leaves the rest untouched.
+3. **Execute per device.** The runtime registers the template locally, reads device-specific values through accessibility text or OCR, checks each target, and applies the inputs independently.
+4. **Collect evidence, not assumptions.** Each device returns a delivery receipt and post-condition. Uncertain outcomes are resolved from evidence rather than replayed.
+5. **Review and repair together.** The agent sees one tiled fleet overview, handles exception groups or individual outliers, and can independently grade the final application records.
 
-Every input is written to a durable ledger before it is sent. An input whose outcome is uncertain is never replayed.
+```text
+task table + exemplar → one agent policy → canary → per-device runners
+                                                   ├─ value injection
+                                                   ├─ target binding
+                                                   ├─ durable input journal
+                                                   └─ post-condition
+                              → fleet overview → exceptions → independent grade
+```
 
-## Try it
+The agent can also use per-desktop tools where a shared policy is the wrong abstraction. That is the intended split: **shared work where possible, individual attention where necessary.**
 
-You need Node ≥ 24, pnpm and Google Chrome (`CU_CHROME` if not at the macOS default path).
+## Quickstart
+
+Requirements: Node ≥ 24, pnpm, and Google Chrome (`CU_CHROME` overrides the macOS default path).
 
 ```sh
 pnpm install
 pnpm check          # typecheck + unit tests
-pnpm fault-suite    # 22 fault-injection scenarios in headless Chrome (~15 min, no model)
+pnpm fault-suite    # 22 deterministic fault scenarios in real Chrome, no model
 ```
 
-For a small model evaluation on local Chrome surfaces, point [`examples/local-eval.json`](examples/local-eval.json) at your Codex CLI and run:
+For a small model evaluation on local Chrome surfaces, point [`examples/local-eval.json`](examples/local-eval.json) at your Codex CLI and authorization file, then run:
 
 ```sh
 node --import tsx lab/virtual-screen/eval-run.ts examples/local-eval.json
 ```
 
-Desktop apps (Blender, KiCad) run in Linux containers (`packages/desktop`). Build an image with `docker build -f packages/desktop/image/Dockerfile --build-arg APP=blender packages/desktop`, then list your Docker hosts in the workload config.
+The example compares conventional per-surface operation with broadcast execution. Desktop applications such as Blender and KiCad run in Linux containers; see [`packages/desktop`](packages/desktop/) and the workload reports for their host configuration.
 
-## Layout
+**Use isolated desktops and browser profiles, not your daily environment.** Model authorization stays local; it is not archived in evaluation plans. Production credential handling and fleet provisioning remain your responsibility.
 
-| Path | What |
-|---|---|
-| `packages/virtual-screen/src/stack.ts` | The runtime: policies, canary, per-machine pipeline, binding, overview |
-| `packages/virtual-screen/src/cdp.ts` | Chrome surfaces: frames, input, accessibility text |
-| `packages/desktop/` | Linux desktop surfaces: container image, agent (frames, OCR, input), fleet launcher, Blender and KiCad apps |
-| `lab/virtual-screen/` | Preregistered runner, arms, analysis, fault suite |
-| `lab/workloads/` | Workloads (web forms, MiniWoB++, Blender, KiCad), blind judge, films |
-| `docs/validation/` | Preregistrations, reports and raw data |
+The Odoo examples use synthetic companies and disposable `admin/admin` and `odoo/odoo` credentials only inside isolated test environments. They are not real user accounts or secrets; never reuse those defaults in a deployed environment.
+
+**Provisioning is destructive to the test fleet:** it resets and removes containers labeled `e5` on the configured Docker host. Use a dedicated local VM or isolated Docker context, never a shared or production host.
+
+## Repository layout
+
+| Path                                     | Responsibility                                                 |
+| ---------------------------------------- | -------------------------------------------------------------- |
+| `packages/virtual-screen/src/stack.ts`   | Policies, canary, per-device pipeline, binding, and overview   |
+| `packages/virtual-screen/src/cdp.ts`     | Chrome frames, input, accessibility text, and input journal    |
+| `packages/virtual-screen/src/workset.ts` | Durable progress and disjoint per-device worksets              |
+| `packages/desktop/`                      | Linux desktop surfaces, container images, and fleet launcher   |
+| `lab/virtual-screen/`                    | Preregistered runner, arms, analysis, and fault suite          |
+| `lab/workloads/`                         | Web forms, Odoo, MiniWoB++, Blender, KiCad, and evidence tools |
+| `docs/validation/`                       | Preregistrations, reports, and machine-readable results        |
+| `docs/assets/`                           | Real comparison films and images                               |
 
 ## License
 
-Apache-2.0. The vendored MiniWoB++ files keep their MIT license.
+[Apache-2.0](LICENSE). Vendored MiniWoB++ files retain their MIT license.
+
+Issues and reproducibility questions: [GitHub Issues](https://github.com/Nexting-ai/multi-computer-use/issues).

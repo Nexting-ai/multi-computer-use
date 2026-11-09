@@ -1,7 +1,7 @@
 /**
- * E5 environment operations.
+ * Odoo environment operations.
  *
- *   node --import tsx lab/workloads/odoo/cli.ts provision <env.json> <hosts.json> <level> <seed> <count>
+ *   node --import tsx lab/workloads/odoo/cli.ts provision <env.json> <hosts.json> <level> <seed> <count> [order-to-cash]
  *   node --import tsx lab/workloads/odoo/cli.ts reset <env.json>
  *   node --import tsx lab/workloads/odoo/cli.ts grade <env.json>
  *   node --import tsx lab/workloads/odoo/cli.ts shot <env.json> <out-dir>   (a screenshot of every company)
@@ -9,7 +9,7 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { OdooEnv } from "./env.js";
-import type { Level } from "./scenario.js";
+import type { Level, Workflow } from "./scenario.js";
 
 const [cmd, path, ...rest] = process.argv.slice(2) as [
   string,
@@ -17,12 +17,15 @@ const [cmd, path, ...rest] = process.argv.slice(2) as [
   ...string[],
 ];
 if (cmd === "provision") {
-  const [hostsPath, level, seed, count] = rest as [
+  const [hostsPath, level, seed, count, workflow] = rest as [
     string,
     string,
     string,
     string,
+    (Workflow | undefined)?,
   ];
+  if (workflow !== undefined && workflow !== "order-to-cash")
+    throw Error(`unknown_workflow:${workflow}`);
   const hosts = JSON.parse(await readFile(hostsPath, "utf8"));
   await OdooEnv.provision(
     path,
@@ -30,6 +33,7 @@ if (cmd === "provision") {
     Number(level) as Level,
     Number(seed),
     Number(count),
+    workflow,
   );
   console.log("provisioned", path);
 } else {
