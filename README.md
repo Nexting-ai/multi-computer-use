@@ -2,7 +2,7 @@
 
 # Multi-Computer Use
 
-**One agent. Many computers. Verified delivery on every desktop.**
+**Infra that lets one agent operate many computers at once.**
 
 An open-source execution and verification layer for Computer Use fleets.<br>
 Share repeated decisions, inject per-device values, contain exceptions, and check the result on each machine.
