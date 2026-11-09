@@ -13,6 +13,19 @@ By [Nexting AI](https://nexting.ai) · [Apache-2.0](LICENSE) · [Real GUI, measu
 
 </div>
 
+## Results at a glance
+
+| Measured workload                         |       Wall-time improvement |              Token improvement |                   Independently verified result |
+| ----------------------------------------- | --------------------------: | -----------------------------: | ----------------------------------------------: |
+| **Odoo order-to-cash, 4 desktops**        | **70.9% less time (3.44×)** |         **58.4% fewer tokens** | **4/4 companies on both arms, 0 wrong records** |
+| **Back office, 100 desktops**             |                  Same 312 s |  **98.9% fewer tokens (~90×)** |                    **900/900 vs 896/900 items** |
+| **House variations, fleet vs 32 agents**  |  **62.2% less time (2.6×)** | **93.6% fewer tokens (15.7×)** |    **96/96 checks; blind quality 7.66 vs 7.09** |
+| **Excalidraw, 12 cursors + text handoff** |  **60.1% less time (2.5×)** |          **22.2% more tokens** |                   **9/9 diagrams on both arms** |
+
+**Press-ready summary:** In a matched Odoo order-to-cash comparison, one agent completed four companies in **5 minutes 32 seconds**, against **19 minutes 4 seconds** for sequential single-desktop Computer Use—**70.9% less wall time**, **58.4% fewer tokens**, and **60.3% fewer tool calls**, with **4/4 companies independently verified on both**. In a separate 100-desktop back-office task, the runtime used **0.17M tokens against 15.17M**—**about 90× fewer tokens, a 98.9% reduction**—while completing **900/900 items**, against 896/900 for 13 parallel per-machine agents. Against 32 independent Blender agents, one agent building 32 house variations used **93.6% fewer tokens** and finished **62.2% sooner**, with a higher blind quality score.
+
+These are measured results with baselines and limitations, not universal multipliers or dollar-cost estimates. The second Odoo pair is excluded from the speed percentage because its baseline stopped at the token budget with W04 incomplete. The 100-desktop result is a token result, not a 90× speed claim. **[Evidence and exact reports](#real-results)**
+
 ---
 
 ## What is it?
@@ -76,6 +89,10 @@ The shared procedure used about **90× fewer tokens** with slightly higher corre
 
 With 20 layouts, the fleet used 0.69M tokens against 5–7M for per-machine operation. With 100 all-different layouts, the token advantage disappeared, but correctness did not drop. Machine-read values matter: when the model transcribed 100 values from images instead, 8.4% were wrong.
 
+[![Z-axis broadcast: 90× fewer tokens, 580→12 inferences, 900/900 correct](docs/assets/e1p/z-broadcast-overview.png)](docs/showcase/z-broadcast.html)
+
+_Static preview of the Z-axis principle and results page. [Open the HTML for charts and source data](docs/showcase/z-broadcast.html)._
+
 **[Fair parallel-baseline report](docs/validation/2026-10-31-e1p-parallel-baseline.md)** · **[Strict evaluation and ablations](docs/validation/2026-10-30-strict-evaluation.md)** · **[Results page](docs/showcase/z-broadcast.html)**
 
 ### 32 desktops: one design, 32 house variations
@@ -137,6 +154,10 @@ Ordinary Computer Use repeats the full perception and reasoning loop per compute
 3. **Execute per device.** The runtime registers the template locally, reads device-specific values through accessibility text or OCR, checks each target, and applies the inputs independently.
 4. **Collect evidence, not assumptions.** Each device returns a delivery receipt and post-condition. Uncertain outcomes are resolved from evidence rather than replayed.
 5. **Review and repair together.** The agent sees one tiled fleet overview, handles exception groups or individual outliers, and can independently grade the final application records.
+
+[![One agent reviewing 32 real desktops in a single fleet overview](docs/assets/s3/m-fleet-overview.jpg)](docs/assets/s3/m-fleet-overview.jpg)
+
+_One actual fleet overview: 32 desktops reviewed in one image, rather than 32 separate model inspections._
 
 ```text
 task table + exemplar → one agent policy → canary → per-device runners
